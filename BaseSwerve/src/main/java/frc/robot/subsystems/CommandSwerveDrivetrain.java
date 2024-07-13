@@ -90,7 +90,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     @Override
     public void periodic(){
-        
+        if (/*DriverStation.isTeleopEnabled() && */!Robot.isSimulation()){
+            // updateVisionPose(LimelightConstants.LIMELIGHT_NAME);
+        }
     }
 
     public Pose2d getPose() {
@@ -165,7 +167,53 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         }
     }
 
+
+    private boolean isInBouds(LimelightHelpers.PoseEstimate currentPose){
+
+        boolean isInBounds = currentPose.pose.getX() > 0 && currentPose.pose.getX() < 16.4846 && currentPose.pose.getY() > 0 && currentPose.pose.getY() < 8.1026;
+
+        return isInBounds;
+    }
+    // private void updateVisionPose(String limelightName){
+    //     double maxRotationalAcceleration = 60;
+
+    //     LimelightHelpers.PoseEstimate botPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+    //     if(botPose.tagCount == 0) {
+    //         return;
+    //     }
+    //     LimelightHelpers.SetRobotOrientation(limelightName, m_odometry.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+    //     if(!isInBouds(botPose)) {
+    //         return;
+    //     }
+    //     if(Math.abs(Units.radiansToDegrees(getState().speeds.omegaRadiansPerSecond)) > maxRotationalAcceleration){
+
+    //         double[] rotationInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get(botPose.avgTagDist);
+    //         addVisionMeasurement(
+    //             botPose.pose,
+    //             botPose.timestampSeconds,VecBuilder.fill(rotationInterpolation[0],rotationInterpolation[1],999999));
+    //         return;
+    //     }
+        
+    //     double[] linearInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get(botPose.avgTagDist);
+    //     addVisionMeasurement(
+    //         botPose.pose,
+    //         botPose.timestampSeconds,VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],999999));
+        
+    // }
     public Rotation2d getYawOffsetDegrees(){
         return m_fieldRelativeOffset;
+    }
+    /**
+     * all in meters
+     * @param pose
+     * @param expected
+     * @param error
+     * @return
+     */
+    public static boolean poseWithinRange(Pose2d pose, Pose2d expected, double error){
+        if (pose.getX()<expected.getX()+error && pose.getX()>expected.getX()-error && pose.getY()<expected.getY()+error && pose.getY()>expected.getY()-error){
+            return true;
+        }
+        return false;
     }
 }

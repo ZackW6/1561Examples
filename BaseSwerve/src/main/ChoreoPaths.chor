@@ -14,17 +14,7 @@
     },
     "paths": {
         "New Path": {
-            "waypoints": [
-                {
-                    "x": 9.518287658691406,
-                    "y": 8.00344181060791,
-                    "heading": 0,
-                    "isInitialGuess": false,
-                    "translationConstrained": true,
-                    "headingConstrained": true,
-                    "controlIntervalCount": 40
-                }
-            ],
+            "waypoints": [],
             "trajectory": [],
             "trajectoryWaypoints": [],
             "constraints": [

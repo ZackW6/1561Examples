@@ -32,6 +32,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
@@ -60,7 +62,8 @@ public class Elevator extends SubsystemBase {
   private final TalonFX motor = new TalonFX(ElevatorConstants.ELEVATOR_MOTOR_ID);
   private final CANcoder encoder = new CANcoder(ElevatorConstants.ELEVATOR_ENCODER_ID);
 
-  // Simulation classes help us simulate what's going on, including gravity.
+  private final double allowableError = .02;
+
   private final ElevatorSim m_elevatorSim =
       new ElevatorSim(
           gearbox,
@@ -77,8 +80,13 @@ public class Elevator extends SubsystemBase {
     configMotor();
 
     elevatorSim = new ElevateSim(motor, m_elevatorSim);
-    elevatorSim.addSimImage("Elevator");
-    elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,0);
+    elevatorSim.addSimImage("Elevator",.5,ElevatorConstants.ELEVATOR_MAX_HEIGHT);
+    elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,-.25);
+
+    ShuffleboardTab shuffleboardTab = Shuffleboard.getTab("Elevator");
+      shuffleboardTab.addNumber("Elevator Position Meters",
+              () -> getCurrentPosition());
+      shuffleboardTab.addBoolean("Is Elevator In Position", this::isAtPosition);
   }
 
   /**
@@ -98,6 +106,14 @@ public class Elevator extends SubsystemBase {
     return this.run(()->motor.setControl(m_request.withPosition(goal.getAsDouble()).withSlot(0)));
   }
 
+  public double getCurrentPosition(){
+    return motor.getPosition().getValueAsDouble();
+  }
+
+  public boolean isAtPosition(){
+    return Math.abs(getCurrentPosition()-motor.getClosedLoopReference().getValueAsDouble())<allowableError;
+  }
+
   @Override
   public void periodic(){
     if (Robot.isSimulation()){
@@ -108,7 +124,7 @@ public class Elevator extends SubsystemBase {
   private void configMotor(){
     talonFXConfigs = new TalonFXConfiguration();
     CANcoderConfiguration canCoderConfigs = new CANcoderConfiguration();
-    // //Set to factory default
+    // Set to factory default
     encoder.getConfigurator().apply(new CANcoderConfiguration());
     motor.getConfigurator().apply(new TalonFXConfiguration());
     

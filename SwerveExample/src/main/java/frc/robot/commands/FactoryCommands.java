@@ -11,6 +11,8 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import frc.robot.constants.LimelightConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.PoseEX;
@@ -33,8 +34,8 @@ import frc.robot.util.PoseEX;
 public class FactoryCommands {
     private final CommandSwerveDrivetrain drivetrain;
     private final CommandXboxController xboxController;
-    public FactoryCommands(CommandSwerveDrivetrain arm, CommandXboxController xboxController){
-        this.drivetrain = arm;
+    public FactoryCommands(CommandSwerveDrivetrain drivetrain, CommandXboxController xboxController){
+        this.drivetrain = drivetrain;
         this.xboxController = xboxController;
     }
     
@@ -46,9 +47,9 @@ public class FactoryCommands {
     private final PIDController thetaControllerSpeaker = new PIDController(2,0,0.01);
 
     public DeferredCommand getInRange() {
-        Pose2d speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
+        Pose2d speakerPose = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField().getTagPose(7).get().toPose2d();
         if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
-        speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
+            speakerPose = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField().getTagPose(4).get().toPose2d();
         }
     
         Pose2d alignPose = speakerPose;
@@ -68,11 +69,11 @@ public class FactoryCommands {
 
 
         DoubleSupplier rotationalVelocity = () -> {
-        if(drivetrain.getAngleFromPose(alignPose).getDegrees()>0){
-            return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()-180,0);//-7;
-        }else{
-            return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()+180,0);//+7;
-        }
+            if(drivetrain.getAngleFromPose(alignPose).getDegrees()>0){
+                return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()-180,0);//-7;
+            }else{
+                return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()+180,0);//+7;
+            }
         };
 
         return new DeferredCommand(()->drivetrain.applyRequest(() -> drive.withVelocityX(xAxis.getAsDouble()) 

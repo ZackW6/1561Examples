@@ -15,27 +15,22 @@
       "/SmartDashboard/Right Shooter Sim": "Mechanism2d"
     },
     "windows": {
-      "/SmartDashboard/Elevator": {
+      "/Pose": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Auto Chooser": {
         "window": {
           "visible": true
         }
       }
     }
   },
-  "NetworkTables": {
-    "transitory": {
-      "Shuffleboard": {
-        "Elevator": {
-          "open": true
-        },
-        "open": true
-      },
-      "SmartDashboard": {
-        "open": true
-      }
-    }
-  },
   "NetworkTables Info": {
     "visible": true
+  },
+  "NetworkTables View": {
+    "visible": false
   }
 }

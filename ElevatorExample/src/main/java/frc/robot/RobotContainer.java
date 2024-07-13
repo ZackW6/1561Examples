@@ -7,16 +7,14 @@ import frc.robot.subsystems.Elevator;
 
 public class RobotContainer {
 
-  /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
 
-  /* Subsystems */
   private final Elevator elevator = new Elevator();
 
   private void configureBindings() {
-    elevator.setDefaultCommand(elevator.reachGoal(()->driverController.getRawAxis(1)*-25+25));
-    driverController.a().whileTrue(elevator.reachGoal(45));
-    driverController.b().whileTrue(elevator.reachGoal(5));
+    elevator.setDefaultCommand(elevator.reachGoal(()->driverController.getRawAxis(1)*-1+1));
+    driverController.a().whileTrue(elevator.reachGoal(1.8));
+    driverController.b().whileTrue(elevator.reachGoal(.2));
   }
 
   public RobotContainer() {
@@ -24,7 +22,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    // TODO Auto-generated method stub
+    // TODO no auto, this is just the elevator example
     return Commands.none();
   }
 }

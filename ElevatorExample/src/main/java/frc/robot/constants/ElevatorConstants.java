@@ -11,22 +11,23 @@ public class ElevatorConstants {
     public static final int ELEVATOR_MOTOR_ID = 12;
     public static final int ELEVATOR_ENCODER_ID = 12;
 
-    public static final double P = 300;
+    public static final double P = 8000;
     public static final double I = 0;
-    public static final double D = 50;
+    public static final double D = 200;
 
     public static final double S = 0.0;
     public static final double G = 0.762;
     public static final double V = 0.762;
     public static final double A = 0.0;
 
+    // Values used in sim only
     public static final double ELEVATOR_GEARING = 1;//10
-    public static final double ELEVATOR_RADIUS = Units.inchesToMeters(1.0);
+    public static final double ELEVATOR_RADIUS = Units.inchesToMeters(1);
     public static final double ELEVATOR_MASS_KG = 4; // kg
 
     // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
     public static final double ELEVATOR_MIN_HEIGHT = 0.0;
-    public static final double ELEVATOR_MAX_HEIGHT = 50;//1.25;
+    public static final double ELEVATOR_MAX_HEIGHT = 2;//1.25;
 
     public static final double CRUISE_VELOCITY = 400;
     public static final double MAX_ACCELERATION = 1000;
