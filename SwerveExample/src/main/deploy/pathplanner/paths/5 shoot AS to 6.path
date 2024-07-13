@@ -1,0 +1,97 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.095742994904793,
+        "y": 3.9526242015446997
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.447068091278239,
+        "y": 2.8986489124243646
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.201637326351578,
+        "y": 3.7395713252964975
+      },
+      "prevControl": {
+        "x": 3.656772854169138,
+        "y": 2.8563716735931375
+      },
+      "nextControl": {
+        "x": 6.0227049083528685,
+        "y": 4.208975998331676
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.281967377058862,
+        "y": 4.11050362756931
+      },
+      "prevControl": {
+        "x": 7.4973413284915,
+        "y": 4.075371117931965
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 27.758540601059966,
+      "rotateFast": true
+    },
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0,
+      "rotateFast": false
+    }
+  ],
+  "constraintZones": [],
+  "eventMarkers": [
+    {
+      "name": "Intake 5",
+      "waypointRelativePos": 1.15,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "intake"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 5.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 0.0,
+    "rotateFast": true
+  },
+  "reversed": false,
+  "folder": "5 shoot",
+  "previewStartingState": {
+    "rotation": -40.65415731046968,
+    "velocity": 0
+  },
+  "useDefaultConstraints": false
+}

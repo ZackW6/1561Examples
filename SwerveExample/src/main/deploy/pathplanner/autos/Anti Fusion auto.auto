@@ -1,0 +1,43 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.4844248215812361,
+      "y": 3.5391622327187657
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "S-L taxi - 5"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "5 shoot US"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "5 shoot US to 6"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "6 shoot"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "Team autos",
+  "choreoAuto": false
+}
