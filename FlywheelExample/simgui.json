@@ -1,0 +1,36 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Pose": "Field2d",
+      "/SmartDashboard/Arm Sim": "Mechanism2d",
+      "/SmartDashboard/Auto Chooser": "String Chooser",
+      "/SmartDashboard/Elevator": "Mechanism2d",
+      "/SmartDashboard/Intake Sim": "Mechanism2d",
+      "/SmartDashboard/Left Shooter Sim": "Mechanism2d",
+      "/SmartDashboard/Module 0": "Mechanism2d",
+      "/SmartDashboard/Module 1": "Mechanism2d",
+      "/SmartDashboard/Module 2": "Mechanism2d",
+      "/SmartDashboard/Module 3": "Mechanism2d",
+      "/SmartDashboard/Right Shooter Sim": "Mechanism2d"
+    },
+    "windows": {
+      "/SmartDashboard/Left Shooter Sim": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Right Shooter Sim": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables Info": {
+    "visible": true
+  },
+  "NetworkTables View": {
+    "visible": false
+  }
+}
