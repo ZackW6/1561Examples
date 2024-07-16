@@ -137,7 +137,7 @@ public class RobotContainer {
     .onFalse(Commands.runOnce(()->shooter.setIdleSpeed(0,0)));
     driverController.rightStick().whileTrue(groupCommands.alignToCorner());
     driverController.a().whileTrue(groupCommands.alignToAmp());//.and(() -> driverController.x().getAsBoolean());
-    driverController.b().whileTrue(groupCommands.getToPieceCommand());//Commands.either(Commands.none(), groupCommands.alignToPiece(),()-> intake.isPiecePresent()));
+    driverController.b().whileTrue(groupCommands.alignToPiece());//Commands.either(Commands.none(), groupCommands.alignToPiece(),()-> intake.isPiecePresent()));
     driverController.x().whileTrue(AutoToPoint.getToPoint(new Pose2d(9,1.2,Rotation2d.fromDegrees(145)), new PathConfig(4,4,Rotation2d.fromDegrees(120),Rotation2d.fromDegrees(120),0,0)).andThen(groupCommands.shoot()));
     // driverController.x().onTrue(Commands.runOnce(()->shooter.setIdleSpeed(60))).onFalse(Commands.runOnce(()->shooter.setIdleSpeed(0)));
 

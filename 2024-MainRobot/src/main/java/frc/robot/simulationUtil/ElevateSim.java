@@ -69,9 +69,6 @@ public class ElevateSim{
         this.offset = offset;
     }
 
-
-    private double lastTime = 0;
-    private double lastVelocity = 0;
     public void simulationPeriodic() {
         
         // In this method, we update our simulation of what our elevator is doing
@@ -85,9 +82,6 @@ public class ElevateSim{
             encoderSim.setRawPosition(elevatorSim.getPositionMeters()-offset);
             encoderSim.setVelocity(elevatorSim.getVelocityMetersPerSecond());
         }
-        motorSim.setRotorAcceleration((elevatorSim.getVelocityMetersPerSecond()-lastVelocity)/(Timer.getFPGATimestamp()-lastTime));
-        lastVelocity = elevatorSim.getVelocityMetersPerSecond();
-        lastTime = Timer.getFPGATimestamp();
         motorSim.setRawRotorPosition(elevatorSim.getPositionMeters()-offset);
         motorSim.setRotorVelocity(Units.radiansToRotations(Units.radiansToRotations(elevatorSim.getVelocityMetersPerSecond())));
         // SimBattery estimates loaded battery voltages

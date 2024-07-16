@@ -29,7 +29,6 @@ public class MotorSim {
     private final DCMotorSim motorSimModel;
 
     private String name;
-    private double currentTime = 0;
 
     public MotorSim(TalonFX motor, DCMotor dcMotor){
         this.motorSim = motor.getSimState();
@@ -74,14 +73,12 @@ public class MotorSim {
         // // Next, we update it. The standard loop time is 20ms.
         motorSimModel.update(0.02);
         //Makes the rest of the robot react based on this usage of Voltage
-        motorSim.setRotorAcceleration((motorSimModel.getAngularVelocityRadPerSec()-lastVelocity)/(Timer.getFPGATimestamp()-currentTime));
         lastVelocity = motorSimModel.getAngularVelocityRadPerSec();
         motorSim.setRawRotorPosition(motorSimModel.getAngularPositionRotations());
         motorSim.setRotorVelocity(Units.radiansToRotations(motorSimModel.getAngularVelocityRadPerSec()));
         
 
         // Update the Mechanism Arm angle based on the simulated arm angle
-        currentTime = Timer.getFPGATimestamp();
         if (spokes[0] != null){
             for (int i = 0; i<spokes.length;i++){
                 spokes[i].setAngle(Units.radiansToDegrees(motorSimModel.getAngularPositionRad())+(360/spokes.length)*i);

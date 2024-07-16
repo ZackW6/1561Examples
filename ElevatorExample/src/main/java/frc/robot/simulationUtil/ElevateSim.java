@@ -56,7 +56,6 @@ public class ElevateSim{
         elevatorLigament.setColor(new Color8Bit(Color.kCrimson));
         elevatorLigament.setLineWeight(ligamentWidth);
                 SmartDashboard.putData(name, mech2d);
-        
     }
     /**
      * offset will likely be different by .25 incriment rotations compared to correct offset.

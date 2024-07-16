@@ -68,7 +68,6 @@ public class FlyWheelSim {
     }
 
 
-    private double lastVelocity = 0;
     public void simulationPeriodic() {
         // In this method, we update our simulation of what our arm is doing
         // First, we set our "inputs" (voltages)
@@ -76,8 +75,6 @@ public class FlyWheelSim {
         // // Next, we update it. The standard loop time is 20ms.
         flywheelSim.update(0.02);
         //Makes the rest of the robot react based on this usage of Voltage
-        motorSim.setRotorAcceleration((flywheelSim.getAngularVelocityRadPerSec()-lastVelocity)/(Timer.getFPGATimestamp()-currentTime));
-        lastVelocity = flywheelSim.getAngularVelocityRadPerSec();
         motorSim.setRawRotorPosition(Units.radiansToRotations(currentRad));
         motorSim.setRotorVelocity(Units.radiansToRotations(flywheelSim.getAngularVelocityRadPerSec()));
         

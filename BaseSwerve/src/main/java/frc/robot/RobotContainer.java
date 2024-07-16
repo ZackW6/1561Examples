@@ -73,17 +73,13 @@ public class RobotContainer {
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     configureBindings();
-    autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
+
+    //How you might make a choreo only path
+    // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
   }
 
   public void configureAutonomousCommands() {
-    //IGNORE THIS
-    NamedCommands.registerCommand("intake", Commands.none());
-    NamedCommands.registerCommand("setIdleSpeed", Commands.none());
-    NamedCommands.registerCommand("loadAndShoot", Commands.none());
-    NamedCommands.registerCommand("loadAndShootLinear", Commands.none());
-    NamedCommands.registerCommand("loadAndShootThree", Commands.none());
-    NamedCommands.registerCommand("loadAndShootFour",Commands.none());
+   
   }
 
   public Command getAutonomousCommand() {

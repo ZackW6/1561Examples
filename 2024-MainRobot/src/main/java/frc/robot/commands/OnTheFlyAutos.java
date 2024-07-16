@@ -61,6 +61,14 @@ public class OnTheFlyAutos {
   private ObjectDetection limelightObjectDetection;
   private CommandXboxController xboxController;
   private FactoryCommands groupCommands;
+
+  private Supplier<Pose2d> speakerPose = ()->{
+    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
+      return LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
+    }
+    return LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
+  };
+
   public OnTheFlyAutos(Arm arm, Shooter shooter, Intake intake, CommandSwerveDrivetrain drivetrain, ObjectDetection limelightCam, CommandXboxController xboxController, FactoryCommands groupCommands){
     this.arm = arm;
     this.shooter = shooter;
@@ -117,12 +125,6 @@ public class OnTheFlyAutos {
   }
 
   private DeferredCommand shootAtSpeakerCommand(){
-    Supplier<Pose2d> speakerPose = ()->{
-      if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
-        return LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
-      }
-      return LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
-    };
     return new DeferredCommand(()->
       AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(),speakerPose.get(), 0)
       .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),speakerPose.get())
@@ -130,8 +132,11 @@ public class OnTheFlyAutos {
       .until(()->PoseEX.getDistanceFromPoseMeters(speakerPose.get(),drivetrain.getPose())<4).andThen(Commands.deadline(Commands.waitSeconds(.5).andThen(groupCommands.speakerShoot(60,80)),groupCommands.getInRange())),Set.of(drivetrain,shooter,intake));
   }
 
-  private Command findIntakeAndShootNote(){
-    return groupCommands.autoFindNote().andThen(groupCommands.getToSpeakerCommand()).andThen(groupCommands.speakerShoot(60,80));
+  private DeferredCommand findIntakeAndShootNote(){
+    return new DeferredCommand(()->groupCommands.autoFindNote()
+      .andThen(Commands.race(groupCommands.getToSpeakerCommand())
+      ,Commands.waitUntil(()->(PoseEX.getDistanceFromPoseMeters(drivetrain.getPose(), speakerPose.get())<3.7))
+      .andThen(groupCommands.speakerShoot(60,80))),Set.of());
   }
 
 }

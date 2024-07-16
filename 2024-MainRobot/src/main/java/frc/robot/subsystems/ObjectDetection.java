@@ -131,7 +131,6 @@ public class ObjectDetection extends SubsystemBase {
             double goalHeightMeters = 0;
 
             double angleToGoalRadians = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
-
             return  (limelightLensHeightMeters-goalHeightMeters) / -(Math.sin(angleToGoalRadians));
         }
         return 0;

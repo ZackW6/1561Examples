@@ -12,6 +12,10 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.ApplyChassisSpeeds;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.FieldCentric;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.RobotCentric;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.SwerveControlRequestParameters;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -20,6 +24,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -54,6 +59,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.ObjectDetection;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Arm.ArmState;
+import frc.robot.util.FieldCentricFacingRed;
 import frc.robot.util.PoseEX;
 
 public class FactoryCommands extends SubsystemBase{
@@ -64,6 +70,14 @@ public class FactoryCommands extends SubsystemBase{
   private CommandSwerveDrivetrain drivetrain;
   private CommandXboxController xboxController;
   private ObjectDetection limelightObject;
+
+  private Supplier<Pose2d> speakerPose = ()->{
+    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
+      return LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
+    }
+    return LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
+  };
+
   public FactoryCommands(Arm arm, Shooter shooter, Intake intake, CommandSwerveDrivetrain drivetrain, ObjectDetection limelightCam, CommandXboxController xboxController){
     this.arm = arm;
     this.shooter = shooter;
@@ -169,69 +183,54 @@ public class FactoryCommands extends SubsystemBase{
       .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble())));
   }
 
-  private final PIDController thetaControllerPiece = new PIDController(3,0,0.2);
-  private final PIDController distanceControllerPiece = new PIDController(1.7, 0, 0.2);
-  public Command alignToPiece() {
-    DoubleSupplier distanceSpeed = ()-> -distanceControllerPiece.calculate(limelightObject.getDistanceFromPieceVertical(), .5)+.5;
-    DoubleSupplier shareableNum = ()->(drivetrain.getYawOffsetDegrees().getDegrees()-drivetrain.getPose().getRotation().getDegrees()+limelightObject.getHorizontalRotationFromPiece().getDegrees()-90)*Math.PI/180;
-    DoubleSupplier xAxis = () ->
-      (-Math.sin(shareableNum.getAsDouble()))*distanceSpeed.getAsDouble()
-      /Math.max(Math.max(Math.abs(xboxController.getLeftX()* TunerConstants.kSpeedAt12VoltsMps), Math.abs(xboxController.getLeftY()* TunerConstants.kSpeedAt12VoltsMps)),1)
-      -xboxController.getLeftY() * TunerConstants.kSpeedAt12VoltsMps;
-    DoubleSupplier yAxis = () -> 
-      (-Math.cos(shareableNum.getAsDouble()))*distanceSpeed.getAsDouble()
-      /Math.max(Math.max(Math.abs(xboxController.getLeftX()* TunerConstants.kSpeedAt12VoltsMps), Math.abs(xboxController.getLeftY()* TunerConstants.kSpeedAt12VoltsMps)),1)
-      -xboxController.getLeftX() * TunerConstants.kSpeedAt12VoltsMps;
-    thetaControllerSpeaker.reset();
-    
-    DoubleSupplier rotationalVelocity = () -> thetaControllerPiece.calculate(-limelightObject.getHorizontalRotationFromPiece().getDegrees(),0);
+  private final PIDController thetaControllerPiece = new PIDController(5,0,0.2);
 
-    return drivetrain.applyRequest(() -> drive.withVelocityX(xAxis.getAsDouble())
-          .withVelocityY(yAxis.getAsDouble())
+  private final PIDController distanceControllerPiece = new PIDController(2, 0, 0.2);
+  private final PIDController horizontalControllerPiece = new PIDController(1, 0, .2);
+
+  private final RobotCentric pieceDrive = new SwerveRequest.RobotCentric()
+      .withDeadband(0).withRotationalDeadband(0)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+  public Command alignToPiece() {
+    DoubleSupplier forwardSpeed = ()-> -distanceControllerPiece.calculate(limelightObject.getDistanceFromPieceVertical(), .5);
+
+    DoubleSupplier leftSpeed = ()-> -horizontalControllerPiece.calculate(limelightObject.getDistanceFromPieceHorizontal(),0);
+    
+    DoubleSupplier rotationalVelocity = () -> -thetaControllerPiece.calculate(limelightObject.getHorizontalRotationFromPiece().getDegrees(),0);
+
+    return drivetrain.applyRequest(() -> pieceDrive.withVelocityX(forwardSpeed.getAsDouble())
+          .withVelocityY(leftSpeed.getAsDouble())
           .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble())));
   }
-  private final PIDController distanceControllerSpeaker = new PIDController(1.7, 0, 0.2);
 
+  private final FieldCentricFacingRed speakerDrive = new FieldCentricFacingRed()
+      .withDeadband(0).withRotationalDeadband(0)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+    
+  private final PIDController distanceControllerSpeaker = new PIDController(.35, 0, 0);
 
-  // Pose2d speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
-  // {
-  //   if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
-  //     speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
-  //   }
-  // }
   public DeferredCommand getInRange() {
-    Pose2d speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
-    if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
-      speakerPose = LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
-    }
-  
-    Pose2d alignPose = speakerPose;
+    DoubleSupplier distanceSpeed = ()-> -distanceControllerSpeaker.calculate(drivetrain.getDistanceFromPoseMeters(speakerPose.get()), 2.395);
 
-    DoubleSupplier distanceSpeed = ()-> -distanceControllerSpeaker.calculate(drivetrain.getDistanceFromPoseMeters(alignPose), 2.395);
+    DoubleSupplier xAxis = ()->(speakerPose.get().getX()-drivetrain.getPose().getX())*distanceSpeed.getAsDouble();
 
-    DoubleSupplier shareableNum = ()->(drivetrain.getYawOffsetDegrees().getDegrees()-drivetrain.getPoseAngle(alignPose).getDegrees()-90)*Math.PI/180;
-    DoubleSupplier xAxis = () -> 
-      (-Math.sin(shareableNum.getAsDouble()))*distanceSpeed.getAsDouble()
-      /Math.max(Math.max(Math.abs(xboxController.getLeftX()* TunerConstants.kSpeedAt12VoltsMps), Math.abs(xboxController.getLeftY()* TunerConstants.kSpeedAt12VoltsMps)),1)
-      -xboxController.getLeftY() * TunerConstants.kSpeedAt12VoltsMps;
-    DoubleSupplier yAxis = () ->
-      (-Math.cos(shareableNum.getAsDouble()))*distanceSpeed.getAsDouble()
-      /Math.max(Math.max(Math.abs(xboxController.getLeftX()* TunerConstants.kSpeedAt12VoltsMps), Math.abs(xboxController.getLeftY()* TunerConstants.kSpeedAt12VoltsMps)),1)
-      -xboxController.getLeftX() * TunerConstants.kSpeedAt12VoltsMps;
+    DoubleSupplier yAxis = ()->(speakerPose.get().getY()-drivetrain.getPose().getY())*distanceSpeed.getAsDouble();
+    
     thetaControllerSpeaker.reset();
 
-
     DoubleSupplier rotationalVelocity = () -> {
-      if(drivetrain.getAngleFromPose(alignPose).getDegrees()>0){
-        return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()-180,0);//-7;
+      if(drivetrain.getAngleFromPose(speakerPose.get()).getDegrees()>0){
+        return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(speakerPose.get()).getDegrees()-180,0);//-7;
       }else{
-        return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(alignPose).getDegrees()+180,0);//+7;
+        return -thetaControllerSpeaker.calculate(drivetrain.getAngleFromPose(speakerPose.get()).getDegrees()+180,0);//+7;
       }
     };
 
-    return new DeferredCommand(()->drivetrain.applyRequest(() -> drive.withVelocityX(xAxis.getAsDouble()) 
-          .withVelocityY(yAxis.getAsDouble())
-          .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble()))),Set.of(drivetrain));
+    return new DeferredCommand(()->drivetrain.applyRequest(() -> speakerDrive.withVelocityX(xAxis.getAsDouble()) 
+        .withCurrentPose(drivetrain.getPose())
+        .withVelocityY(yAxis.getAsDouble())
+        .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble()))),Set.of(drivetrain));
   }
 
   public Command getToPiecePoseCommand(){
@@ -259,12 +258,6 @@ public class FactoryCommands extends SubsystemBase{
     //   ,Commands.none(),()->limelightObject.isPiecePresent());
   }
   public DeferredCommand getToSpeakerCommand(){
-    Supplier<Pose2d> speakerPose = ()->{
-      if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
-        return LimelightConstants.K_TAG_LAYOUT.getTagPose(4).get().toPose2d();
-      }
-      return LimelightConstants.K_TAG_LAYOUT.getTagPose(7).get().toPose2d();
-    };
     return new DeferredCommand(()->
       AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(),speakerPose.get(), 2)
       .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),speakerPose.get())
