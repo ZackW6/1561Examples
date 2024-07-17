@@ -39,7 +39,14 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final double kSlipCurrentA = 300;//TODO do not use like this
+    private static final double kSlipCurrentA;
+    static {
+        if (Robot.isSimulation()){
+                kSlipCurrentA = 300;
+        }else{ //TODO I HOPE THIS WORKS, WE SHOULD CHECK
+                kSlipCurrentA = 80;
+        }
+    }
 
     // Theoretical free speed (m/s) at 12v applied output;
     // This needs to be tuned to your individual robot

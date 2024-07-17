@@ -16,6 +16,7 @@
 
 package frc.robot;
 
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -69,6 +70,7 @@ import frc.robot.subsystems.Elevator;
 // import frc.robot.subsystems.Candle;
 import frc.robot.subsystems.Arm.ArmState;
 import frc.robot.util.ChoreoEX;
+import frc.robot.util.DynamicObstacle;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.ObjectDetection;
 import frc.robot.subsystems.Shooter;
@@ -137,7 +139,7 @@ public class RobotContainer {
     .onFalse(Commands.runOnce(()->shooter.setIdleSpeed(0,0)));
     driverController.rightStick().whileTrue(groupCommands.alignToCorner());
     driverController.a().whileTrue(groupCommands.alignToAmp());//.and(() -> driverController.x().getAsBoolean());
-    driverController.b().whileTrue(groupCommands.alignToPiece());//Commands.either(Commands.none(), groupCommands.alignToPiece(),()-> intake.isPiecePresent()));
+    driverController.b().whileTrue(groupCommands.getToPieceCommand());//Commands.either(Commands.none(), groupCommands.alignToPiece(),()-> intake.isPiecePresent()));
     driverController.x().whileTrue(AutoToPoint.getToPoint(new Pose2d(9,1.2,Rotation2d.fromDegrees(145)), new PathConfig(4,4,Rotation2d.fromDegrees(120),Rotation2d.fromDegrees(120),0,0)).andThen(groupCommands.shoot()));
     // driverController.x().onTrue(Commands.runOnce(()->shooter.setIdleSpeed(60))).onFalse(Commands.runOnce(()->shooter.setIdleSpeed(0)));
 
@@ -157,18 +159,23 @@ public class RobotContainer {
     
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(3,1), Rotation2d.fromDegrees(90)));
-      drivetrain.seedFieldRelative(drivetrain.getPose().getRotation().getDegrees()-90);
+      drivetrain.seedFieldRelative(90-drivetrain.getPose().getRotation().getDegrees());
     }
     drivetrain.registerTelemetry(logger::telemeterize);
     limelightObject.registerTelemetry(logger::registerPieceTelemetry);
-    new Trigger(()->DriverStation.isTeleop()).and(()->{
-      var alliance = DriverStation.getAlliance();
-      if (!alliance.isPresent()){
-        return true;
+    new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.defer(()->Commands.runOnce(()->{
+      DynamicObstacle.clearDynamicObstacles(drivetrain.getPose().getTranslation());
+      if (Robot.isSimulation()){
+        drivetrain.seedFieldRelative(90-drivetrain.getPose().getRotation().getDegrees());
+        return;
       }
-      return DriverStation.getAlliance().get().equals(Alliance.Red);
-    }).onTrue(Commands.runOnce(()->drivetrain.seedFieldRelative(180-drivetrain.getPose().getRotation().getDegrees())))
-    .onFalse(Commands.runOnce(()->drivetrain.seedFieldRelative(360-drivetrain.getPose().getRotation().getDegrees())));
+      if (DriverStation.getAlliance().get() == Alliance.Red){
+        drivetrain.seedFieldRelative(180-drivetrain.getPose().getRotation().getDegrees());
+      }else{
+        drivetrain.seedFieldRelative(360-drivetrain.getPose().getRotation().getDegrees());
+      }
+
+    }),Set.of()));
   }
 
   public RobotContainer() {
@@ -185,7 +192,8 @@ public class RobotContainer {
     configureBindings();
     autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     autoChooser.addOption("Conditional Auto", conditionalAutos.getConditionalAuto());
-    autoChooser.addOption("OnTheFly Auto", onTheFlyAutos.getOnTheFlyAuto(new Pose2d(1.4818934202194214,7.29,Rotation2d.fromDegrees(0)),1,2,4,7,8,3,0));
+    autoChooser.addOption("OnTheFly Auto", onTheFlyAutos.getOnTheFlyAuto(new Pose2d(1.4818934202194214,7.29,Rotation2d.fromDegrees(0)),"Note3Correct",1,2,4,7,8,3,0));
+    autoChooser.addOption("Pre876", onTheFlyAutos.getOnTheFlyAuto(new Pose2d(1.4818934202194214,3.43,Rotation2d.fromDegrees(0)),"AvoidStage",8,7,6,0));
   }
 
   public void configureAutonomousCommands() {

@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -12,7 +13,9 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -35,6 +38,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.ObjectDetection;
 import frc.robot.subsystems.Shooter;
+import frc.robot.util.DynamicObstacle;
 import frc.robot.util.PoseEX;
 
 /** Add your docs here. */
@@ -89,6 +93,18 @@ public class OnTheFlyAutos {
    */
 
   public Command getOnTheFlyAuto(Pose2d initPose, int... places){
+    return getOnTheFlyAuto(initPose, null, places);
+  }
+  /**
+   * this will take in the indexes of every piece you want, numbered how Nityant wanted, if one is not present, it will go to the next one
+   * give 0 if you want it to find a note on your side, if included should be the last command
+   * @param initPose this pose will be flipped based on side, so make it on blue
+   * @param navgrid allows you to set your own navgrid of avoidance for this auto, avoid teamates 
+   * @param places
+   * @return
+   */
+  public Command getOnTheFlyAuto(Pose2d initPose, String navgrid, int... places){
+    
     for (int i = 0; i < places.length; i++){
       if (places[i] > 8){
         places[i] -= 8;
@@ -105,6 +121,9 @@ public class OnTheFlyAutos {
       }
     }
     return Commands.defer(()->Commands.runOnce(()->{
+        if (navgrid != null){
+          DynamicObstacle.setDynamicObstacles(navgrid,drivetrain.getPose().getTranslation());
+        }
         if (DriverStation.getAlliance().get() == Alliance.Red){
             drivetrain.seedFieldRelative(new Pose2d(16.54-initPose.getX(),initPose.getY(), Rotation2d.fromDegrees(180-initPose.getRotation().getDegrees())));
             return;
@@ -115,13 +134,8 @@ public class OnTheFlyAutos {
 
   private Command getToPiecePoseCommand(int index){
     return Commands.either(groupCommands.getToPoseAndPoint(PoseEX.mirrorPose(piecePoses[index]), new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0))
-    ,Commands.defer(()->AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(), piecePoses[index], .5)
-    .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),piecePoses[index])))
-    //Rotation2d.fromDegrees(drivetrain.getPose().getRotation().getDegrees()+PoseEX.getPoseAngle(drivetrain.getPose(),piecePoses[index]).getDegrees()))
-    ,new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0),true)
-    , Set.of())
-    ,()->DriverStation.getAlliance().get()==Alliance.Red
-    );
+    ,groupCommands.getToPoseAndPoint(piecePoses[index], new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0))
+    ,()->DriverStation.getAlliance().get()==Alliance.Red);
   }
 
   private DeferredCommand shootAtSpeakerCommand(){

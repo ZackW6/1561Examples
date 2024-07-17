@@ -93,7 +93,7 @@ public class FactoryCommands extends SubsystemBase{
   }
 
   public Command align() {
-    return Commands.either(alignToAmp(), getToSpeakerCommand()/*getInRange()*/, ()->(getState() == State.Amp));
+    return Commands.either(alignToAmp(), getToSpeakerCommand(), ()->(getState() == State.Amp));
   }
 
   public Command speakerShoot(double LSpeed, double RSpeed){
@@ -210,7 +210,7 @@ public class FactoryCommands extends SubsystemBase{
     
   private final PIDController distanceControllerSpeaker = new PIDController(.35, 0, 0);
 
-  public DeferredCommand getInRange() {
+  public Command getInRange() {
     DoubleSupplier distanceSpeed = ()-> -distanceControllerSpeaker.calculate(drivetrain.getDistanceFromPoseMeters(speakerPose.get()), 2.395);
 
     DoubleSupplier xAxis = ()->(speakerPose.get().getX()-drivetrain.getPose().getX())*distanceSpeed.getAsDouble();
@@ -227,10 +227,10 @@ public class FactoryCommands extends SubsystemBase{
       }
     };
 
-    return new DeferredCommand(()->drivetrain.applyRequest(() -> speakerDrive.withVelocityX(xAxis.getAsDouble()) 
+    return drivetrain.applyRequest(() -> speakerDrive.withVelocityX(xAxis.getAsDouble()) 
         .withCurrentPose(drivetrain.getPose())
         .withVelocityY(yAxis.getAsDouble())
-        .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble()))),Set.of(drivetrain));
+        .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble())));
   }
 
   public Command getToPiecePoseCommand(){
@@ -245,10 +245,10 @@ public class FactoryCommands extends SubsystemBase{
   public Command getToPoseAndPoint(Pose2d pose, PathConfig config){
     return Commands.defer(()->
       AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(), pose, 0)
-      .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),pose))),config).until(()->(PoseEX.getDistanceFromPoseMeters(drivetrain.getPose(), limelightObject.getPiecePose())<2.5)),Set.of())
-      .andThen(Commands.defer(()->AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(), pose, .5)
       .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),pose))),config)
-      ,Set.of(drivetrain)));
+      .until(()->(PoseEX.getDistanceFromPoseMeters(drivetrain.getPose(), pose)<2.5)),Set.of(drivetrain))
+      .andThen(Commands.defer(()->AutoToPoint.getToPoint(PoseEX.getInbetweenPose2d(drivetrain.getPose(), pose, .5)
+      .transformBy(new Transform2d(0,0,PoseEX.getPoseAngle(drivetrain.getPose(),pose))),config),Set.of(drivetrain)));
   }
 
   public Command getToPieceCommand(){
