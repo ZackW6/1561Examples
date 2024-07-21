@@ -145,16 +145,38 @@ public class FactoryCommands extends SubsystemBase{
       .withDeadband(0).withRotationalDeadband(0)
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+
+
+  private final FieldCentricFacingRed ampDrive = new FieldCentricFacingRed()
+      .withDeadband(0).withRotationalDeadband(0)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+
   private final PIDController thetaControllerAmp = new PIDController(6,0,.7);//(12.2,1.1,.4);
+  private final PIDController ampHorizontal = new PIDController(6,0,.2);//(12.2,1.1,.4);
+  private final PIDController ampVertical = new PIDController(4,0,.2);//(12.2,1.1,.4);
+
   public Command alignToAmp() {
-    DoubleSupplier xAxis = () -> -xboxController.getLeftY() * TunerConstants.kSpeedAt12VoltsMps;
-    DoubleSupplier yAxis = () -> -xboxController.getLeftX() * TunerConstants.kSpeedAt12VoltsMps;
+
+    Supplier<Pose2d> ampPose = ()->{
+      if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
+        return LimelightConstants.K_TAG_LAYOUT.getTagPose(5).get().toPose2d();
+      }
+      return LimelightConstants.K_TAG_LAYOUT.getTagPose(6).get().toPose2d();
+    };
+
+    DoubleSupplier xAxis = ()-> ampHorizontal.calculate(drivetrain.getPose().getX(),ampPose.get().getX());
+
+    DoubleSupplier yAxis = ()-> ampVertical.calculate(drivetrain.getPose().getY(),ampPose.get().getY()-.5);
 
     thetaControllerAmp.reset();
     DoubleSupplier rotationalVelocity = () -> thetaControllerAmp.calculate(correctYaw((drivetrain.getPose().getRotation().getDegrees())%360,90), 90);
-    return drivetrain.applyRequest(() -> drive.withVelocityX(xAxis.getAsDouble())
-      .withVelocityY(yAxis.getAsDouble())
-      .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble())));
+    
+    return AutoToPoint.getToPoint(new Pose2d(ampPose.get().getX(),ampPose.get().getY(),Rotation2d.fromDegrees(90))).until(()->PoseEX.getDistanceFromPoseMeters(drivetrain.getPose(), ampPose.get())<2)
+    .andThen(drivetrain.applyRequest(() -> ampDrive.withVelocityX(xAxis.getAsDouble())
+        .withCurrentPose(drivetrain.getPose())
+        .withVelocityY(yAxis.getAsDouble())
+        .withRotationalRate(Units.degreesToRadians(rotationalVelocity.getAsDouble()))));
   }
 
   private double correctYaw(double x, double setpoint){

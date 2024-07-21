@@ -103,10 +103,10 @@ public class Arm extends SubsystemBase {
           ArmConstants.MIN_ARM_ANGLE_RAD,
           ArmConstants.MAX_ARM_ANGLE_RAD,
           true,
-          Units.rotationsToRadians(.47)
-          );
+          Units.rotationsToRadians(0)
+        );
   private final ArmSim armSim;
-  // Create a Mechanism2d display of an Arm with a fixed ArmTower and moving Arm.
+
   public Arm() {
     armMotor = new TalonFX(ArmConstants.ARM_MOTOR_ID);
     encoder = new CANcoder(ArmConstants.CAN_CODER_ID);

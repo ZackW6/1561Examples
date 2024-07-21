@@ -51,7 +51,7 @@ public class ArmSim{
           new MechanismLigament2d(
               name + " Arm",
               armLength,
-              Units.radiansToDegrees(armSim.getAngleRads()),
+              Units.radiansToDegrees(0),
               6,
               new Color8Bit(Color.kPurple)));
         armTower.setColor(new Color8Bit(Color.kBlue));
@@ -59,7 +59,10 @@ public class ArmSim{
     }
 
     /**
-     * offset will likely be different by .25 incriment rotations compared to correct offset.
+     * offset requires encoder offset, because the encoder offset will be active in sim, and we need to cancel it
+     * secondly 0 is straight down, so if you have 0 somewhere else you input the opposite of the needed rotation to get there
+     * an example would be if your 0 is at a graphs 0, you would need to add .25, as adding is counterclockwise
+     * (Im not sure if this works for different orientations..., I hope so)
      * @param encoder
      * @param orientation
      * @param offset
@@ -73,7 +76,7 @@ public class ArmSim{
 
     public void simulationPeriodic() {
         // In this method, we update our simulation of what our arm is doing
-        // First, we set our "inputs" (voltages)    
+        // First, we set our "inputs" (voltages)
 
         armSim.setInput(motorSim.getMotorVoltage());
 

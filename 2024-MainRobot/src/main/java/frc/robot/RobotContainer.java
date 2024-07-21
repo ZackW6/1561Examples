@@ -36,6 +36,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -164,6 +165,7 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
     limelightObject.registerTelemetry(logger::registerPieceTelemetry);
     new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.defer(()->Commands.runOnce(()->{
+      // DynamicObstacle.setDynamicObstacles("testNodeSize", drivetrain.getPose().getTranslation());
       DynamicObstacle.clearDynamicObstacles(drivetrain.getPose().getTranslation());
       if (Robot.isSimulation()){
         drivetrain.seedFieldRelative(90-drivetrain.getPose().getRotation().getDegrees());
@@ -181,6 +183,9 @@ public class RobotContainer {
   public RobotContainer() {
     drivetrain.configurePathPlanner();
     ChoreoEX.setDrivetrain(drivetrain);
+
+    DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
 
     PathOnTheFly.PathConfig pathConfig = new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0);
     PathOnTheFly.addConfig(pathConfig,0);
