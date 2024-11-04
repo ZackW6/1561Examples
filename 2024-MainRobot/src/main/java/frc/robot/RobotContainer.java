@@ -63,6 +63,7 @@ import frc.robot.commands.OnTheFlyAutos;
 import frc.robot.commands.PathOnTheFly;
 // import frc.robot.commands.PIDTuningCommand;
 import frc.robot.commands.Toggle;
+import frc.robot.commands.WheelRadiusCommand;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.generated.TunerConstants;
@@ -150,7 +151,11 @@ public class RobotContainer {
 
     Command either = Commands.either(Commands.either(groupCommands.switchState(State.Amp),groupCommands.switchState(State.Speaker), ()->groupCommands.getState() == State.Speaker),Commands.none(),()->groupCommands.getState()!=State.Intake);
     operatorController.a().onTrue(either);
-    // operatorController.y().onTrue(groupCommands.wheelRadiusCommand());
+    operatorController.rightBumper().onTrue(new WheelRadiusCommand(drivetrain));
+    operatorController.b().onTrue(Commands.runOnce(()->{
+      drivetrain.seedFieldRelative(new Pose2d(3,5,new Rotation2d(0)));
+    }));
+
     operatorController.leftTrigger().whileTrue(intake.setVelocity(-5));
     operatorController.rightTrigger().whileTrue(intake.setVelocity(10));
     // operatorController.x().whileTrue(Commands.deadline(Commands.waitSeconds(.1),intake.setVelocity(-5)).andThen(intake.setVelocity(10)));

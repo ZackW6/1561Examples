@@ -1,12 +1,17 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "Talon FX (v6)[10]": {
+      "CANCoder (v6)[1]": {
         "header": {
           "open": true
         }
       },
-      "Talon FX (v6)[10]/Rotor Sensor": {
+      "Pigeon 2 (v6)[0]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[2]/Rotor Sensor": {
         "header": {
           "open": true
         }
@@ -63,6 +68,13 @@
         "window": {
           "visible": true
         }
+      }
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "LiveWindow": {
+        "open": true
       }
     }
   },

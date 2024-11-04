@@ -156,14 +156,13 @@ public class FactoryCommands extends SubsystemBase{
   private final PIDController ampHorizontal = new PIDController(6,0,.2);//(12.2,1.1,.4);
   private final PIDController ampVertical = new PIDController(4,0,.2);//(12.2,1.1,.4);
 
-  public Command alignToAmp() {
-
-    Supplier<Pose2d> ampPose = ()->{
+  Supplier<Pose2d> ampPose = ()->{
       if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get().equals(Alliance.Red)){
         return LimelightConstants.K_TAG_LAYOUT.getTagPose(5).get().toPose2d();
       }
       return LimelightConstants.K_TAG_LAYOUT.getTagPose(6).get().toPose2d();
     };
+  public Command alignToAmp() {
 
     DoubleSupplier xAxis = ()-> ampHorizontal.calculate(drivetrain.getPose().getX(),ampPose.get().getX());
 

@@ -9,7 +9,7 @@
       "name": "Main",
       "request": "launch",
       "mainClass": "frc.robot.Main",
-      "projectName": "2024-MainRobot"
+      "projectName": "ArmExample"
     },
     {
       "type": "wpilib",

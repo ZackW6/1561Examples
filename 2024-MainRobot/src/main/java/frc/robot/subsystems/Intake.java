@@ -96,12 +96,13 @@ public class Intake extends SubsystemBase{
         return setVelocity(intakeSpeed).until(() -> getLimitSwitch())
             .finallyDo(()->stop());
     }
+
     public Command outtakePiece(){
         return Commands.deadline((Commands.waitSeconds(2)),setVelocity(outtakeSpeed)).andThen(stop());
     }
 
     public Command setVelocity(double rps){
-        return this.runOnce(() -> intakeMotor.setControl(torqueCurrentFOC.withVelocity(rps)));
+        return this.run(() -> intakeMotor.setControl(torqueCurrentFOC.withVelocity(rps)));
     }
 
     public Command stop(){
