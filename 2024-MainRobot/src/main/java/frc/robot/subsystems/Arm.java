@@ -59,6 +59,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Robot;
 import frc.robot.constants.ArmConstants;
 import frc.robot.simulationUtil.ArmSim;
+import frc.robot.simulationUtil.mechanismUtil.ArmMech;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
@@ -105,15 +106,18 @@ public class Arm extends SubsystemBase {
           true,
           Units.rotationsToRadians(0)
         );
-  private final ArmSim armSim;
+  private ArmSim armSim;
+
+  private ArmMech armMech = new  ArmMech("Arm Sim",1,1,new double[]{.8,.2},.2,-90,.3);
 
   public Arm() {
     armMotor = new TalonFX(ArmConstants.ARM_MOTOR_ID);
     encoder = new CANcoder(ArmConstants.CAN_CODER_ID);
-
-    armSim = new ArmSim(armMotor, singleJointedArmSim);
-    armSim.addSimImage("Arm Sim",1,1,new double[]{.8,.2},.2,-90,.3);
-    armSim.configureCANCoder(encoder, ChassisReference.Clockwise_Positive,ArmConstants.ANGLE_OFFSET.getRotations()+.25);
+    if (Robot.isSimulation()){
+      armSim = new ArmSim(armMotor, singleJointedArmSim);
+      armSim.configureCANCoder(encoder, ChassisReference.Clockwise_Positive,ArmConstants.ANGLE_OFFSET.getRotations()+.25);
+    }
+    
 
     configMotor();
 
@@ -219,6 +223,7 @@ public class Arm extends SubsystemBase {
   }
 
   public void periodic(){
+    armMech.setAngle(Units.degreesToRadians(getArmDegrees()+ArmConstants.ANGLE_OFFSET.getRadians()));
     if (Robot.isSimulation()){
       armSim.simulationPeriodic();
     }

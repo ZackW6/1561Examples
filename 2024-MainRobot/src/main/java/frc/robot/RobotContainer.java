@@ -17,60 +17,35 @@
 package frc.robot;
 
 import java.util.Set;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-
-import com.choreo.lib.Choreo;
-import com.choreo.lib.ChoreoTrajectory;
-import com.choreo.lib.ChoreoTrajectoryState;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.FactoryCommands.State;
-import frc.robot.commands.PathOnTheFly.AutoToPath;
 import frc.robot.commands.PathOnTheFly.AutoToPoint;
 import frc.robot.commands.PathOnTheFly.PathConfig;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.ConditionalAutos;
 import frc.robot.commands.FactoryCommands;
 import frc.robot.commands.OnTheFlyAutos;
 import frc.robot.commands.PathOnTheFly;
-// import frc.robot.commands.PIDTuningCommand;
-import frc.robot.commands.Toggle;
 import frc.robot.commands.WheelRadiusCommand;
-import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
-// import frc.robot.subsystems.Candle;
-import frc.robot.subsystems.Arm.ArmState;
 import frc.robot.util.ChoreoEX;
 import frc.robot.util.DynamicObstacle;
 import frc.robot.subsystems.Intake;
@@ -121,14 +96,13 @@ public class RobotContainer {
 
     intake.setDefaultCommand(intake.stop());
 
-    elevator.setDefaultCommand(elevator.reachGoal(()->operatorController.getRawAxis(1)*25+25));
+    elevator.setDefaultCommand(elevator.reachGoal(()->.5-driverController.getRawAxis(1)/2));
     // candle.setDefaultCommand(candle.idleLED());
     drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * 1.00 * MaxSpeed)
-            .withVelocityY(-driverController.getLeftX() * 1.00 * MaxSpeed)
+        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * MaxSpeed)
+            .withVelocityY(-driverController.getLeftX() * MaxSpeed)
             .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * 2/3 * MaxAngularRate)
     ));
-
     /* Controller Bindings */
 
     driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
@@ -191,6 +165,7 @@ public class RobotContainer {
 
     DataLogManager.start();
     DriverStation.startDataLog(DataLogManager.getLog());
+    DataLogManager.logNetworkTables(true);
 
     PathOnTheFly.PathConfig pathConfig = new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0);
     PathOnTheFly.addConfig(pathConfig,0);

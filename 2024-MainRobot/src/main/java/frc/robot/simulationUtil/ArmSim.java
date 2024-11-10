@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.constants.ArmConstants;
+import frc.robot.simulationUtil.mechanismUtil.ArmMech;
 
 /** Add your docs here. */
 public class ArmSim{
@@ -34,28 +35,9 @@ public class ArmSim{
 
     private final SingleJointedArmSim armSim;
 
-    private Mechanism2d mech2d;
-    private MechanismRoot2d armPivot;
-    private MechanismLigament2d armTower;
-    private MechanismLigament2d arm;
     public ArmSim(TalonFX motor, SingleJointedArmSim armSim){
         this.armSim = armSim;
         motorSim = motor.getSimState();
-    }
-
-    public void addSimImage(String name, double imageWidth, double imageHeight, double[] pivotPlacement, double armTowerLength, double armTowerAngle, double armLength){
-        mech2d = new Mechanism2d(imageWidth, imageHeight);
-        armPivot = mech2d.getRoot(name+ " ArmPivot", pivotPlacement[0], pivotPlacement[1]);
-        armTower = armPivot.append(new MechanismLigament2d(name+" ArmTower", armTowerLength, armTowerAngle));
-        arm = armPivot.append(
-          new MechanismLigament2d(
-              name + " Arm",
-              armLength,
-              Units.radiansToDegrees(0),
-              6,
-              new Color8Bit(Color.kPurple)));
-        armTower.setColor(new Color8Bit(Color.kBlue));
-        SmartDashboard.putData(name, mech2d);
     }
 
     /**
@@ -98,6 +80,6 @@ public class ArmSim{
         //     BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
 
         // Update the Mechanism Arm angle based on the simulated arm angle
-        arm.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
+        // arm.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
     }
 }

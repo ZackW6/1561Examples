@@ -40,6 +40,7 @@ import frc.robot.Robot;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.ShooterConstants;
 import frc.robot.simulationUtil.FlyWheelSim;
+import frc.robot.simulationUtil.mechanismUtil.WheelMech;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 
@@ -57,22 +58,22 @@ public class Shooter extends SubsystemBase{
     private final MotionMagicVelocityTorqueCurrentFOC velocityRequestR = new MotionMagicVelocityTorqueCurrentFOC(0).withSlot(0);
 
     private final FlywheelSim fSimL = new FlywheelSim(DCMotor.getFalcon500(1), 1, .0062);
-    private final FlyWheelSim flywheelSimL;
+    private FlyWheelSim flywheelSimL;
     private final FlywheelSim fSimR = new FlywheelSim(DCMotor.getFalcon500(1), 1, .0062);
-    private final FlyWheelSim flywheelSimR;
+    private FlyWheelSim flywheelSimR;
+
+    private WheelMech leftMech = new WheelMech("Left Shooter Sim",1,1,new double[]{.2,.4},.1,4);
+    private WheelMech rightMech = new WheelMech("Right Shooter Sim",1,1,new double[]{.2,.4},.1,4);
 
     public Shooter(){
         
         leftShooterMotor = new TalonFX(ShooterConstants.LEFT_SHOOTER_MOTOR_ID);
         rightShooterMotor = new TalonFX(ShooterConstants.RIGHT_SHOOTER_MOTOR_ID);
-
-        flywheelSimL = new FlyWheelSim(leftShooterMotor, fSimL);
-        flywheelSimL.addSimImage("Left Shooter Sim",1,1,new double[]{.2,.4},.1,4);
-        flywheelSimL.addDirectionColor();
-
-        flywheelSimR = new FlyWheelSim(rightShooterMotor, fSimR);
-        flywheelSimR.addSimImage("Right Shooter Sim",1,1,new double[]{.2,.4},.1,4);
-        flywheelSimR.addDirectionColor();
+        if (Robot.isSimulation()){
+            flywheelSimL = new FlyWheelSim(leftShooterMotor, fSimL);
+            flywheelSimR = new FlyWheelSim(rightShooterMotor, fSimR);
+        }
+        
 
         configMotors();
 
@@ -96,7 +97,12 @@ public class Shooter extends SubsystemBase{
         if (Robot.isSimulation()){
             flywheelSimL.simulationPeriodic();
             flywheelSimR.simulationPeriodic();
+            leftMech.setAngle(flywheelSimL.getCurrentPosition());
+            rightMech.setAngle(flywheelSimR.getCurrentPosition());
+            return;
         }
+        leftMech.setAngle(getLeftMotorPosition());
+        rightMech.setAngle(getRightMotorPosition());
     }
     /**
      * 0 stops the motors with a coast
@@ -159,6 +165,14 @@ public class Shooter extends SubsystemBase{
 
     public boolean isShooterAtTargetSpeed(){
         return isRightFlywheelAtTargetSpeed() && isLeftFlywheelAtTargetSpeed();
+    }
+
+    public double getLeftMotorPosition(){
+        return leftShooterMotor.getRotorPosition().getValueAsDouble();
+    }
+
+    public double getRightMotorPosition(){
+        return rightShooterMotor.getRotorPosition().getValueAsDouble();
     }
 
     private void configMotors(){

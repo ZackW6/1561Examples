@@ -35,28 +35,12 @@ public class ElevateSim{
     private final TalonFXSimState motorSim;
     private CANcoderSimState encoderSim;
     private double offset;
-    private final double ligamentWidth = 40;
-    private final double ligamentLength = 10;
-
 
     public ElevateSim(TalonFX motor, ElevatorSim elevatorSim){
         this.elevatorSim = elevatorSim;
         motorSim = motor.getSimState();
     }
 
-    private Mechanism2d mech2d;
-    private MechanismRoot2d elevatorRoot;
-    private MechanismLigament2d elevatorLigament;
-    public void addSimImage(String name){
-        mech2d = new Mechanism2d(20, 50);
-        elevatorRoot = mech2d.getRoot(name+ " Elevator Root", 10, 0);
-        elevatorLigament =
-            elevatorRoot.append(
-                new MechanismLigament2d("Elevator", ligamentLength, 90));
-        elevatorLigament.setColor(new Color8Bit(Color.kCrimson));
-        elevatorLigament.setLineWeight(ligamentWidth);
-                SmartDashboard.putData(name, mech2d);
-    }
     /**
      * offset will likely be different by .25 incriment rotations compared to correct offset.
      * @param orientation
@@ -85,7 +69,7 @@ public class ElevateSim{
         motorSim.setRawRotorPosition(elevatorSim.getPositionMeters()-offset);
         motorSim.setRotorVelocity(Units.radiansToRotations(Units.radiansToRotations(elevatorSim.getVelocityMetersPerSecond())));
         // SimBattery estimates loaded battery voltages
-        elevatorRoot.setPosition(10, elevatorSim.getPositionMeters()-10);
+        // elevatorRoot.setPosition(10, elevatorSim.getPositionMeters()-10);
         // elevatorLigament.setLength(elevatorSim.getPositionMeters());
         // RoboRioSim.setVInVoltage(
         //     BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));

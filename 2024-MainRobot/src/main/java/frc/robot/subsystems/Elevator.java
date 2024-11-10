@@ -48,6 +48,7 @@ import frc.robot.Robot;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.simulationUtil.ElevateSim;
+import frc.robot.simulationUtil.mechanismUtil.ElevatorMech;
 
 public class Elevator extends SubsystemBase {
   // This gearbox represents a gearbox containing 4 Vex 775pro motors.
@@ -72,14 +73,17 @@ public class Elevator extends SubsystemBase {
           ElevatorConstants.ELEVATOR_MAX_HEIGHT,
           true,
           0);
-  private final ElevateSim elevatorSim;
+  private ElevateSim elevatorSim;
+  private ElevatorMech elevatorMech = new ElevatorMech("Elevator", 1, 1, new double[]{.5,.5}, .2);
   /** Subsystem constructor. */
   public Elevator() {
     configMotor();
 
-    elevatorSim = new ElevateSim(motor, m_elevatorSim);
-    elevatorSim.addSimImage("Elevator");
-    elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,0);
+    if (Robot.isSimulation()){
+      elevatorSim = new ElevateSim(motor, m_elevatorSim);
+      elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,0);
+    }
+    
   }
 
   /**
@@ -99,8 +103,13 @@ public class Elevator extends SubsystemBase {
     return this.run(()->motor.setControl(m_request.withPosition(goal.getAsDouble()).withSlot(0)));
   }
 
+  public double getPosition(){
+    return motor.getPosition().getValueAsDouble();
+  }
+
   @Override
   public void periodic(){
+    elevatorMech.setAngle(getPosition());
     if (Robot.isSimulation()){
       elevatorSim.simulationPeriodic();
     }

@@ -4,25 +4,12 @@
 
 package frc.robot.commands;
 
-import java.util.List;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.commands.PathOnTheFly.AutoToPoint;
-import frc.robot.commands.PathOnTheFly.PathConfig;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Intake;
@@ -124,7 +110,7 @@ public class OnTheFlyAutos {
         if (navgrid != null){
           DynamicObstacle.setDynamicObstacles(navgrid,drivetrain.getPose().getTranslation());
         }
-        if (DriverStation.getAlliance().get() == Alliance.Red){
+        if (!DriverStation.getAlliance().isEmpty() && DriverStation.getAlliance().get() == Alliance.Red){
             drivetrain.seedFieldRelative(new Pose2d(16.54-initPose.getX(),initPose.getY(), Rotation2d.fromDegrees(180-initPose.getRotation().getDegrees())));
             return;
         }
@@ -135,7 +121,7 @@ public class OnTheFlyAutos {
   private Command getToPiecePoseCommand(int index){
     return Commands.either(groupCommands.getToPoseAndPoint(PoseEX.mirrorPose(piecePoses[index]), new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0))
     ,groupCommands.getToPoseAndPoint(piecePoses[index], new PathOnTheFly.PathConfig(5,5,Rotation2d.fromDegrees(720),Rotation2d.fromDegrees(720),0,0))
-    ,()->DriverStation.getAlliance().get()==Alliance.Red);
+    ,()->!DriverStation.getAlliance().isEmpty() && DriverStation.getAlliance().get() == Alliance.Red);
   }
 
   private DeferredCommand shootAtSpeakerCommand(){

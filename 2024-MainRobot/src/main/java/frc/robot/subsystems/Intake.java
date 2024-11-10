@@ -52,6 +52,7 @@ import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.ShooterConstants;
 import frc.robot.simulationUtil.FlyWheelSim;
 import frc.robot.simulationUtil.LimitSwitchSimable;
+import frc.robot.simulationUtil.mechanismUtil.WheelMech;
 
 
 public class Intake extends SubsystemBase{
@@ -64,18 +65,22 @@ public class Intake extends SubsystemBase{
     private final double outtakeSpeed = -60.0;
 
     private final FlywheelSim fSim = new FlywheelSim(DCMotor.getFalcon500(1), IntakeConstants.GEARING, IntakeConstants.MOMENT_OF_INERTIA);
-    private final FlyWheelSim flywheelSim;
+    private FlyWheelSim flywheelSim;
+
+    private WheelMech intakeMech = new WheelMech("Intake Sim",1,1,new double[]{.5,.35},.05,4);
 
     public Intake(){
         intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID);
         limitSwicth1 = new LimitSwitchSimable(IntakeConstants.LIMIT_SWITCH_ID_1);
         limitSwicth2 = new LimitSwitchSimable(IntakeConstants.LIMIT_SWITCH_ID_2);
-        limitSwicth1.setSimInverse(true);
-        limitSwicth2.setSimInverse(true);
+        if (Robot.isSimulation()){
+            limitSwicth1.setSimInverse(true);
+            limitSwicth2.setSimInverse(true);
+            flywheelSim = new FlyWheelSim(intakeMotor, fSim);
+        }
+        
 
-        flywheelSim = new FlyWheelSim(intakeMotor, fSim);
-        flywheelSim.addSimImage("Intake Sim",1,1,new double[]{.5,.35},.05,4);
-        flywheelSim.addDirectionColor();
+        
 
         ShuffleboardTab shuffleboardTab = Shuffleboard.getTab("Intake");
         shuffleboardTab.addNumber("Intake Speed",
@@ -130,11 +135,19 @@ public class Intake extends SubsystemBase{
         return getLimitSwitch();
     }
 
+    public double getMotorPosition(){
+        return intakeMotor.getPosition().getValueAsDouble();
+    }
+
     @Override
     public void periodic() {
+        
         if (Robot.isSimulation()){
             flywheelSim.simulationPeriodic();
+            intakeMech.setAngle(flywheelSim.getCurrentPosition());
+            return;
         }
+        intakeMech.setAngle(Units.rotationsToRadians(getMotorPosition()));
     }
     
     private void configMotors(){

@@ -1,17 +1,22 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "CANCoder (v6)[1]": {
-        "header": {
-          "open": true
-        }
-      },
       "Pigeon 2 (v6)[0]": {
         "header": {
           "open": true
         }
       },
-      "Talon FX (v6)[2]/Rotor Sensor": {
+      "Talon FX (v6)[20]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[20]/Rotor Sensor": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[21]/Rotor Sensor": {
         "header": {
           "open": true
         }
@@ -64,6 +69,11 @@
           "visible": true
         }
       },
+      "/SmartDashboard/Module 0": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Right Shooter Sim": {
         "window": {
           "visible": true
@@ -72,6 +82,12 @@
     }
   },
   "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
+    "Transitory Values": {
+      "open": false
+    },
     "transitory": {
       "LiveWindow": {
         "open": true

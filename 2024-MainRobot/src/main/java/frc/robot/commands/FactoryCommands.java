@@ -343,7 +343,7 @@ public class FactoryCommands extends SubsystemBase{
       .withRotationalRate(Units.degreesToRadians(120))).until(()->(limelightObject.isPiecePresent() && limelightObject.getPiecePose().getX()>8.27));
     return Commands.either(spin1
       ,spin2
-      , ()->DriverStation.getAlliance().get() == Alliance.Blue)
+      , ()->DriverStation.getAlliance().isEmpty() || DriverStation.getAlliance().get() == Alliance.Blue)
       .andThen(Commands.defer(()->Commands.parallel(intakeMainAuto(), getToPiecePoseCommand()),Set.of()));
   }
 

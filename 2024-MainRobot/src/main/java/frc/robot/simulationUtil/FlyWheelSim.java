@@ -27,7 +27,6 @@ public class FlyWheelSim {
     private final FlywheelSim flywheelSim;
     private final TalonFXSimState motorSim;
 
-    private String name;
     private double currentRad = 0;
     private double currentTime = 0;
 
@@ -35,39 +34,7 @@ public class FlyWheelSim {
         this.flywheelSim = flywheelSim;
         this.motorSim = motor.getSimState();
     }
-
-    private Mechanism2d mech2d;
-    private MechanismRoot2d pivot;
-
-    private MechanismRoot2d directionPivot;
-    private MechanismLigament2d directionLine;
     
-    private MechanismLigament2d[] spokes;
-
-
-    public void addSimImage(String name, double imageWidth, double imageHeight, double[] pivotPlacement, double spokeLength, int numOfSpokes){
-        this.name = name;
-        mech2d = new Mechanism2d(imageWidth, imageHeight);
-        pivot = mech2d.getRoot(name+" Pivot", pivotPlacement[0], pivotPlacement[1]);
-        spokes = new MechanismLigament2d[numOfSpokes];
-
-        for (int i = 0; i < spokes.length;i++){
-            spokes[i] = pivot.append(
-            new MechanismLigament2d(
-                name+" Spoke "+i,
-                spokeLength,
-                Units.radiansToDegrees(currentRad)+(360/spokes.length)*i,
-                6,
-                new Color8Bit(Color.kAqua)));
-        }
-        SmartDashboard.putData(name, mech2d);
-    }
-
-    public void setNewPivotPosition(double[] pivotPlacement){
-
-    }
-
-
     public void simulationPeriodic() {
         // In this method, we update our simulation of what our arm is doing
         // First, we set our "inputs" (voltages)
@@ -77,37 +44,15 @@ public class FlyWheelSim {
         //Makes the rest of the robot react based on this usage of Voltage
         motorSim.setRawRotorPosition(Units.radiansToRotations(currentRad));
         motorSim.setRotorVelocity(Units.radiansToRotations(flywheelSim.getAngularVelocityRadPerSec()));
-        
-
         // Update the Mechanism Arm angle based on the simulated arm angle
         currentRad+=(flywheelSim.getAngularVelocityRadPerSec()*(Timer.getFPGATimestamp()-currentTime));
         currentTime = Timer.getFPGATimestamp();
-        if (spokes[0] != null){
-            for (int i = 0; i<spokes.length;i++){
-                spokes[i].setAngle(Units.radiansToDegrees(currentRad)+(360/spokes.length)*i);
-            }
-        }
-        try {
-            if (flywheelSim.getAngularVelocityRadPerSec()>0){
-                directionLine.setColor(new Color8Bit(Math.min((int)flywheelSim.getAngularVelocityRadPerSec()/3,255),0,0));
-            }else{
-                directionLine.setColor(new Color8Bit(0,0,Math.min(Math.abs((int)flywheelSim.getAngularVelocityRadPerSec()/3),255)));
-            }
-        } catch (Exception e) {
-            return;
-        }
         // RoboRioSim.setVInVoltage(
         //     BatterySim.calculateDefaultBatteryLoadedVoltage(flywheelSim.getCurrentDrawAmps()));
         
     }
-    public void addDirectionColor(){
-        directionPivot = mech2d.getRoot(name+" Direction Pivot", 0, 60);
-        directionLine = directionPivot.append(
-            new MechanismLigament2d(
-                name+" Direction Line",
-                60,
-                Units.radiansToDegrees(0),
-                10,
-                new Color8Bit(Color.kRed)));  
+
+    public double getCurrentPosition(){
+        return currentRad;
     }
 }

@@ -43,19 +43,22 @@ public class ObjectDetection extends SubsystemBase {
         this.limelightName = limelightName;
         this.limelightTransform = limelightTransform;
         this.robotPose = robotPose;
-        objectDetectionSim = new ObjectDetectionSim(limelightTransform, VecBuilder.fill(63.3,49.7), VecBuilder.fill(3,7), robotPose);
-        objectDetectionSim.addObjectPose(new Pose3d(2.88,4.1,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(2.88,5.6,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(2.88,7.1,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(8.27,7.4,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(8.27,5.7,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(8.27,4.1,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(8.27,2.4,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(8.27,.8,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(13.661,4.1,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(13.661,5.6,0,new Rotation3d(0,0,0)));
-        objectDetectionSim.addObjectPose(new Pose3d(13.661,7.1,0,new Rotation3d(0,0,0)));
+        if (Robot.isSimulation()){
+            objectDetectionSim = new ObjectDetectionSim(limelightTransform, VecBuilder.fill(63.3,49.7), VecBuilder.fill(3,7), robotPose);
+            objectDetectionSim.addObjectPose(new Pose3d(2.88,4.1,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(2.88,5.6,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(2.88,7.1,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(8.27,7.4,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(8.27,5.7,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(8.27,4.1,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(8.27,2.4,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(8.27,.8,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(13.661,4.1,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(13.661,5.6,0,new Rotation3d(0,0,0)));
+            objectDetectionSim.addObjectPose(new Pose3d(13.661,7.1,0,new Rotation3d(0,0,0)));
+        }
     }
+        
 
     public static class ObjectDetectionState{
 
