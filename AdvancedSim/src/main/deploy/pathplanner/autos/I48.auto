@@ -1,0 +1,49 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.51,
+      "y": 7.36
+    },
+    "rotation": 0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "FirstShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Pickup4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot 4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Intake8"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot8"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

@@ -14,6 +14,8 @@ import com.ctre.phoenix6.configs.Slot2Configs;
 import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
@@ -57,10 +59,11 @@ public class Elevator extends SubsystemBase {
   private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
 
   // Standard classes for controlling our elevator
-  private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+  private final PositionVoltage m_request = new PositionVoltage(0);
 
-  private final TalonFX motor = new TalonFX(ElevatorConstants.ELEVATOR_MOTOR_ID);
-  private final CANcoder encoder = new CANcoder(ElevatorConstants.ELEVATOR_ENCODER_ID);
+  private final TalonFX motorLead = new TalonFX(ElevatorConstants.ELEVATOR_MOTOR1_ID);
+  private final TalonFX motorFollow = new TalonFX(ElevatorConstants.ELEVATOR_MOTOR2_ID);
+  // private final CANcoder encoder = new CANcoder(ElevatorConstants.ELEVATOR_ENCODER_ID);
 
   private final double allowableError = .02;
 
@@ -79,9 +82,9 @@ public class Elevator extends SubsystemBase {
   public Elevator() {
     configMotor();
 
-    elevatorSim = new ElevateSim(motor, m_elevatorSim);
+    elevatorSim = new ElevateSim(motorLead, m_elevatorSim);
     elevatorSim.addSimImage("Elevator",.5,ElevatorConstants.ELEVATOR_MAX_HEIGHT);
-    elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,-.25);
+    // elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,-.25);
 
     ShuffleboardTab shuffleboardTab = Shuffleboard.getTab("Elevator");
       shuffleboardTab.addNumber("Elevator Position Meters",
@@ -95,7 +98,7 @@ public class Elevator extends SubsystemBase {
    * @param goal the position to maintain
    */
   public Command reachGoal(double goal) {
-    return this.run(()->motor.setControl(m_request.withPosition(goal).withSlot(0)));
+    return this.run(()->motorLead.setControl(m_request.withPosition(goal).withSlot(0)));
   }
   /**
    * Run control loop to reach and maintain changing goal.
@@ -103,19 +106,20 @@ public class Elevator extends SubsystemBase {
    * @param goal the position to maintain
    */
   public Command reachGoal(DoubleSupplier goal) {
-    return this.run(()->motor.setControl(m_request.withPosition(goal.getAsDouble()).withSlot(0)));
+    return this.run(()->motorLead.setControl(m_request.withPosition(goal.getAsDouble()).withSlot(0)));
   }
 
   public double getCurrentPosition(){
-    return motor.getPosition().getValueAsDouble();
+    return motorLead.getPosition().getValueAsDouble();
   }
 
   public boolean isAtPosition(){
-    return Math.abs(getCurrentPosition()-motor.getClosedLoopReference().getValueAsDouble())<allowableError;
+    return Math.abs(getCurrentPosition()-motorLead.getClosedLoopReference().getValueAsDouble())<allowableError;
   }
 
   @Override
   public void periodic(){
+    System.out.println(getCurrentPosition());
     if (Robot.isSimulation()){
       elevatorSim.simulationPeriodic();
     }
@@ -123,17 +127,17 @@ public class Elevator extends SubsystemBase {
 
   private void configMotor(){
     talonFXConfigs = new TalonFXConfiguration();
-    CANcoderConfiguration canCoderConfigs = new CANcoderConfiguration();
+    // CANcoderConfiguration canCoderConfigs = new CANcoderConfiguration();
     // Set to factory default
-    encoder.getConfigurator().apply(new CANcoderConfiguration());
-    motor.getConfigurator().apply(new TalonFXConfiguration());
+    // encoder.getConfigurator().apply(new CANcoderConfiguration());
+    motorLead.getConfigurator().apply(new TalonFXConfiguration());
+    motorFollow.getConfigurator().apply(new TalonFXConfiguration());
     
+    // canCoderConfigs.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+    // canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    // canCoderConfigs.MagnetSensor.MagnetOffset = 0;
     
-    canCoderConfigs.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
-    canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
-    canCoderConfigs.MagnetSensor.MagnetOffset = 0;
-    
-    encoder.getConfigurator().apply(canCoderConfigs);
+    // encoder.getConfigurator().apply(canCoderConfigs);
 
     Slot0Configs slot0Configs = talonFXConfigs.Slot0;
     slot0Configs.kS = ElevatorConstants.S;
@@ -148,16 +152,19 @@ public class Elevator extends SubsystemBase {
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
-    talonFXConfigs.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-    talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-    talonFXConfigs.Feedback.SensorToMechanismRatio = 1.0;
+    // talonFXConfigs.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
+    // talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    talonFXConfigs.Feedback.SensorToMechanismRatio = ElevatorConstants.ELEVATOR_GEARING;
     talonFXConfigs.Feedback.RotorToSensorRatio = 1.0;
 
-    var motionMagicConfigs = talonFXConfigs.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = ElevatorConstants.CRUISE_VELOCITY; // Unlimited cruise velocity
-    motionMagicConfigs.MotionMagicAcceleration = ElevatorConstants.MAX_ACCELERATION;
-    motionMagicConfigs.MotionMagicJerk = ElevatorConstants.JERK;
-
-    motor.getConfigurator().apply(talonFXConfigs);
+    // var motionMagicConfigs = talonFXConfigs.MotionMagic;
+    // motionMagicConfigs.MotionMagicCruiseVelocity = ElevatorConstants.CRUISE_VELOCITY; // Unlimited cruise velocity
+    // motionMagicConfigs.MotionMagicAcceleration = ElevatorConstants.MAX_ACCELERATION;
+    // motionMagicConfigs.MotionMagicJerk = ElevatorConstants.JERK;
+    talonFXConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+    talonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
+    
+    motorLead.getConfigurator().apply(talonFXConfigs);
+    motorFollow.getConfigurator().apply(talonFXConfigs);
   }
 }

@@ -112,11 +112,11 @@ public class FactoryCommands extends SubsystemBase{
   public Command intake(){
     return Commands.deadline(intake.intakePiece(),switchState(State.Intake))
       // .andThen(candle.pickUpLights())
-      .andThen(Commands.runOnce(()->xboxController.getHID().setRumble(RumbleType.kBothRumble, 1)))
+      // .andThen(Commands.runOnce(()->xboxController.getHID().setRumble(RumbleType.kBothRumble, 1)))
       .andThen(Commands.deadline(switchState(State.Speaker).andThen(Commands.waitSeconds(.5)).andThen(Commands.waitUntil(()->arm.isArmAtAngle()))
       ,intake.setVelocity(15)))
       .handleInterrupt(()->{
-        xboxController.getHID().setRumble(RumbleType.kBothRumble, 0);
+        // xboxController.getHID().setRumble(RumbleType.kBothRumble, 0);
         Command switchEnd = switchState(State.Speaker);
         switchEnd.initialize();
         switchEnd.schedule();
@@ -128,11 +128,11 @@ public class FactoryCommands extends SubsystemBase{
   public Command intakeMainAuto(){
     return Commands.deadline(intake.intakePiece(),switchState(State.Intake))
       // .andThen(candle.pickUpLights())
-      .andThen(Commands.runOnce(()->xboxController.getHID().setRumble(RumbleType.kBothRumble, 1)))
+      // .andThen(Commands.runOnce(()->xboxController.getHID().setRumble(RumbleType.kBothRumble, 1)))
       .andThen(Commands.deadline(switchState(State.Speaker).andThen(Commands.waitSeconds(.3)).andThen(Commands.waitUntil(()->arm.isArmAtAngle()))
       ,intake.setVelocity(15)))
       .handleInterrupt(()->{
-        xboxController.getHID().setRumble(RumbleType.kBothRumble, 0);
+        // xboxController.getHID().setRumble(RumbleType.kBothRumble, 0);
         Command switchEnd = switchState(State.Speaker);
         switchEnd.initialize();
         switchEnd.schedule();

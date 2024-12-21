@@ -7,6 +7,8 @@ package frc.robot.simulation;
 import java.util.ArrayList;
 
 import com.ctre.phoenix6.Utils;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -36,20 +38,20 @@ public class SimMotor extends SubsystemBase{
 
     private double positionRotations = 0;
 
-    private PWMSparkMax realMotor;
+    private CANSparkMax realMotor;
 
     private final ArrayList<SimMotor> m_followers = new ArrayList<>();
 
     private boolean inverted = false;
     private int ID;
 
-    public SimMotor(int ID){
+    public SimMotor(int ID, MotorType motorType){
         this.ID = ID;
         if (Robot.isSimulation()){
 
             return;
         }
-        realMotor = new PWMSparkMax(ID);
+        realMotor = new CANSparkMax(ID, motorType);
     }
 
     /**
@@ -78,10 +80,16 @@ public class SimMotor extends SubsystemBase{
      */
     public void set(double speed) {
         if (!Robot.isSimulation()){
-            realMotor.set(speed);
+            realMotor.set(speed * (inverted ? -1.0 : 1.0));
+            for (SimMotor follower : m_followers){
+                follower.realMotor.set(speed * (inverted ? -1.0 : 1.0));
+            }
             return;
         }
         setSpeed = speed * (inverted ? -1.0 : 1.0);
+        for (SimMotor follower : m_followers){
+            follower.setSpeed = speed * (inverted ? -1.0 : 1.0);
+        }
     }
 
     /**
@@ -93,17 +101,13 @@ public class SimMotor extends SubsystemBase{
      */
     public double get() {
         if (Robot.isSimulation()){
-            return setSpeed * (inverted ? -1.0 : 1.0);
+            return setSpeed;
         }
         return realMotor.get();
     }
 
     public void setInverted(boolean isInverted) {
-        if (Robot.isSimulation()){
-            inverted = isInverted;
-            return;
-        }
-        realMotor.setInverted(isInverted);
+        inverted = isInverted;
     }
 
     public boolean getInverted() {
@@ -155,7 +159,7 @@ public class SimMotor extends SubsystemBase{
             m_followers.add(follower);
             return;
         }
-        realMotor.addFollower(follower.realMotor);
+        follower.realMotor.follow(realMotor);
     }
 
     private void addFriction() {

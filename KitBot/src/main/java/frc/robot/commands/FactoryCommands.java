@@ -38,16 +38,16 @@ public class FactoryCommands {
 
     private PIDController rotationController = new PIDController(.002, 0, .0001);
 
-    public Command alignToSpeaker(){
-        return Commands.run(()->{
-            if (drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).isEmpty() || drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).isEmpty()){
-                return;
-            }
-            if (Math.abs(drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).get()-2) < .05 && Math.abs(drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).get()) < 3) {
-                return;
-            }
-            drivetrain.arcadeDrive(-distanceController.calculate(drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).get(),2)
-            , -rotationController.calculate(drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).get(),0), false);
-        });
-    }
+    // public Command alignToSpeaker(){
+    //     return Commands.run(()->{
+    //         if (drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).isEmpty() || drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).isEmpty()){
+    //             return;
+    //         }
+    //         if (Math.abs(drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).get()-2) < .05 && Math.abs(drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).get()) < 3) {
+    //             return;
+    //         }
+    //         drivetrain.arcadeDrive(-distanceController.calculate(drivetrain.getCamera().getDistToTag(speakerID.getAsInt()).get(),2)
+    //         , -rotationController.calculate(drivetrain.getCamera().getYawToTag(speakerID.getAsInt()).get(),0), false);
+    //     });
+    // }
 }

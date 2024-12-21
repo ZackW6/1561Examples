@@ -6,13 +6,13 @@ package frc.robot.constants;
 
 /** Add your docs here. */
 public class DriveBaseConstants {
-    public static int leftLeaderID = 0;
-    public static int leftfollowerID = 1;
-    public static int rightLeaderID = 2;
-    public static int rightFollowerID = 3;
+    public static int leftLeaderID = 40;
+    public static int leftfollowerID = 20;
+    public static int rightLeaderID = 30;
+    public static int rightFollowerID = 10;
 
-    public static boolean leftInverted = false;
-    public static boolean rightInverted = true;
+    public static boolean leftInverted = true;
+    public static boolean rightInverted = false;
 
     public static double robotLengthInches = 24;
     public static double robotWheelRadius = 1.935;

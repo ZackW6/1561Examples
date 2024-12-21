@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.CANSparkLowLevel.MotorType;
+
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -16,8 +18,8 @@ import frc.robot.simulation.SimMotor;
 
 public class Shooter extends SubsystemBase {
 
-  SimMotor indexer = new SimMotor(ShooterConstants.indexerMotorID);
-  SimMotor shooter = new SimMotor(ShooterConstants.shooterMotorID);
+  SimMotor shooter = new SimMotor(ShooterConstants.shooterMotorID, MotorType.kBrushless);
+  SimMotor indexer = new SimMotor(ShooterConstants.indexerMotorID, MotorType.kBrushed);
 
   private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
   private final NetworkTable shooterStats = inst.getTable("Shooter");
@@ -26,12 +28,14 @@ public class Shooter extends SubsystemBase {
   private final DoublePublisher indexerSpeed = shooterStats.getDoubleTopic("IndexSpeed").publish();
 
   /** Creates a new Shooter. */
-  public Shooter() {}
+  public Shooter() {
+    shooter.setInverted(true);
+  }
 
   public Command intakeNote(){
     return Commands.run(()->{
       setIndexerSpeed(-1);
-      setShooterSpeed(-.5);
+      setShooterSpeed(-1);
     }).finallyDo(()->{
       setIndexerSpeed(0);
       setShooterSpeed(0);

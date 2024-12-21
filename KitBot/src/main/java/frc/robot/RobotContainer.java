@@ -45,9 +45,9 @@ public class RobotContainer {
   private final FactoryCommands factoryCommands = new FactoryCommands(driveBase);
 
   private void configureBindings() {
-    driveBase.setDefaultCommand(driveBase.arcadeDriveCommand(()->-driverController.getLeftY(), ()->driverController.getRightX(), true));
+    driveBase.setDefaultCommand(driveBase.arcadeDriveCommand(()->driverController.getLeftY(), ()->-driverController.getRightX(), true));
 
-    driverController.leftTrigger().whileTrue(factoryCommands.alignToSpeaker());
+    // driverController.leftTrigger().whileTrue(factoryCommands.alignToSpeaker());
     driveBase.registerTelemetry(logger::telemeterize);
 
     driverController.rightBumper().whileTrue(shooter.intakeNote());

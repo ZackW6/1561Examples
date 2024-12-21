@@ -6,6 +6,6 @@ package frc.robot.constants;
 
 /** Add your docs here. */
 public class ShooterConstants {
-    public static int shooterMotorID = 4;
-    public static int indexerMotorID = 5;
+    public static int shooterMotorID = 60;
+    public static int indexerMotorID = 50;
 }

@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.Elevator;
 
 public class RobotContainer {
@@ -12,9 +13,9 @@ public class RobotContainer {
   private final Elevator elevator = new Elevator();
 
   private void configureBindings() {
-    elevator.setDefaultCommand(elevator.reachGoal(()->driverController.getRawAxis(1)*-1+1));
-    driverController.a().whileTrue(elevator.reachGoal(1.8));
-    driverController.b().whileTrue(elevator.reachGoal(.2));
+    elevator.setDefaultCommand(elevator.reachGoal(()->(Math.abs(driverController.getRawAxis(1))*ElevatorConstants.MAX_HEIGHT)/2));
+    driverController.a().whileTrue(elevator.reachGoal(ElevatorConstants.MAX_HEIGHT));
+    driverController.b().whileTrue(elevator.reachGoal(ElevatorConstants.MAX_HEIGHT/2));
   }
 
   public RobotContainer() {
