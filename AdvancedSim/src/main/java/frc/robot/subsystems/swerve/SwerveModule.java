@@ -108,21 +108,4 @@ public class SwerveModule extends SubsystemBase{
         this.driveK = K;
         return this;
     }
-
-    /**
-     * for sim only
-     * rotations in radians
-     */
-    public void overrideActualState(SwerveModuleState state){
-        // System.out.println(driveMotor.getVelocity()+"   "+state.speedMetersPerSecond/(2*Math.PI*Units.inchesToMeters(this.wheelRadiusInches)));
-        if (driveMotor instanceof SimMotor){
-            SimMotor dMotor = (SimMotor)driveMotor;
-            dMotor.setVelocity(state.speedMetersPerSecond/(2*Math.PI*Units.inchesToMeters(this.wheelRadiusInches)));
-        }
-
-        if (steerMotor instanceof SimMotor){
-            SimMotor sMotor = (SimMotor)steerMotor;
-            sMotor.setPosition(state.angle);
-        }
-    }
   }

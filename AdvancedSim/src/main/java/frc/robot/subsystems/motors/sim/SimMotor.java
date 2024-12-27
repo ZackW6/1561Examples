@@ -125,20 +125,4 @@ public class SimMotor extends VirtualSubsystem implements BaseMotor{
         
         time = Timer.getFPGATimestamp();
     }
-
-    /**
-     * only for advanced sim
-     * @param newRot
-     */
-    public void setPosition(Rotation2d newRot){
-        this.position = newRot.getRotations()*(isInverted ? -1 : 1);
-    }
-
-    /**
-     * only for advanced sim, in rotations per second
-     * @param velocity
-     */
-    public void setVelocity(double velocity){
-        motorSim.setState(Units.rotationsToRadians(velocity * (isInverted ? -1 : 1)));
-    }
 }

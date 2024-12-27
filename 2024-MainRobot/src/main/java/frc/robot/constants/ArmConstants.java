@@ -2,6 +2,7 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Robot;
 
 public class ArmConstants{
 
@@ -19,10 +20,22 @@ public class ArmConstants{
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;
-        public static final double kP = 190;//300;
-        public static final double kI = .2;//.1;
-        public static final double kD = 50;//55;
+        
+        public static final double kP;//300;
+        public static final double kI;//.1;
+        public static final double kD;//55;
         public static final double kG = 8.574609375;//8.4749;
+        static {
+            if (Robot.isSimulation()){
+                kP = 600;
+                kI = 0;
+                kD = 0;
+            }else{
+                kP = 190;
+                kI = .2;
+                kD = 50;
+            }
+        }
 
         // TODO: Make the arm positive when it goes up.
         public static final double CRUISE_VELOCITY = 400;

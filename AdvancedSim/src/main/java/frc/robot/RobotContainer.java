@@ -45,7 +45,7 @@ public class RobotContainer {
 
   private void configureBindings() {
     if (Robot.isSimulation()){
-      GameConnection.initConnection();
+      GameConnection.initConnection(drive.getKinematics(), drive.getOdometry(), (rot)->drive.setGyroSim(rot),()->drive.getModuleStates(), ()->drive.getModulePositions());
     }
     drive.registerTelemetry(logger::telemeterize);
     drive.setDefaultCommand(drive.fieldRelativeDrive(()->-driverController.getLeftY()*maxSpeed

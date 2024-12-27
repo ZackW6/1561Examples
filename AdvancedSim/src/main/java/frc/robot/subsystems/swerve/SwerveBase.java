@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.fasterxml.jackson.databind.JsonSerializable.Base;
 import com.fasterxml.jackson.databind.ser.std.BooleanSerializer;
@@ -43,7 +44,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.constants.DriveBaseConstants;
 import frc.robot.gameConnection.GameConnection;
-import frc.robot.simulation.SimGyro;
 import frc.robot.subsystems.motors.BaseMotor;
 
 public abstract class SwerveBase extends SubsystemBase {
@@ -54,7 +54,7 @@ public abstract class SwerveBase extends SubsystemBase {
   protected Rotation2d rotationOffset = new Rotation2d();
 
   protected double time = Timer.getFPGATimestamp();
-  protected SimGyro gyro;
+  protected Pigeon2 gyro;
 
   protected DriveState driveState = new DriveState();
 
@@ -73,7 +73,7 @@ public abstract class SwerveBase extends SubsystemBase {
    * left front, right front, left back, right back
    */
   public SwerveBase(int gyroID, List<SwerveModule> list){
-    gyro = new SimGyro(gyroID);
+    gyro = new Pigeon2(gyroID, "Canivore");
     driveState.modules = list;
     Translation2d[] translations = new Translation2d[list.size()];
     SwerveModulePosition[] modulePositions = new SwerveModulePosition[list.size()];
@@ -88,7 +88,7 @@ public abstract class SwerveBase extends SubsystemBase {
     kinematics = new SwerveDriveKinematics(translations);
 
     odometry = new SwerveDriveOdometry(
-      kinematics, gyro.getRotation(),
+      kinematics, gyro.getRotation2d(),
       modulePositions, new Pose2d(0, 0, new Rotation2d()));
   }
 
@@ -152,7 +152,7 @@ public abstract class SwerveBase extends SubsystemBase {
    * @param location Pose to make the current pose at.
    */
   public void seedFieldRelative(Pose2d location) {
-    odometry.resetPosition(gyro.getRotation(), getModulePositions(), location);
+    odometry.resetPosition(gyro.getRotation2d(), getModulePositions(), location);
   }
 
   public void seedFieldRelative() {
@@ -162,16 +162,15 @@ public abstract class SwerveBase extends SubsystemBase {
   @Override
   public void periodic() {
     if (Robot.isSimulation()){
+      
       double deltaTime = Timer.getFPGATimestamp() - time;
       time = Timer.getFPGATimestamp();
 
       double rotSpeed = kinematics.toChassisSpeeds(getModuleStates()).omegaRadiansPerSecond;
-      gyro.setRotation(gyro.getRotation().plus(Rotation2d.fromRadians(rotSpeed * deltaTime)));
-
-      GameConnection.setRobotPose(this.getPose());
+      gyro.getSimState().setRawYaw(gyro.getRotation2d().plus(Rotation2d.fromRadians(rotSpeed * deltaTime)).getDegrees());
     }
-    
-    driveState.drivePose = odometry.update(gyro.getRotation(),
+
+    driveState.drivePose = odometry.update(gyro.getRotation2d(),
       getModulePositions());
 
     if (m_telemetryFunction!=null){
@@ -190,8 +189,8 @@ public abstract class SwerveBase extends SubsystemBase {
         this::seedFieldRelative,  // Consumer for seeding pose against auto
         this::getChassisSpeeds,
         (speeds)->this.pathplannerDrive(speeds), // Consumer of ChassisSpeeds to drive the robot
-        new HolonomicPathFollowerConfig(new PIDConstants(5, 0, 0),
-                                        new PIDConstants(5, 0, 0),
+        new HolonomicPathFollowerConfig(new PIDConstants(8, 0, 0),
+                                        new PIDConstants(8, 0, 0),
                 5.3,
         driveBaseRadius,
         new ReplanningConfig()),
@@ -218,5 +217,21 @@ public abstract class SwerveBase extends SubsystemBase {
         }
                     
         setSwerveStates(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, new Rotation2d());
+    }
+
+    public SwerveDriveKinematics getKinematics(){
+      return kinematics;
+    }
+
+    public SwerveDriveOdometry getOdometry(){
+      return odometry;
+    }
+
+    public void setGyroSim(Rotation2d rot){
+      gyro.getSimState().setRawYaw(rot.getDegrees());
+    }
+
+    public Rotation2d getRotation2d(){
+      return gyro.getRotation2d();
     }
 }
