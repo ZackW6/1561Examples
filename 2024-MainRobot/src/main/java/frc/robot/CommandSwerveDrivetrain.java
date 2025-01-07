@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.constants.LimelightConstants;
+import frc.robot.gameConnection.GameConnection;
 import frc.robot.util.PoseEX;
 
 import com.choreo.lib.*;
@@ -61,12 +62,14 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         if (Utils.isSimulation()) {
             startSimThread();
+            GameConnection.initConnection(m_kinematics,m_odometry,(rot)->m_pigeon2.getSimState().setRawYaw(rot.getDegrees()), ()->getState().speeds, ()->m_modulePositions);
         }
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         if (Utils.isSimulation()) {
             startSimThread();
+            GameConnection.initConnection(m_kinematics,m_odometry,(rot)->m_pigeon2.getSimState().setRawYaw(rot.getDegrees()), ()->getState().speeds, ()->m_modulePositions);
         }
     }
 
@@ -85,6 +88,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
             /* use the measured time delta, get battery voltage from WPILib */
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
+            GameConnection.drivePeriodic();
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
@@ -216,6 +220,14 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void seedFieldRelative(Pose2d pose) {
+        super.seedFieldRelative(pose);
+        if (GameConnection.isConnected()){
+            GameConnection.seedFieldRelative(pose);
+        }
     }
 
     // private double[] currentVisionPose(String limelightName) {

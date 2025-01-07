@@ -1,0 +1,25 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "S-A 4.5 piece continuous"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "6 shoot"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "5 piece",
+  "choreoAuto": false
+}

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -62,6 +63,11 @@ public class Telemetry {
     private final DoubleArrayPublisher robotPose = table.getDoubleArrayTopic("robotPose").publish();
     private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
     
+    private final StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("MyPose", Pose2d.struct).publish();
+
+    private final StructPublisher<Pose3d> piecePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("PiecePose", Pose3d.struct).publish();
 
     /* Robot speeds for general checking */
     private final NetworkTable driveStats = inst.getTable("Drive");
@@ -110,7 +116,7 @@ public class Telemetry {
             pose.getY(),
             pose.getRotation().getDegrees()
         });
-
+        posePublisher.set(pose);
         // SignalLogger.writeDoubleArray("field2d", new double[] {
         //     pose.getX(),
         //     pose.getY(),
@@ -146,6 +152,7 @@ public class Telemetry {
         }
     }
     public void registerPieceTelemetry(ObjectDetectionState state){
+        piecePublisher.set(new Pose3d(state.seenPose));
         piecePose.set(new double[] {
             state.seenPose.getX(),
             state.seenPose.getY(),

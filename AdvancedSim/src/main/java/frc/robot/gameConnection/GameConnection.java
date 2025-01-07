@@ -19,7 +19,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.SimSwerve;
 
 public class GameConnection {
 
@@ -73,7 +72,6 @@ public class GameConnection {
         });
         comThread.start();
     }
-
 
     public static void initConnection(SwerveDriveKinematics kinematics,
             SwerveDriveOdometry odometry,
