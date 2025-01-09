@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.dyn4j.geometry.Rotation;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
@@ -82,17 +84,20 @@ public class MainDrive implements NativeSwerveRequest {
         }
     }
 
-    private final CommandSwerveDrivetrain drivetrain;
+    private final Supplier<Rotation2d> poseRotation;
+    private final Supplier<Rotation2d> yawOffset;
+
     /**
      * This is my custom drive, I made it so that we can have many inputs acting without any need for extra work
      * @param drivetrain
      */
-    public MainDrive(CommandSwerveDrivetrain drivetrain){
-        this.drivetrain = drivetrain;
+    public MainDrive(Supplier<Rotation2d> poseRotation, Supplier<Rotation2d> yawOffset){
+        this.poseRotation = poseRotation;
+        this.yawOffset = yawOffset;
     }
 
     /**
-     * The field-centric chassis speeds to apply to the drivetrain.
+     * The robotCentric chassis speeds to apply to the drivetrain.
      */
     public ChassisSpeeds Speeds = new ChassisSpeeds();
 
@@ -383,10 +388,10 @@ public class MainDrive implements NativeSwerveRequest {
         Vector2 finalSpeeds = new Vector2(0, 0);
         double finalRot = 0;
 
-        double drivetrainRotation = drivetrain.getState().Pose.getRotation().getRadians();
+        double drivetrainRotation = poseRotation.get().getRadians();
         
-        double drivetrainOffset = drivetrain.getYawOffset().getRadians();
-        
+        double drivetrainOffset = yawOffset.get().getRadians();
+
         String[] keys = allSpeeds.keySet().toArray(new String[0]);
         CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
         for (int i = 0; i < allSpeeds.size(); i++){
@@ -422,7 +427,7 @@ public class MainDrive implements NativeSwerveRequest {
             finalSpeeds = finalSpeeds.normalize().multiply(maxLinearVelocity);
         }
         finalRot = Math.min(Math.max(finalRot, -maxRotationalVelocity),maxRotationalVelocity);
-
+        Speeds = new ChassisSpeeds(finalSpeeds.x, finalSpeeds.y, finalRot);
         return StatusCode.valueOf(SwerveJNI.JNI_Request_Apply_ApplyFieldSpeeds(parameters.drivetrainId,
             finalSpeeds.x,
             finalSpeeds.y,
@@ -443,9 +448,9 @@ public class MainDrive implements NativeSwerveRequest {
         Vector2 finalSpeeds = new Vector2(0, 0);
         double finalRot = 0;
 
-        double drivetrainRotation = drivetrain.getState().Pose.getRotation().getRadians();
+        double drivetrainRotation = poseRotation.get().getRadians();
         
-        double drivetrainOffset = drivetrain.getYawOffset().getRadians();
+        double drivetrainOffset = yawOffset.get().getRadians();
 
         String[] keys = allSpeeds.keySet().toArray(new String[0]);
         CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
@@ -482,7 +487,7 @@ public class MainDrive implements NativeSwerveRequest {
             finalSpeeds = finalSpeeds.normalize().multiply(maxLinearVelocity);
         }
         finalRot = Math.min(Math.max(finalRot, -maxRotationalVelocity),maxRotationalVelocity);
-
+        Speeds = new ChassisSpeeds(finalSpeeds.x, finalSpeeds.y, finalRot);
         SwerveJNI.JNI_SetControl_ApplyRobotSpeeds(id,
                 finalSpeeds.x,
                 finalSpeeds.y,

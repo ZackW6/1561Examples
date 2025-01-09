@@ -64,10 +64,10 @@ import frc.robot.commands.FactoryCommands;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.constants.PathplannerConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
 import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
 import frc.robot.subsystems.swerve.swerveHelpers.Vector2;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.DynamicObstacle;
 import frc.robot.util.PoseEX;
 
@@ -77,14 +77,10 @@ import frc.robot.util.PoseEX;
  * so it can be used in command-based projects easily.
  */
 
-public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> implements Subsystem, SwerveDriveIO{
+public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> implements SwerveDriveIO{
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
-
-    private final MainDrive mainRequest;
-
-    private final Vision cameras;
 
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants, double odometryUpdateFrequency,
@@ -94,9 +90,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        cameras = new Vision(this, LimelightConstants.LIMELIGHT_NAME);
-        mainRequest = new MainDrive(this);
-        setDefaultCommand(applyRequest(()->mainRequest));
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... modules) {
@@ -104,13 +97,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        cameras = new Vision(this, LimelightConstants.LIMELIGHT_NAME);
-        mainRequest = new MainDrive(this);
-        setDefaultCommand(applyRequest(()->mainRequest));
-    }
-
-    public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> this.setControl(requestSupplier.get()));
     }
 
     private void startSimThread() {
@@ -127,122 +113,34 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
+    
+    @Override
+    public void seedFieldRelative(Rotation2d rot) {
+        setOperatorPerspectiveForward(rot);
+    }
 
     @Override
-    public void periodic(){
-        if (!Robot.isSimulation()){
-            cameras.updateVisionPose();
-        }
-    }
-
-    public Pose2d getPose() {
-        return this.getState().Pose;
-    }
-
-    public void configureTeleop(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vrot){
-        setDefaultCommand(applyRequest(()->mainRequest).alongWith(
-            // Commands.run(()->mainRequest.addFieldFacingSpeeds(5, 0, 10, "TELEOP"))));
-                // Commands.run(()->comparison.withSpeeds(new ChassisSpeeds(5,0,10)))));
-            Commands.run(()->mainRequest.addFieldFacingSpeeds(vx.getAsDouble(), vy.getAsDouble(), vrot.getAsDouble(), "TELEOP"))));
-            // Commands.run(()->comparison.withVelocityX(vx.getAsDouble()).withVelocityY(vy.getAsDouble()).withRotationalRate(vrot.getAsDouble()))));
-
-        new Trigger(()->DriverStation.isAutonomous()).onTrue(Commands.runOnce(()->{
-            addFieldFacingSpeeds(0,0,0, "TELEOP");
-        }));
-    }
-
-    public Command addFieldRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addFieldSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public Command addFieldFacingSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addFieldFacingSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public Command addRobotRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addRobotSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public void addFieldRelativeSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addFieldSpeeds(vx, vy, vr, key);
-    }
-
-    public void addFieldFacingSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addFieldFacingSpeeds(vx, vy, vr, key);
-    }
-
-    public void addRobotRelativeSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addRobotSpeeds(vx, vy, vr, key);
-    }
-
-    public void removeSource(String key){
-        mainRequest.removeSource(key);
-    }
-
-    public void configurePathPlanner() {
-        //EXAMPLE CODE
-        // Optional<FactoryCommands> commands = FactoryCommands.getInstance();
-        // Command pointTowardPiece;
-
-        // if (commands.isPresent()){
-        //     pointTowardPiece = commands.get().activePointPose(new Pose2d(3,4.5, new Rotation2d()),5,.5,"AUTOPOINT");
-        // }else{
-        //     pointTowardPiece = Commands.none();
-        // }
-
-        // new Trigger(()->DriverStation.isAutonomous()).onTrue(pointTowardPiece);
-        
-        // new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
-        //     addRobotRelativeSpeeds(0,0,0, "AUTO");
-        //     pointTowardPiece.end(false);
-        // }));
-
-        
-        AutoBuilder.configure(
-            this::getPose, // getState of the robot pose
-            this::resetPose,  // Consumer for seeding pose against auto
-            this::getCurrentRobotChassisSpeeds,
-            (speeds, feedForward)->this.setControl(mainRequest.addRobotSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, "AUTO")), // Consumer of ChassisSpeeds to drive the robot
-            new PPHolonomicDriveController(new PIDConstants(5, 0, 0),
-                                            new PIDConstants(5, 0, 0)),
-            PathplannerConstants.pathingConfig,
-            () -> {
-                // Boolean supplier that controls when the path will be mirrored for the red alliance
-                // This will flip the path being followed to the red side of the field.
-                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-                var alliance = DriverStation.getAlliance();
-                if (alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
-            },
-            // Reference to this subsystem to set requirements // Change this if the path needs to be flipped on red vs blue
-            this); // Subsystem for requirements
-    }
-
-    public Command getAutoPath(String pathName) {
-        return new PathPlannerAuto(pathName);
-    }
-
-    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+    public ChassisSpeeds getSpeeds() {
         return getState().Speeds;
     }
 
+    @Override
     public Rotation2d getYaw() {
         return getState().RawHeading;
     }
     
+    @Override
     public Rotation2d getYawOffset(){
         return Rotation2d.fromRadians(SwerveJNI.JNI_GetOperatorForwardDirection(m_drivetrainId));
+    }
+
+    @Override
+    public void addVisionMeasurement(Pose2d pose, double timestep, Vector<N3> stdDev) {
+        super.addVisionMeasurement(pose,timestep,stdDev);
+    }
+
+    @Override
+    public Pose2d getPose() {
+        return getState().Pose;
     }
 }

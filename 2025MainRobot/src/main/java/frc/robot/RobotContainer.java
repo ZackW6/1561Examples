@@ -50,7 +50,9 @@ import frc.robot.commands.WaitAutos.BranchInstruction.BeginPose;
 import frc.robot.commands.WaitAutos.BranchInstruction.IntakePose;
 import frc.robot.commands.WaitAutos.BranchInstruction.ShootPose;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.swerve.SwerveDrive;
 import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
+import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.util.ChoreoEX;
 import frc.robot.util.DynamicObstacle;
 public class RobotContainer {
@@ -63,7 +65,7 @@ public class RobotContainer {
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
   
-  private final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // My drivetrain
+  private final SwerveDrive drivetrain = new SwerveDrive(new SimSwerve());//new SwerveDrive(TunerConstants.DriveTrain); // My drivetrain
 
 
   private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain);
@@ -77,6 +79,7 @@ public class RobotContainer {
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
   private void configureBindings() {
+    drivetrain.resetPose(new Pose2d(5,5,new Rotation2d()));
     drivetrain.configureTeleop(
       ()->-driverController.getLeftY() * 1.00 * MaxSpeed
       ,()->-driverController.getLeftX() * 1.00 * MaxSpeed
@@ -100,7 +103,7 @@ public class RobotContainer {
 
     /* Controller Bindings */
 
-    driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(drivetrain.getPose().getRotation())));
+    driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
     driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
 
@@ -111,13 +114,13 @@ public class RobotContainer {
       // DynamicObstacle.setDynamicObstacles("testNodeSize", drivetrain.getPose().getTranslation());
       DynamicObstacle.clearDynamicObstacles(drivetrain.getPose().getTranslation());
       if (Robot.isSimulation()){
-        drivetrain.setOperatorPerspectiveForward(Rotation2d.fromDegrees(90));
+        drivetrain.seedFieldRelative(Rotation2d.fromDegrees(90));
         return;
       }
       if (DriverStation.getAlliance().get() == Alliance.Red){
-        drivetrain.setOperatorPerspectiveForward(Rotation2d.fromDegrees(180));
+        drivetrain.seedFieldRelative(Rotation2d.fromDegrees(180));
       }else{
-        drivetrain.setOperatorPerspectiveForward(Rotation2d.fromDegrees(0));
+        drivetrain.seedFieldRelative(Rotation2d.fromDegrees(0));
       }
     }));
   }

@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.vision;
 
 import java.util.List;
 
@@ -10,14 +10,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.LimelightHelpers;
 import frc.robot.constants.LimelightConstants;
+import frc.robot.subsystems.swerve.SwerveDriveIO;
 import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
 
 public class Vision {
 
-    private final CommandSwerveDrivetrain drivetrain;
+    private final SwerveDriveIO drivetrain;
     private final String[] names;
 
-    public Vision(CommandSwerveDrivetrain drivetrain, String... limelightNames){
+    public Vision(SwerveDriveIO drivetrain, String... limelightNames){
         this.drivetrain = drivetrain;
         names = limelightNames;
     }
@@ -38,7 +39,7 @@ public class Vision {
         if(!isInBouds(botPose)) {
             return;
         }
-        if(Math.abs(Units.radiansToDegrees(drivetrain.getState().Speeds.omegaRadiansPerSecond)) > maxRotationalAcceleration){
+        if(Math.abs(Units.radiansToDegrees(drivetrain.getSpeeds().omegaRadiansPerSecond)) > maxRotationalAcceleration){
 
             double[] rotationInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get(botPose.avgTagDist);
             drivetrain.addVisionMeasurement(

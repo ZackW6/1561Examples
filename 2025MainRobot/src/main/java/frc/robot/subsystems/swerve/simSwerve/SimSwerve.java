@@ -1,113 +1,241 @@
 package frc.robot.subsystems.swerve.simSwerve;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radian;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volt;
+import static edu.wpi.first.units.Units.Volts;
+
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructArrayTopic;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
+import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
 
-public class SimSwerve implements SwerveDriveIO{
-    private final SwerveDriveSimulation swerveDriveSimulation;
-    public SimSwerve(){
-        swerveDriveSimulation = SimSwerveConstants.getSimSwerve();
-        SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
+public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
+    private final SelfControlledSwerveDriveSimulation simulatedDrive;
+    // private final Field2d field2d;
+
+    private final NetworkTable instance = NetworkTableInstance.getDefault().getTable("RealData");
+
+    private final StructPublisher<Pose2d> posePublisher = instance
+        .getStructTopic("RealPose", Pose2d.struct).publish();
+
+    private final StructArrayPublisher<Pose3d> coralPublisher = instance
+        .getStructArrayTopic("AllCoral", Pose3d.struct).publish();
+    private final StructArrayPublisher<Pose3d> algaePublisher = instance
+        .getStructArrayTopic("AllAlgae", Pose3d.struct).publish();
+    private final StructArrayPublisher<Pose3d> stackPublisher = instance
+        .getStructArrayTopic("AllStacks", Pose3d.struct).publish();
+
+    private Rotation2d yawOffset = new Rotation2d();
+    
+    public SimSwerve() {
+        // For your own code, please configure your drivetrain properly according to the documentation
+        final DriveTrainSimulationConfig config = SimSwerveConstants.driveTrainSimulationConfig;
+
+        // Creating the SelfControlledSwerveDriveSimulation instance
+        this.simulatedDrive = new SelfControlledSwerveDriveSimulation(
+                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())));
+
+        // Register the drivetrain simulation to the simulation world
+        SimulatedArena.getInstance().addDriveTrainSimulation(simulatedDrive.getDriveTrainSimulation());
+
     }
+
     @Override
-    public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'applyRequest'");
+    public void setControl(SwerveRequest request) {
+        //TODO this is probably really slow, if someone finds a better way please fix
+        ChassisSpeeds speeds = new ChassisSpeeds();
+        request.apply(new SwerveControlParameters(), new SwerveModule[]{});
+        boolean fieldRelative = false;
+        boolean discretize = true;
+        if (request instanceof MainDrive){
+            speeds = ((MainDrive)request).Speeds;
+        }
+        if (request instanceof SwerveRequest.ApplyFieldSpeeds){
+            speeds = ((SwerveRequest.ApplyFieldSpeeds)request).Speeds;
+            fieldRelative = true;
+        }
+        if (request instanceof SwerveRequest.ApplyRobotSpeeds){
+            speeds = ((SwerveRequest.ApplyRobotSpeeds)request).Speeds;
+        }
+        if (request instanceof SwerveRequest.FieldCentric){
+            speeds = new ChassisSpeeds(
+                ((SwerveRequest.FieldCentric)request).VelocityX,
+                ((SwerveRequest.FieldCentric)request).VelocityY,
+                ((SwerveRequest.FieldCentric)request).RotationalRate);
+        }
+        if (request instanceof SwerveRequest.FieldCentricFacingAngle){
+            //TODO
+        }
+        if (request instanceof SwerveRequest.RobotCentric){
+            speeds = new ChassisSpeeds(
+                ((SwerveRequest.RobotCentric)request).VelocityX,
+                ((SwerveRequest.RobotCentric)request).VelocityY,
+                ((SwerveRequest.RobotCentric)request).RotationalRate);
+        }
+        if (request instanceof SwerveRequest.PointWheelsAt){
+            Rotation2d direction = ((SwerveRequest.PointWheelsAt)request).ModuleDirection;
+            runSwerveStates(
+                new SwerveModuleState[]{
+                    new SwerveModuleState(0,direction),
+                    new SwerveModuleState(0,direction),
+                    new SwerveModuleState(0,direction),
+                    new SwerveModuleState(0,direction)
+            });
+            return;
+        }
+        if (request instanceof SwerveRequest.Idle){
+            speeds = new ChassisSpeeds();
+        }
+        if (request instanceof SwerveRequest.SwerveDriveBrake){
+            runSwerveStates(
+                new SwerveModuleState[]{
+                    new SwerveModuleState(0,Rotation2d.fromDegrees(45)),
+                    new SwerveModuleState(0,Rotation2d.fromDegrees(-45)),
+                    new SwerveModuleState(0,Rotation2d.fromDegrees(45)),
+                    new SwerveModuleState(0,Rotation2d.fromDegrees(-45))
+            });
+            return;
+        }
+        runChassisSpeeds(speeds, fieldRelative, discretize);
+    }
+
+    private void runChassisSpeeds(ChassisSpeeds speeds, boolean fieldCentric, boolean discretize){
+        this.simulatedDrive.runChassisSpeeds(
+                speeds,
+                new Translation2d(),
+                fieldCentric,
+                discretize);
+    }
+
+    public void runSwerveStates(SwerveModuleState[] targets) {
+        this.simulatedDrive.runSwerveStates(targets);
     }
 
     @Override
     public Pose2d getPose() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPose'");
+        return simulatedDrive.getOdometryEstimatedPose();
     }
 
     @Override
-    public void configureTeleop(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vrot) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'configureTeleop'");
+    public void resetPose(Pose2d pose) {
+        simulatedDrive.setSimulationWorldPose(pose);
+        simulatedDrive.resetOdometry(pose);
+        SimulatedArena.getInstance().resetFieldForAuto();
     }
 
     @Override
-    public Command addFieldRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFieldRelativeSpeeds'");
+    public void seedFieldRelative(Rotation2d rot) {
+        yawOffset = rot;
     }
 
     @Override
-    public Command addFieldFacingSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFieldFacingSpeeds'");
+    public void addVisionMeasurement(Pose2d pose, double timestep, Vector<N3> stdDev) {
+        
     }
 
-    @Override
-    public Command addRobotRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addRobotRelativeSpeeds'");
-    }
 
+    private Thread telemetryThread = new Thread();
+    private Consumer<SwerveDriveState> consumer = null;
     @Override
-    public void addFieldRelativeSpeeds(double vx, double vy, double vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFieldRelativeSpeeds'");
-    }
+    public void registerTelemetry(Consumer<SwerveDriveState> consumer) {
+        if (this.consumer != consumer){
+            // telemetryThread.interrupt();
+            telemetryThread = new Thread(()->{
+                while(true){
+                    try {
+                        consumer.accept(getState());
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                
 
-    @Override
-    public void addFieldFacingSpeeds(double vx, double vy, double vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFieldFacingSpeeds'");
-    }
-
-    @Override
-    public void addRobotRelativeSpeeds(double vx, double vy, double vr, String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addRobotRelativeSpeeds'");
-    }
-
-    @Override
-    public void removeSource(String key) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeSource'");
-    }
-
-    @Override
-    public void configurePathPlanner() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'configurePathPlanner'");
-    }
-
-    @Override
-    public Command getAutoPath(String pathName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAutoPath'");
-    }
-
-    @Override
-    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCurrentRobotChassisSpeeds'");
+            });
+            telemetryThread.setDaemon(true);
+            telemetryThread.start();
+        }
     }
 
     @Override
     public Rotation2d getYaw() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getYaw'");
+        return simulatedDrive.getActualPoseInSimulationWorld().getRotation();
     }
 
     @Override
     public Rotation2d getYawOffset() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getYawOffset'");
+        return yawOffset;
     }
-    
+
+    @Override
+    public ChassisSpeeds getSpeeds() {
+        return simulatedDrive.getActualSpeedsRobotRelative();
+    }
+
+    @Override
+    public SwerveDriveState getState() {
+        SwerveDriveState state = new SwerveDriveState();
+        state.Pose = getPose();
+        state.ModuleStates = simulatedDrive.getMeasuredStates();
+        state.ModuleTargets = simulatedDrive.getSetPointsOptimized();
+        state.ModulePositions = simulatedDrive.getLatestModulePositions();
+        
+        return state;
+    }
+
+    @Override
+    public void periodic() {
+        this.simulatedDrive.periodic();
+        coralPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        algaePublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+        stackPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("CoralAlgaeStack"));
+        posePublisher.accept(simulatedDrive.getActualPoseInSimulationWorld());
+    }
 }
