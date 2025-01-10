@@ -19,6 +19,7 @@ package frc.robot;
 import java.io.IOException;
 import java.util.Set;
 
+import org.ironmaple.simulation.SimulatedArena;
 import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -65,7 +66,7 @@ public class RobotContainer {
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
   
-  private final SwerveDrive drivetrain = new SwerveDrive(new SimSwerve());//new SwerveDrive(TunerConstants.DriveTrain); // My drivetrain
+  private final SwerveDrive drivetrain = new SwerveDrive(new SimSwerve()); // My drivetrain
 
 
   private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain);
@@ -79,7 +80,7 @@ public class RobotContainer {
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
   private void configureBindings() {
-    drivetrain.resetPose(new Pose2d(5,5,new Rotation2d()));
+    drivetrain.resetPose(new Pose2d(7,5,new Rotation2d()));
     drivetrain.configureTeleop(
       ()->-driverController.getLeftY() * 1.00 * MaxSpeed
       ,()->-driverController.getLeftX() * 1.00 * MaxSpeed
@@ -150,7 +151,7 @@ public class RobotContainer {
 
   public void configureAutonomousCommands() {
     NamedCommands.registerCommand("intake", Commands.none());
-    NamedCommands.registerCommand("shoot", Commands.none());
+    NamedCommands.registerCommand("place", Commands.none());
   }
 
   public Command getAutonomousCommand() {

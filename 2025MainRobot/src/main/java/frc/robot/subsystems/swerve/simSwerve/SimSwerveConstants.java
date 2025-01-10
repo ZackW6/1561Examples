@@ -21,7 +21,7 @@ public class SimSwerveConstants {
                 .withSwerveModule(COTS.ofMark4(
                         DCMotor.getKrakenX60(1), // Drive motor is a Kraken X60
                         DCMotor.getFalcon500(1), // Steer motor is a Falcon 500
-                        COTS.WHEELS.COLSONS.cof, // Use the COF for Colson Wheels
+                        COTS.WHEELS.SLS_PRINTED_WHEELS.cof, // Use the COF for Colson Wheels
                         1)) // L3 Gear ratio
                 // Configures the track length and track width (spacing between swerve modules)
                 .withTrackLengthTrackWidth(Inches.of(24), Inches.of(24))

@@ -11,9 +11,14 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -31,7 +36,14 @@ public class SwerveDrive extends SubsystemBase{
 
     private final SwerveDriveIO swerveIO;
 
-    private Consumer<SwerveDriveState> telemetryFunction = null;
+    //NetworkTables stuff
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+    private final NetworkTable robot = inst.getTable("Robot");
+    private final NetworkTable odom = robot.getSubTable("Odometry");
+
+    private final StructPublisher<Pose2d> posePublisher = odom
+        .getStructTopic("RobotPose", Pose2d.struct).publish();
 
     public SwerveDrive(SwerveDriveIO swerveIO){
         this.swerveIO = swerveIO;
@@ -48,9 +60,11 @@ public class SwerveDrive extends SubsystemBase{
 
     @Override
     public void periodic(){
-        if (!Robot.isSimulation()){
-            cameras.updateVisionPose();
-        }
+        // if (!Robot.isSimulation()){
+        // swerveIO.addVisionMeasurement(new Pose2d(), Timer.getFPGATimestamp(), VecBuilder.fill(0,0,0));
+        cameras.updateVisionPose();
+        // }
+        posePublisher.accept(getPose());
     }
 
     public void resetPose(Pose2d pose){
@@ -143,6 +157,10 @@ public class SwerveDrive extends SubsystemBase{
 
     public Rotation2d getYaw(){
         return swerveIO.getYaw();
+    }
+
+    public SwerveDriveIO getDriveIO(){
+        return swerveIO;
     }
 
     public void registerTelemetry(Consumer<SwerveDriveState> object) {

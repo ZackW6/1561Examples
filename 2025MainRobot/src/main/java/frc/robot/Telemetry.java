@@ -31,7 +31,7 @@ public class Telemetry {
      */
     public Telemetry(double maxSpeed) {
         MaxSpeed = maxSpeed;
-        SignalLogger.start();
+        // SignalLogger.start();
     }
     
     /* What to publish over networktables for telemetry */
@@ -41,9 +41,6 @@ public class Telemetry {
     private final NetworkTable robot = inst.getTable("Robot");
     private final NetworkTable swerve = robot.getSubTable("Swerve");
     private final NetworkTable table = inst.getTable("Pose");
-    // private final NetworkTable vision = robot.getSubTable("Vision");
-    private final StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("MyPose", Pose2d.struct).publish();
 
     StructArrayPublisher<SwerveModuleState> moduleStates = swerve
     .getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
@@ -101,7 +98,6 @@ public class Telemetry {
             pose.getY(),
             pose.getRotation().getDegrees()
         });
-        posePublisher.set(pose);
 
         // SignalLogger.writeDoubleArray("field2d", new double[] {
         //     pose.getX(),

@@ -59,6 +59,4 @@ public interface SwerveDriveIO {
     public ChassisSpeeds getSpeeds();
 
     public SwerveDriveState getState();
-
-    
 }
