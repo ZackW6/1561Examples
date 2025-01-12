@@ -91,7 +91,7 @@ public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
         // Creating the SelfControlledSwerveDriveSimulation instance
         //I SPENT HOURS TO FIND THIS LINE!!!!!!!!!!!!!!!!!!!!!!!!! AHHHHHHHHHHHHHHHHHHHHHHHHHH.
         this.simulatedDrive = new SelfControlledSwerveDriveSimulation(
-                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(1,1,1), VecBuilder.fill(1,1,1));
+                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(.1,.1,0), VecBuilder.fill(0,0,0));
 
         // Register the drivetrain simulation to the simulation world
         SimulatedArena.getInstance().addDriveTrainSimulation(simulatedDrive.getDriveTrainSimulation());

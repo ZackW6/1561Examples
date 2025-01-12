@@ -30,6 +30,8 @@
  import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
  import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
@@ -94,10 +96,10 @@ import com.ctre.phoenix6.Utils;
             // Create simulated camera properties. These can be set to mimic your actual camera.
             var cameraProp = new SimCameraProperties();
             cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
-            cameraProp.setCalibError(0,0);//0.35, 0.10);
+            cameraProp.setCalibError(.35,.1);//0.35, 0.10);
             cameraProp.setFPS(15);
-            cameraProp.setAvgLatencyMs(0);//50);
-            cameraProp.setLatencyStdDevMs(0);//15);
+            cameraProp.setAvgLatencyMs(50);//50);
+            cameraProp.setLatencyStdDevMs(15);//15);
             // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
             // targets.
             cameraSim = new PhotonCameraSim(camera, cameraProp);
@@ -139,8 +141,8 @@ import com.ctre.phoenix6.Utils;
              target.yaw,
               target.pitch,
                target.area,
-                PoseEX.getDistanceFromPoseMeters(driveIO.getPose(), LimelightConstants.K_TAG_LAYOUT.getTagPose(target.fiducialId).get().toPose2d()),
-                PoseEX.getDistanceFromPoseMeters(driveIO.getPose(), LimelightConstants.K_TAG_LAYOUT.getTagPose(target.fiducialId).get().toPose2d()),
+                target.bestCameraToTarget.getTranslation().toTranslation2d().getDistance(new Translation2d(0,0)),
+                target.bestCameraToTarget.getTranslation().toTranslation2d().getDistance(new Translation2d(0,0)),
                  target.poseAmbiguity);
             fiducials[i] = fiducial;
             totalArea+=fiducial.ta;

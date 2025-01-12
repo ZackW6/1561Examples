@@ -36,7 +36,7 @@ public class MultiLinearInterpolator {
     }
     public double[] get(double key){
         double[] values = new double[multiLinearInterpolator.length];
-        for(int i = 0; i < multiLinearInterpolator.length;i++){
+        for(int i = 0; i<multiLinearInterpolator.length;i++){
             values[i] = multiLinearInterpolator[i].get(key);
         }
         return values;

@@ -62,9 +62,11 @@ public class SwerveDrive extends SubsystemBase{
     public void periodic(){
         // if (!Robot.isSimulation()){
         // swerveIO.addVisionMeasurement(new Pose2d(), Timer.getFPGATimestamp(), VecBuilder.fill(0,0,0));
+        // double currentTime = Timer.getFPGATimestamp();
         cameras.updateVisionPose();
         // }
         posePublisher.accept(getPose());
+        // System.out.println(Timer.getFPGATimestamp() - currentTime);
     }
 
     public void resetPose(Pose2d pose){

@@ -17,14 +17,14 @@ public class LimelightConstants {
     public static final String LIMELIGHT_NAME = "limelight";
     public static final double MAX_XY_ERROR = 1.0;
     public static final Transform3d LIMELIGHT_CAMERA_TRANSFORM =
-        new Transform3d(new Translation3d(0,-0.297, 0.25146), new Rotation3d(0, Units.degreesToRadians(33.5), Units.degreesToRadians(180)));
+        new Transform3d(new Translation3d(0,-0.297, 0.25146), new Rotation3d(0, Units.degreesToRadians(10), Units.degreesToRadians(180)));
 
     public static final String AMP_CAM = "limelight-object";
     public static final double MAX_XY_ERROR_AMP_CAM = 1.0;
     public static final Transform3d AMP_CAM_TRANSFORM =
         new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0)));
 
-    public static final AprilTagFieldLayout K_TAG_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    public static final AprilTagFieldLayout K_TAG_LAYOUT = AprilTagFields.k2025Reefscape.loadAprilTagLayoutField();
 
     public static final double[][] ONE_APRIL_TAG_LOOKUP_TABLE = {
       // {distance in meters, x std deviation, y std deviation, r (in degrees//actually maybe radians) std deviation}
