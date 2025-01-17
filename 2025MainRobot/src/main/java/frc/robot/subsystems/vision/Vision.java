@@ -1,21 +1,31 @@
 package frc.robot.subsystems.vision;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.ctre.phoenix6.swerve.jni.SwerveJNI;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NetworkTablesJNI;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 import frc.robot.LimelightHelpers.RawFiducial;
+import frc.robot.constants.GameData;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
 import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
@@ -25,31 +35,61 @@ import frc.robot.subsystems.vision.simVision.SimVision;
 
 public class Vision {
 
+    public static class VisionMeasurement{
+
+        public final Pose2d pose;
+        public final double timeStamp; 
+        public final Vector<N3> stdDev;
+
+        public VisionMeasurement(Pose2d pose, double timeStamp, Vector<N3> stdDev){
+            this.pose = pose;
+            this.timeStamp = timeStamp;
+            this.stdDev = stdDev;
+        }
+    }
+
     private final SwerveDriveIO drivetrain;
     private final String[] names;
-    private final VisionIO visionIO;
+    private final VisionIO[] visionIO;
 
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable odom = robot.getSubTable("Odometry");
 
-    private final StructPublisher<Pose2d> visionPubliser = odom
-        .getStructTopic("VisionPose", Pose2d.struct).publish();
-    private final StructPublisher<Pose2d> seenPublisher = odom
-        .getStructTopic("SeenPose", Pose2d.struct).publish();
+    private final StructPublisher<Pose2d>[] visionPubliser;
+    private final StructArrayPublisher<Pose3d>[] seenPublisher;
 
-    public Vision(SwerveDriveIO drivetrain, String... limelightNames){
+    private final Pose2d[][] poseMemory;
+
+    @SuppressWarnings("unchecked")
+    public Vision(SwerveDriveIO drivetrain, Transform3d[] transforms, String... limelightNames){
+        
         this.drivetrain = drivetrain;
         names = limelightNames;
+        visionIO = new VisionIO[limelightNames.length];
 
         if (Robot.isSimulation()){
-            if (drivetrain instanceof SimSwerve){
-                visionIO = new SimVision(drivetrain);
-            }else{
-                visionIO = new SimVision(drivetrain);
+            for (int i = 0; i < limelightNames.length; i++){
+                visionIO[i] = new SimVision(drivetrain, limelightNames[i], transforms[i]);
             }
         }else{
-            visionIO = new LimelightVision();
+            for (int i = 0; i < limelightNames.length; i++){
+                visionIO[i] = new LimelightVision(limelightNames[i]);
+            }
         }
+
+        visionPubliser = new StructPublisher[limelightNames.length + 1];
+        seenPublisher = new StructArrayPublisher[limelightNames.length];
+        for (int i = 0; i < limelightNames.length; i++){
+            visionPubliser[i] = odom
+                .getStructTopic(limelightNames[i]+"VisionPose", Pose2d.struct).publish();
+            seenPublisher[i] = odom
+                .getStructArrayTopic(limelightNames[i]+"SeenPose", Pose3d.struct).publish();
+        }
+        visionPubliser[names.length] = odom
+            .getStructTopic("averageVisionPose", Pose2d.struct).publish();
+
+        poseMemory = new Pose2d[names.length][2];
+        
     }
 
     private boolean isInBouds(LimelightHelpers.PoseEstimate currentPose){
@@ -57,26 +97,72 @@ public class Vision {
         return isInBounds;
     }
 
-    private Pose2d lastPose = null;
-
+    private final double maxRotationalAcceleration = 60;
     public void updateVisionPose(){
-        double maxRotationalAcceleration = 60;
+        ArrayList<VisionMeasurement> visionPoses = new ArrayList<>();
+        for (int i = 0; i < visionIO.length; i++){
+            VisionIO vision = visionIO[i];
+            Optional<VisionMeasurement> pose = updateCameraPose(vision, i);
+            if (pose.isPresent()){
+                visionPoses.add(pose.get());
+            }
+        }
+        if (visionPoses.size() == 0){
+            return;
+        }
+        double totalX = 0;
+        double totalY = 0;
+        double totalRot = 0;
+        for (VisionMeasurement measurement : visionPoses){
+            Pose2d pose = measurement.pose;
+            totalX += pose.getX();
+            totalY += pose.getY();
+            totalRot += pose.getRotation().getRadians();
+        }
+        Pose2d average = new Pose2d(totalX/visionPoses.size(), totalY/visionPoses.size(), Rotation2d.fromRadians(totalRot/visionPoses.size()));
+        visionPubliser[visionPubliser.length - 1].accept(average);
+        for (VisionMeasurement measurement : visionPoses){
+            if (poseWithinRange(measurement.pose, average, .2)){
+                drivetrain.addVisionMeasurement(
+                    measurement.pose,
+                    measurement.timeStamp,measurement.stdDev);
+            }
+        }
+    }
 
-        LimelightHelpers.PoseEstimate botPose = visionIO.getPoseEstimate(names[0]);//LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(names[0]);
-
+    private Optional<VisionMeasurement> updateCameraPose(VisionIO visionIO, int index){
+        LimelightHelpers.PoseEstimate botPose;
+        
+        try {
+            botPose = visionIO.getPoseEstimate();
+            visionIO.setOrientation(drivetrain.getPose().getRotation());
+        } catch (Exception e) {
+            System.out.println("A camera does not exist");
+            return Optional.empty();
+        }
+        
         if(botPose.tagCount == 0) {
-            return;
+            return Optional.empty();
         }
 
-        visionIO.setOrientation(names[0], drivetrain.getPose().getRotation());//LimelightHelpers.SetRobotOrientation(names[0], drivetrain.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        poseMemory[index][1] = poseMemory[index][0];
+        poseMemory[index][0] = botPose.pose;
         if(!isInBouds(botPose)) {
-            return;
+            seenPublisher[index].accept(new Pose3d[]{});
+            visionPubliser[index].accept(botPose.pose);
+            return Optional.empty();
         }
 
-        if (lastPose != null && !poseWithinRange(lastPose, botPose.pose, 1)){
-            visionPubliser.accept(botPose.pose);
-            lastPose = botPose.pose;
-            return;
+        if (poseMemory[index][0] != null && !poseWithinRange(poseMemory[index][0], botPose.pose, .5)){
+            seenPublisher[index].accept(new Pose3d[]{});
+            visionPubliser[index].accept(botPose.pose);
+            return Optional.empty();
+        }
+
+        if (poseMemory[index][1] != null && !poseWithinRange(poseMemory[index][1], botPose.pose, 1)){
+            seenPublisher[index].accept(new Pose3d[]{});
+            visionPubliser[index].accept(botPose.pose);
+            return Optional.empty();
         }
 
         double ambiguity = 0;
@@ -85,34 +171,46 @@ public class Vision {
         }
 
         if (ambiguity/botPose.rawFiducials.length > .2){
-            visionPubliser.accept(botPose.pose);
-            lastPose = botPose.pose;
-            System.out.println(ambiguity/botPose.rawFiducials.length);
-            return;
+            seenPublisher[index].accept(new Pose3d[]{});
+            visionPubliser[index].accept(botPose.pose);
+            return Optional.empty();
         }
-
+        VisionMeasurement measurement;
         if(Math.abs(Units.radiansToDegrees(drivetrain.getSpeeds().omegaRadiansPerSecond)) > maxRotationalAcceleration){
             
             double[] rotationInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get(botPose.avgTagDist);
-            drivetrain.addVisionMeasurement(
-                botPose.pose,
-                botPose.timestampSeconds,VecBuilder.fill(rotationInterpolation[0],rotationInterpolation[1],999999));
+            // drivetrain.addVisionMeasurement(
+            //     botPose.pose,
+            //     botPose.timestampSeconds,VecBuilder.fill(rotationInterpolation[0]*2,rotationInterpolation[1]*2,999999));
+            measurement = new VisionMeasurement(botPose.pose,
+             botPose.timestampSeconds,
+             VecBuilder.fill(rotationInterpolation[0]*2,rotationInterpolation[1]*2,999999));
         }else{
-            double[] linearInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get(botPose.avgTagDist);
-            drivetrain.addVisionMeasurement(
-                botPose.pose,
-                botPose.timestampSeconds,VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],999999));//linearInterpolation[0],linearInterpolation[1],999999));
+            double[] linearInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get((botPose.avgTagDist)/botPose.rawFiducials.length);
+            // drivetrain.addVisionMeasurement(
+            //     botPose.pose,
+            //     botPose.timestampSeconds,VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],.1));//linearInterpolation[0],linearInterpolation[1],999999));
+            measurement = new VisionMeasurement(botPose.pose,
+             botPose.timestampSeconds,
+             VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],linearInterpolation[2]));//linearInterpolation[0],linearInterpolation[1],999999));
+        }
+
+        visionPubliser[index].accept(botPose.pose);
+        //TODO was very slow, needs testing
+        Pose3d[] poses = new Pose3d[botPose.rawFiducials.length];
+        int i = 0;
+        for (RawFiducial fiducial : botPose.rawFiducials){
+            Pose3d pose = new Pose3d();
+            Optional<Pose3d> poseM = GameData.getAprilTagPose3d(fiducial.id);
+            if (poseM.isPresent()){
+                pose = poseM.get();
+            }
+            poses[i] = pose;
+            i++;
         }
         
-        visionPubliser.accept(botPose.pose);
-        //TODO very slow for some reason, fix that
-        Pose2d pose = new Pose2d();
-        if (LimelightConstants.K_TAG_LAYOUT.getTagPose(botPose.rawFiducials[0].id).isPresent()){
-            pose = LimelightConstants.K_TAG_LAYOUT.getTagPose(botPose.rawFiducials[0].id).get().toPose2d();
-        }
-        seenPublisher.accept(pose);
-
-        lastPose = botPose.pose;
+        seenPublisher[index].accept(poses);
+        return Optional.of(measurement);
     }
 
     /**

@@ -66,7 +66,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
 import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
 
-public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
+public class SimSwerve implements SwerveDriveIO {
 
     private final SelfControlledSwerveDriveSimulation simulatedDrive;
 
@@ -77,13 +77,17 @@ public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
 
     private final StructArrayPublisher<Pose3d> coralPublisher = instance
         .getStructArrayTopic("AllCoral", Pose3d.struct).publish();
+
+    /**
+     * object detection sim relies on this as a subscriber
+     */
     private final StructArrayPublisher<Pose3d> algaePublisher = instance
         .getStructArrayTopic("AllAlgae", Pose3d.struct).publish();
-    private final StructArrayPublisher<Pose3d> stackPublisher = instance
-        .getStructArrayTopic("AllStacks", Pose3d.struct).publish();
 
     private Rotation2d yawOffset = new Rotation2d();
     
+    private Thread updateThread = new Thread();
+
     public SimSwerve() {
         // For your own code, please configure your drivetrain properly according to the documentation
         final DriveTrainSimulationConfig config = SimSwerveConstants.driveTrainSimulationConfig;
@@ -91,10 +95,27 @@ public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
         // Creating the SelfControlledSwerveDriveSimulation instance
         //I SPENT HOURS TO FIND THIS LINE!!!!!!!!!!!!!!!!!!!!!!!!! AHHHHHHHHHHHHHHHHHHHHHHHHHH.
         this.simulatedDrive = new SelfControlledSwerveDriveSimulation(
-                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(.1,.1,0), VecBuilder.fill(0,0,0));
+                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(.1,.1,0.025), VecBuilder.fill(0,0,0));
 
         // Register the drivetrain simulation to the simulation world
         SimulatedArena.getInstance().addDriveTrainSimulation(simulatedDrive.getDriveTrainSimulation());
+
+        updateThread = new Thread(()->{
+            while(true){
+                try {
+                    SimulatedArena.getInstance().simulationPeriodic();
+                    simulatedDrive.periodic();
+                    coralPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+                    algaePublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+                    posePublisher.accept(simulatedDrive.getActualPoseInSimulationWorld());
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        updateThread.setDaemon(true);
+        updateThread.start();
     }
 
     @Override
@@ -247,15 +268,5 @@ public class SimSwerve extends SubsystemBase implements SwerveDriveIO {
         state.ModulePositions = simulatedDrive.getLatestModulePositions();
         
         return state;
-    }
-
-    @Override
-    public void periodic() {
-        SimulatedArena.getInstance().simulationPeriodic();
-        simulatedDrive.periodic();
-        coralPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-        algaePublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-        stackPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("CoralAlgaeStack"));
-        posePublisher.accept(simulatedDrive.getActualPoseInSimulationWorld());
     }
 }

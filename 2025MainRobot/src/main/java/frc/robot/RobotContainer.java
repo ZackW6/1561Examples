@@ -34,7 +34,11 @@ import com.pathplanner.lib.util.FileVersionException;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -50,10 +54,14 @@ import frc.robot.commands.WaitAutos.BranchInstruction;
 import frc.robot.commands.WaitAutos.BranchInstruction.BeginPose;
 import frc.robot.commands.WaitAutos.BranchInstruction.IntakePose;
 import frc.robot.commands.WaitAutos.BranchInstruction.ShootPose;
+import frc.robot.constants.GameData;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.swerve.SwerveDrive;
 import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
+import frc.robot.subsystems.vision.objectDetection.ObjectDetection;
 import frc.robot.util.ChoreoEX;
 import frc.robot.util.DynamicObstacle;
 public class RobotContainer {
@@ -66,8 +74,14 @@ public class RobotContainer {
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
   
-  private final SwerveDrive drivetrain = new SwerveDrive(new SimSwerve()); // My drivetrain
+  private final SwerveDrive drivetrain = new SwerveDrive(); // My drivetrain
 
+  private final Elevator elevator = new Elevator();
+
+  private final Arm arm = new Arm();
+
+  private final ObjectDetection objectDetection = new ObjectDetection("Test",
+    new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0))), ()->drivetrain.getPose());
 
   private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain);
 
@@ -86,11 +100,9 @@ public class RobotContainer {
       ,()->-driverController.getLeftX() * 1.00 * MaxSpeed
       ,()->-driverController.getRightX() * 2/3 * MaxAngularRate);
 
-    driverController.a().whileTrue(drivetrain.addFieldRelativeSpeeds(()->0, ()->1, ()->1, "TEST"))
-      .onFalse(Commands.runOnce(()->drivetrain.removeSource("TEST")));
+    driverController.a().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
 
-    driverController.b().whileTrue(drivetrain.addRobotRelativeSpeeds(()->1, ()->0, ()->0, "TEST2"))
-      .onFalse(Commands.runOnce(()->drivetrain.addRobotRelativeSpeeds(0, 0, 0, "TEST2")));
+    driverController.b().whileTrue(elevator.reachGoal(2).alongWith(arm.reachGoal(.47)));
 
     // driverController.x().whileTrue(drivetrain.passiveTowardPose(new Pose2d(3,4.5,Rotation2d.fromDegrees(90)), 5,3, 5, "TEST3"));
     driverController.x().whileTrue(factoryCommands.passiveTowardPiece(new Pose2d(3,4.5,Rotation2d.fromDegrees(90)), 5,3, 3, new Rotation2d(), "TEST3"));

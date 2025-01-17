@@ -77,7 +77,7 @@ public class RobotContainer {
   private final Arm arm = new Arm();
   private final Shooter shooter = new Shooter();
   private final Intake intake = new Intake();
-  // private final Elevator elevator = new Elevator();
+  private final Elevator elevator = new Elevator();
   private final ObjectDetection limelightObject = new ObjectDetection(LimelightConstants.AMP_CAM, LimelightConstants.AMP_CAM_TRANSFORM, ()->drivetrain.getPose());
   // private final Candle candle = new Candle();
   private final FactoryCommands groupCommands = new FactoryCommands(arm, shooter, intake, drivetrain, limelightObject, driverController);

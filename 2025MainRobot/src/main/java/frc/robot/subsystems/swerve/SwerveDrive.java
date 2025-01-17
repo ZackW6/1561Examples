@@ -14,6 +14,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -26,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.constants.PathplannerConstants;
+import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
 import frc.robot.subsystems.vision.Vision;
 
@@ -45,10 +48,17 @@ public class SwerveDrive extends SubsystemBase{
     private final StructPublisher<Pose2d> posePublisher = odom
         .getStructTopic("RobotPose", Pose2d.struct).publish();
 
-    public SwerveDrive(SwerveDriveIO swerveIO){
-        this.swerveIO = swerveIO;
-
-        cameras = new Vision(swerveIO, LimelightConstants.LIMELIGHT_NAME);
+    public SwerveDrive(){
+        if (Robot.isSimulation()){
+            this.swerveIO = new SimSwerve();
+        }else{
+            this.swerveIO = TunerConstants.DriveTrain;
+        }
+        
+        cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FORWARD_LIMELIGHT_CAMERA_TRANSFORM,
+             LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM},
+              LimelightConstants.FORWARD_LIMELIGHT_NAME,
+               LimelightConstants.BACKWARD_LIMELIGHT_NAME);
         mainRequest = new MainDrive(()->swerveIO.getPose().getRotation(),()->swerveIO.getYawOffset());
 
         setDefaultCommand(applyRequest(()->mainRequest));

@@ -2,12 +2,14 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.hardwareSimUtil;
+package frc.robot.subsystems.vision.objectDetection.simObjectDetection;
 
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import org.ironmaple.simulation.SimulatedArena;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -17,8 +19,11 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArraySubscriber;
+import edu.wpi.first.networktables.StructSubscriber;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
+import frc.robot.subsystems.vision.objectDetection.ObjectDetectionIO;
 import frc.robot.util.PoseEX;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -26,32 +31,22 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 
 /** Simple sim to test object detection related ideas*/
-public class ObjectDetectionSim {
+public class ObjectDetectionSim implements ObjectDetectionIO{
     private final Transform3d transform3d;
     private final Vector<N2> fieldOfView;
-    private final ArrayList<Pose3d> possibleObjects;
     private final Supplier<Pose2d> robotPose;
+
+    private final NetworkTable instance = NetworkTableInstance.getDefault().getTable("RealData");
+    private final StructArraySubscriber<Pose3d> algaeSubscriber = 
+        instance.getStructArrayTopic("AllAlgae",Pose3d.struct).subscribe(new Pose3d[0]);
     /**
      * @param transform from center of robot
      * @param FOV horizontal and vertical FOV in degrees
      */
-    public ObjectDetectionSim(Transform3d transform, Vector<N2> FOV, Vector<N2> latencyRange, Supplier<Pose2d> robotPose){
+    public ObjectDetectionSim(Transform3d transform, Vector<N2> FOV, Supplier<Pose2d> robotPose){
         this.transform3d = transform;
         this.fieldOfView = FOV;
-        this.possibleObjects = new ArrayList<Pose3d>();
         this.robotPose = robotPose;
-    }
-
-    public void addObjectPose(Pose3d pose){
-        possibleObjects.add(pose);
-    }
-
-    public void removeObjectPose(Pose3d pose){
-        possibleObjects.remove(pose);
-    }
-
-    public ArrayList<Pose3d> getObjectPoses(){
-        return possibleObjects;
     }
 
     public boolean isPiecePresent(){
@@ -62,9 +57,13 @@ public class ObjectDetectionSim {
     }
     
     public Optional<Pose3d> getClosestVisiblePiece(){
+        if (!algaeSubscriber.exists()){
+            return null;
+        }
         ArrayList<Pose3d> objects = new ArrayList<Pose3d>();
         Pose3d cameraPose = new Pose3d(robotPose.get()).transformBy(transform3d);
-        for (Pose3d pose : possibleObjects){
+        for (Pose3d pose : algaeSubscriber.get()){
+            pose = new Pose3d(pose.getX(), pose.getY(), 0,new Rotation3d());
             Rotation2d yawFromPiece = PoseEX.getYawFromPose(cameraPose.toPose2d(), pose.toPose2d());
             Rotation2d pitchFromPiece = PoseEX.getPitchFromPose(cameraPose, pose);
             // System.out.println(pitchFromPiece.getDegrees()+" PICTH");
@@ -100,10 +99,9 @@ public class ObjectDetectionSim {
         } catch (Exception e) {
             return Rotation2d.fromDegrees(0);
         }
-        
     }
     
-    public Rotation2d getVerticalRotationFromTarget(){
+    public Rotation2d getVerticalRotationFromPiece(){
         Pose3d cameraPose = new Pose3d(robotPose.get()).transformBy(transform3d);
         try {
             return PoseEX.getPitchFromPose(cameraPose,getClosestVisiblePiece().get());

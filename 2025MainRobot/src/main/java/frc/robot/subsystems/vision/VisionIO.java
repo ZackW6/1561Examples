@@ -9,8 +9,9 @@ public interface VisionIO {
      * used to help megatag 2 find pose more accurately, do periodically
      * @param yaw
      */
-    public void setOrientation(String name, Rotation2d yaw);
+    public void setOrientation(Rotation2d yaw);
 
-    public LimelightHelpers.PoseEstimate getPoseEstimate(String name);
+    public LimelightHelpers.PoseEstimate getPoseEstimate();
 
+    public String getName();
 }

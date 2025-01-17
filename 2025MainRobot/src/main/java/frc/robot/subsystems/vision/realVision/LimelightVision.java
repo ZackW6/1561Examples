@@ -7,14 +7,24 @@ import frc.robot.subsystems.vision.VisionIO;
 
 public class LimelightVision implements VisionIO{
 
+    private final String name;
+    public LimelightVision(String name){
+        this.name = name;
+    }
+
     @Override
-    public void setOrientation(String name, Rotation2d yaw) {
+    public void setOrientation(Rotation2d yaw) {
         LimelightHelpers.SetRobotOrientation(name, yaw.getDegrees(), 0, 0, 0, 0, 0);
     }
 
     @Override
-    public PoseEstimate getPoseEstimate(String name) {
+    public PoseEstimate getPoseEstimate() {
         return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
     
 }

@@ -50,6 +50,7 @@ import java.util.List;
  import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.SimulatedArena;
 import org.photonvision.EstimatedRobotPose;
  import org.photonvision.PhotonCamera;
  import org.photonvision.PhotonPoseEstimator;
@@ -72,15 +73,20 @@ import com.ctre.phoenix6.Utils;
 
      private final SwerveDriveIO driveIO;
      private boolean completeSim = false;
+
+     private final String name;
  
-     public SimVision(SwerveDriveIO drivetrain) {
+     private Thread updateThread = new Thread();
+
+     public SimVision(SwerveDriveIO drivetrain, String name, Transform3d transform) {
+        this.name = name;
         this.driveIO = drivetrain;
         if (driveIO instanceof SimSwerve){
             completeSim = true;
         }
 
-        camera = new PhotonCamera("main");
-        Transform3d last = LimelightConstants.LIMELIGHT_CAMERA_TRANSFORM;
+        camera = new PhotonCamera(name);
+        Transform3d last = transform;
         Transform3d newTransform = new Transform3d(last.getX(), last.getY(), last.getZ(),
              new Rotation3d(last.getRotation().getX(),-last.getRotation().getY(),last.getRotation().getZ()));
         photonEstimator =
@@ -90,7 +96,7 @@ import com.ctre.phoenix6.Utils;
         // ----- Simulation
         if (Robot.isSimulation()) {
             // Create the vision system simulation which handles cameras and targets on the field.
-            visionSim = new VisionSystemSim("main");
+            visionSim = new VisionSystemSim(name);
             // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
             visionSim.addAprilTags(LimelightConstants.K_TAG_LAYOUT);
             // Create simulated camera properties. These can be set to mimic your actual camera.
@@ -107,6 +113,24 @@ import com.ctre.phoenix6.Utils;
             visionSim.addCamera(cameraSim, newTransform);
 
             cameraSim.enableDrawWireframe(true);
+
+            updateThread = new Thread(()->{
+                while(true){
+                    try {
+                        if (completeSim){
+                            visionSim.update(((SimSwerve)driveIO).getRealPose());
+                            Thread.sleep(20);
+                            continue;
+                        }
+                        visionSim.update(driveIO.getPose());
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            updateThread.setDaemon(true);
+            updateThread.start();
         }
      }
  
@@ -120,7 +144,7 @@ import com.ctre.phoenix6.Utils;
       * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
       *     used for estimation.
       */
-     public PoseEstimate getPoseEstimate(String name) {
+     public PoseEstimate getPoseEstimate() {
         
          Optional<EstimatedRobotPose> visionEst = Optional.empty();
          for (var change : camera.getAllUnreadResults()) {
@@ -183,16 +207,16 @@ import com.ctre.phoenix6.Utils;
      * Unused here
      */
     @Override
-    public void setOrientation(String name, Rotation2d yaw) {
+    public void setOrientation(Rotation2d yaw) {
         
     }
 
     @Override
     public void periodic() {
-        if (completeSim){
-            visionSim.update(((SimSwerve)driveIO).getRealPose());
-            return;
-        }
-        visionSim.update(driveIO.getPose());
+        
+    }
+
+    public String getName(){
+        return name;
     }
  }
