@@ -29,7 +29,11 @@ public class PoseEX {
     }
 
     public static Pose2d pose180(Pose2d initPose){
-        return new Pose2d(GameData.fieldSizeX-initPose.getX(), GameData.fieldSizeY-initPose.getY(), Rotation2d.fromDegrees(initPose.getRotation().getDegrees() - 180));
+        double newDegrees = initPose.getRotation().getDegrees() - 180;
+        if (newDegrees < -180){
+            newDegrees+=360;
+        }
+        return new Pose2d(GameData.fieldSizeX-initPose.getX(), GameData.fieldSizeY-initPose.getY(), Rotation2d.fromDegrees(newDegrees));
     }
     
     public static double getDistanceFromPoseMeters(Pose2d mainPose, Pose2d comparingPose) {

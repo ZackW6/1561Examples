@@ -102,7 +102,7 @@ import com.ctre.phoenix6.Utils;
             // Create simulated camera properties. These can be set to mimic your actual camera.
             var cameraProp = new SimCameraProperties();
             cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
-            cameraProp.setCalibError(.35,.1);//0.35, 0.10);
+            cameraProp.setCalibError(0,0);//.04,.01);//0.35, 0.10);
             cameraProp.setFPS(15);
             cameraProp.setAvgLatencyMs(50);//50);
             cameraProp.setLatencyStdDevMs(15);//15);
@@ -116,6 +116,7 @@ import com.ctre.phoenix6.Utils;
 
             updateThread = new Thread(()->{
                 while(true){
+                    double startTime = Utils.getCurrentTimeSeconds();
                     try {
                         if (completeSim){
                             visionSim.update(((SimSwerve)driveIO).getRealPose());
@@ -127,8 +128,12 @@ import com.ctre.phoenix6.Utils;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    if (Utils.getCurrentTimeSeconds() - startTime > .02){
+                        System.out.println("Vision thread exceeded limit: "+(Utils.getCurrentTimeSeconds() - startTime));
+                    }
                 }
             });
+            updateThread.setName("Vision Update Thread");
             updateThread.setDaemon(true);
             updateThread.start();
         }

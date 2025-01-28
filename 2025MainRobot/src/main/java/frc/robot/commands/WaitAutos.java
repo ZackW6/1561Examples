@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
@@ -13,6 +15,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 import com.pathplanner.lib.util.FileVersionException;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,7 +29,7 @@ public class WaitAutos {
 
     public static class BranchInstruction{
 
-        static interface GetPiece{
+        private static interface GetPiece{
             public String value();
         }
 
@@ -51,13 +54,23 @@ public class WaitAutos {
          * will be based on TBD places by roboducks
          */
         public static enum ShootPose{
-            PlaceA("PA"),
-            PlaceB("PB"),
-            PlaceC("PC");
-
+            PlaceA("PA",1),
+            PlaceB("PB",2),
+            PlaceC("PC",3),
+            PlaceD("PD",4),
+            PlaceE("PE",5),
+            PlaceF("PF",6),
+            PlaceG("PG",7),
+            PlaceH("PH",8),
+            PlaceI("PI",9),
+            PlaceJ("PJ",10),
+            PlaceK("PK",11),
+            PlaceL("PL",12);
             private final String ID;
-            ShootPose(String id) {
+            private final int num;
+            ShootPose(String id, int num) {
                 this.ID = id;
+                this.num = num;
             }
 
             public String value(){
@@ -86,12 +99,14 @@ public class WaitAutos {
 
         private final GetPiece from;
         private final ShootPose to;
+        private final int layer;
 
         /**
          * @param from - piece you have or want to get
          * @param to - where you go to shoot the piece if acquired, else go for next
          */
-        public BranchInstruction(GetPiece from, ShootPose to){
+        public BranchInstruction(GetPiece from, ShootPose to, int layer){
+            this.layer = MathUtil.clamp(layer, 1, 4);
             this.from = from;
             this.to = to;
         }
@@ -100,8 +115,8 @@ public class WaitAutos {
          * @param from - piece you have or want to get
          * @param to - where you go to shoot the piece if acquired, else go for next
          */
-        public static BranchInstruction of(GetPiece from, ShootPose to){
-            return new BranchInstruction(from, to);
+        public static BranchInstruction of(GetPiece from, ShootPose to, int layer){
+            return new BranchInstruction(from, to, layer);
         }
 
         public GetPiece getFrom(){
@@ -120,25 +135,24 @@ public class WaitAutos {
      * 
      * Also need auto builder for this, but you probably already did that.
      * 
+     * Make sure to declare factoryCommands beforehand.
      * 
      * @apiNote Be cautious, this is complex, it will always be in the format
      * createBranchCommand(whetherOrNotPieceGrabbed,
      *  BranchInstruction.of(BeginPose.BeginUpper, ShootPose.ShootUpper),
      *  BranchInstruction.of(PiecePose.FirstPiece, ShootPose.ShootMiddle),
      *  etc...);
-     * 
-     * @param reason - this is the boolean supplier saying yes or no to success of intake,
-     *  if yes it will go to place/shoot, while if false will continue
+     * @param beginPose - if you don't have an initial path of that name, it will make one from this pose
+     * @param reason - acquired piece or not yet
      * @param branchInstructions - this is the list of pieces you want to get and where you want to score them.
      */
-    public static Command createBranchCommand(BooleanSupplier reason, BranchInstruction... branchInstructions){
+    public static Command createBranchCommand(Pose2d beginPose, BranchInstruction... branchInstructions){
+        DynamicObstacle.setDynamicObstacles("avoidAlgae",beginPose.getTranslation());
         SequentialCommandGroup commandGroup = new SequentialCommandGroup();
 
-        Command firstPath;
-        Pose2d startPose;
+        Pose2d startPose = beginPose;
         
         //Get first path
-        firstPath = tryPath(branchInstructions[0].from.value()+branchInstructions[0].to.value());
 
         try {
             //Find start for odom reset
@@ -146,39 +160,40 @@ public class WaitAutos {
             startPose = path.getPathPoses().get(0);
         } catch (Exception e) {
             System.out.println(branchInstructions[0].from.value()+branchInstructions[0].to.value()+ " does not exist");
-            //TODO, fix this please
-            return Commands.none();
         }
 
-        commandGroup.addCommands(firstPath);
 
-        String[] lastToID = new String[]{branchInstructions[0].to.value()};
 
-        for (int i = 1; i < branchInstructions.length; i++){
-            String fromIntakeID = branchInstructions[i].from.value();
-            String ifShootID = branchInstructions[i].to.value();
-
-            commandGroup.addCommands(Commands.defer(()->tryPath(lastToID[0]+fromIntakeID)
-                .andThen(Commands.waitSeconds(.1)), Set.of())
-                .andThen(Commands.defer(()->Commands.either(
-                    tryPath(fromIntakeID+ifShootID)
-                    .alongWith(Commands.runOnce(()->{lastToID[0] = ifShootID;}))
-                    ,Commands.runOnce(()->{lastToID[0] = fromIntakeID;})
-                    ,reason),Set.of())));
+        for (int i = 0; i < branchInstructions.length; i++){
+            String fromID = branchInstructions[i].from.value();
+            String shootID = branchInstructions[i].to.value();
+            int place = branchInstructions[i].to.num;
+            if (i == branchInstructions.length-1){
+                commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer));
+                continue;
+            }
+            commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer).andThen(tryPath(shootID, branchInstructions[i+1].from.value(), place, 0)));
         }
 
         return AutoBuilder.resetOdom(startPose)
-            .andThen(Commands.runOnce(()->{lastToID[0] = branchInstructions[0].to.value();}))
             .andThen(commandGroup);
     }
 
-    private static Command tryPath(String totalID){
+    private static Command tryPath(String from, String to, int place, int layer){
+        FactoryCommands factoryCommands = FactoryCommands.getInstance().get();
         try {
-            return AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(totalID));
+            return AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to));
         } catch (Exception e) {
-            System.out.println(totalID +" path does not exist");
-            //TODO, eventually this will/should be supplimented by pathplanner autopathing
-            return Commands.none();
+            System.out.println(from+to +" path does not exist");
+            if (to.startsWith("P")){
+                return factoryCommands.autoScoreCoral(place, layer);
+            }
+            try {
+                return factoryCommands.autoIntakeCoral(Integer.parseInt(to.substring(1,2),10));
+            } catch (Exception e2) {
+                return Commands.none();
+            }
+            
         }
     }
 }

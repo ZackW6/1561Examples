@@ -11,7 +11,7 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
 
     private final DCMotor gearbox = DCMotor.getFalcon500(2);
     
-    private PIDController pidController = new PIDController(5, 0, 0);
+    private PIDController pidController = new PIDController(30, 0, 0);
 
     private double targetPosition = 0;
 

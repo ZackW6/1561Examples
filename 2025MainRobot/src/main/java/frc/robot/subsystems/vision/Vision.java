@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.jni.SwerveJNI;
 
 import edu.wpi.first.math.Matrix;
@@ -125,7 +126,7 @@ public class Vision {
             if (poseWithinRange(measurement.pose, average, .2)){
                 drivetrain.addVisionMeasurement(
                     measurement.pose,
-                    measurement.timeStamp,measurement.stdDev);
+                    Utils.fpgaToCurrentTime(measurement.timeStamp),VecBuilder.fill(0,0,0));//measurement.stdDev);
             }
         }
     }
@@ -133,14 +134,17 @@ public class Vision {
     private Optional<VisionMeasurement> updateCameraPose(VisionIO visionIO, int index){
         LimelightHelpers.PoseEstimate botPose;
         
+        visionIO.setOrientation(drivetrain.getPose().getRotation());
         try {
             botPose = visionIO.getPoseEstimate();
-            visionIO.setOrientation(drivetrain.getPose().getRotation());
         } catch (Exception e) {
             System.out.println("A camera does not exist");
             return Optional.empty();
         }
         
+        if (botPose == null){
+            return Optional.empty();
+        }
         if(botPose.tagCount == 0) {
             return Optional.empty();
         }
@@ -187,9 +191,10 @@ public class Vision {
              VecBuilder.fill(rotationInterpolation[0]*2,rotationInterpolation[1]*2,999999));
         }else{
             double[] linearInterpolation = LimelightConstants.ONE_APRIL_TAG_LINEAR_INTERPOLATOR.get((botPose.avgTagDist)/botPose.rawFiducials.length);
+            // System.out.println(Utils.getCurrentTimeSeconds()-.02+"   "+botPose.timestampSeconds);
             // drivetrain.addVisionMeasurement(
             //     botPose.pose,
-            //     botPose.timestampSeconds,VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],.1));//linearInterpolation[0],linearInterpolation[1],999999));
+            //     Utils.fpgaToCurrentTime(botPose.timestampSeconds),VecBuilder.fill(0,0,999));//linearInterpolation[0],linearInterpolation[1],.1));//linearInterpolation[0],linearInterpolation[1],999999));
             measurement = new VisionMeasurement(botPose.pose,
              botPose.timestampSeconds,
              VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],linearInterpolation[2]));//linearInterpolation[0],linearInterpolation[1],999999));
@@ -200,15 +205,12 @@ public class Vision {
         Pose3d[] poses = new Pose3d[botPose.rawFiducials.length];
         int i = 0;
         for (RawFiducial fiducial : botPose.rawFiducials){
-            Pose3d pose = new Pose3d();
-            Optional<Pose3d> poseM = GameData.getAprilTagPose3d(fiducial.id);
-            if (poseM.isPresent()){
-                pose = poseM.get();
-            }
+            Pose3d pose = GameData.getAprilTagPose3d(fiducial.id);
+
             poses[i] = pose;
             i++;
         }
-        
+
         seenPublisher[index].accept(poses);
         return Optional.of(measurement);
     }

@@ -15,6 +15,8 @@ import java.util.function.Supplier;
 
 import org.ejml.simple.SimpleMatrix;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -46,6 +48,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
@@ -65,6 +68,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
 import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
+import frc.robot.util.MapleSimWorld;
 
 public class SimSwerve implements SwerveDriveIO {
 
@@ -75,22 +79,16 @@ public class SimSwerve implements SwerveDriveIO {
     private final StructPublisher<Pose2d> posePublisher = instance
         .getStructTopic("RealPose", Pose2d.struct).publish();
 
-    private final StructArrayPublisher<Pose3d> coralPublisher = instance
-        .getStructArrayTopic("AllCoral", Pose3d.struct).publish();
 
-    /**
-     * object detection sim relies on this as a subscriber
-     */
-    private final StructArrayPublisher<Pose3d> algaePublisher = instance
-        .getStructArrayTopic("AllAlgae", Pose3d.struct).publish();
 
     private Rotation2d yawOffset = new Rotation2d();
     
     private Thread updateThread = new Thread();
 
+
     public SimSwerve() {
         // For your own code, please configure your drivetrain properly according to the documentation
-        final DriveTrainSimulationConfig config = SimSwerveConstants.driveTrainSimulationConfig;
+        DriveTrainSimulationConfig config = SimSwerveConstants.driveTrainSimulationConfig;
 
         // Creating the SelfControlledSwerveDriveSimulation instance
         //I SPENT HOURS TO FIND THIS LINE!!!!!!!!!!!!!!!!!!!!!!!!! AHHHHHHHHHHHHHHHHHHHHHHHHHH.
@@ -103,10 +101,12 @@ public class SimSwerve implements SwerveDriveIO {
         updateThread = new Thread(()->{
             while(true){
                 try {
-                    SimulatedArena.getInstance().simulationPeriodic();
-                    simulatedDrive.periodic();
-                    coralPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-                    algaePublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+                    // SimulatedArena.getInstance().simulationPeriodic();
+                    try {
+                        simulatedDrive.periodic();
+                    } catch (Exception e) {
+                        System.out.println("AHHHHH");
+                    }
                     posePublisher.accept(simulatedDrive.getActualPoseInSimulationWorld());
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -116,6 +116,7 @@ public class SimSwerve implements SwerveDriveIO {
         });
         updateThread.setDaemon(true);
         updateThread.start();
+        MapleSimWorld.addMainDrive(simulatedDrive.getDriveTrainSimulation());
     }
 
     @Override
@@ -200,8 +201,10 @@ public class SimSwerve implements SwerveDriveIO {
         return simulatedDrive.getActualPoseInSimulationWorld();
     }
 
+    double resetTime = -1;
     @Override
     public void resetPose(Pose2d pose) {
+        resetTime = Timer.getFPGATimestamp();
         simulatedDrive.setSimulationWorldPose(pose);
         simulatedDrive.resetOdometry(pose);
         SimulatedArena.getInstance().resetFieldForAuto();
@@ -214,6 +217,9 @@ public class SimSwerve implements SwerveDriveIO {
 
     @Override
     public void addVisionMeasurement(Pose2d pose, double timestep, Vector<N3> stdDev) {
+        if (currentTimeToFPGA(timestep) < resetTime){
+            return;
+        }
         simulatedDrive.addVisionEstimation(pose, currentTimeToFPGA(timestep), stdDev);
     }
 

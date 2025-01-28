@@ -78,7 +78,7 @@ public class Elevator extends SubsystemBase {
   /** Subsystem constructor. */
   public Elevator() {
     configMotor();
-    motor.setControl(m_request.withPosition(.5).withSlot(0));
+    // motor.setControl(m_request.withPosition(.5).withSlot(0));
     if (Robot.isSimulation()){
       elevatorSim = new ElevateSim(motor, m_elevatorSim);
       elevatorSim.configureCANCoder(encoder, ChassisReference.CounterClockwise_Positive,0);

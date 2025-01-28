@@ -32,6 +32,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.pathplanner.lib.util.FileVersionException;
 
+import edu.wpi.first.hal.simulation.RoboRioDataJNI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -41,11 +42,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.WaitAutos;
@@ -56,14 +59,17 @@ import frc.robot.commands.WaitAutos.BranchInstruction.IntakePose;
 import frc.robot.commands.WaitAutos.BranchInstruction.ShootPose;
 import frc.robot.constants.GameData;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.MainMechanism;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.swerve.SwerveDrive;
 import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.subsystems.vision.objectDetection.ObjectDetection;
 import frc.robot.util.ChoreoEX;
 import frc.robot.util.DynamicObstacle;
+import frc.robot.util.MapleSimWorld;
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
@@ -78,12 +84,15 @@ public class RobotContainer {
 
   private final Elevator elevator = new Elevator();
 
+  private final Intake intake = new Intake();
+
   private final Arm arm = new Arm();
 
-  private final ObjectDetection objectDetection = new ObjectDetection("Test",
-    new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0))), ()->drivetrain.getPose());
+  private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator);
+  // private final ObjectDetection objectDetection = new ObjectDetection("Test",
+  //   new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0))), ()->drivetrain.getPose());
 
-  private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain);
+  private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain, scoringMechanism);
 
   // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
   //     .withDeadband(TunerConstants.TRANSLATIONAL_DEADBAND).withRotationalDeadband(TunerConstants.ROTATIONAL_DEADBAND)
@@ -100,14 +109,21 @@ public class RobotContainer {
       ,()->-driverController.getLeftX() * 1.00 * MaxSpeed
       ,()->-driverController.getRightX() * 2/3 * MaxAngularRate);
 
-    driverController.a().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
+    // driverController.a().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
 
-    driverController.b().whileTrue(elevator.reachGoal(2).alongWith(arm.reachGoal(.47)));
+    driverController.b().whileTrue(scoringMechanism.intake());
+    driverController.povUp().whileTrue(scoringMechanism.score(1));
+    driverController.povRight().whileTrue(scoringMechanism.score(2));
+    driverController.povDown().whileTrue(scoringMechanism.score(3));
+    driverController.povLeft().whileTrue(scoringMechanism.score(4));
 
     // driverController.x().whileTrue(drivetrain.passiveTowardPose(new Pose2d(3,4.5,Rotation2d.fromDegrees(90)), 5,3, 5, "TEST3"));
-    driverController.x().whileTrue(factoryCommands.passiveTowardPiece(new Pose2d(3,4.5,Rotation2d.fromDegrees(90)), 5,3, 3, new Rotation2d(), "TEST3"));
-    
+    driverController.x().whileTrue(factoryCommands.autoScoreCoral(12,3));
+
+    // driverController.x().whileTrue(factoryCommands.toPoseWhilePointing(new Pose2d(10,5, new Rotation2d())));
+
     driverController.rightStick().whileTrue(factoryCommands.activePointPose(new Pose2d(3,4.5, new Rotation2d()), MaxAngularRate,5, "point"));
+  
     // drivetrain.setDefaultCommand(
     //     drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * 1.00 * MaxSpeed)
     //         .withVelocityY(-driverController.getLeftX() * 1.00 * MaxSpeed)
@@ -120,12 +136,10 @@ public class RobotContainer {
     
     driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
 
-    drivetrain.registerTelemetry(logger::telemeterize);
-
     //TODO was deffered, i switched to not, make sure it works in all scenarios
     new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
       // DynamicObstacle.setDynamicObstacles("testNodeSize", drivetrain.getPose().getTranslation());
-      DynamicObstacle.clearDynamicObstacles(drivetrain.getPose().getTranslation());
+      DynamicObstacle.setDynamicObstacles("avoidAlgae",drivetrain.getPose().getTranslation());
       if (Robot.isSimulation()){
         drivetrain.seedFieldRelative(Rotation2d.fromDegrees(90));
         return;
@@ -139,6 +153,7 @@ public class RobotContainer {
   }
 
   public RobotContainer() {
+    // MapleSimWorld.instantiate();
     drivetrain.configurePathPlanner();
     
     DataLogManager.start();
@@ -154,11 +169,21 @@ public class RobotContainer {
     //How you might make a choreo only path
     // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     
-    // autoChooser.addOption("Choreo Branching",
-    //   WaitAutos.createBranchCommand(()->(int)(Math.random()+.5) == 1,
-    //     BranchInstruction.of(BeginPose.BeginLeft, ShootPose.ShootMiddle),
-    //     BranchInstruction.of(IntakePose.FeederOne, ShootPose.ShootMiddle),
-    //     BranchInstruction.of(IntakePose.FeederTwo, ShootPose.ShootMiddle)));
+    autoChooser.addOption("WaitAuto",
+      WaitAutos.createBranchCommand(new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)),
+        BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceF,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceA,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceB,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceF,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceG,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceH,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceI,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceJ,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceK,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceL,4)));
   }
 
   public void configureAutonomousCommands() {

@@ -36,13 +36,13 @@
     "maxVelocity": 5.0,
     "maxAcceleration": 10.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 5000.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 176.560130306254
+    "rotation": 65.83337015701451
   },
   "reversed": false,
   "folder": null,

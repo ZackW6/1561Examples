@@ -31,6 +31,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -87,7 +88,7 @@ public class Elevator extends SubsystemBase {
    * @param goal the position to maintain
    */
   public Command reachGoal(double goal) {
-    return Commands.runOnce(()->elevatorIO.setPosition(goal));
+    return this.run(()->elevatorIO.setPosition(goal));
   }
   /**
    * Run control loop to reach and maintain changing goal.
@@ -95,7 +96,7 @@ public class Elevator extends SubsystemBase {
    * @param goal the position to maintain
    */
   public Command reachGoal(DoubleSupplier goal) {
-    return Commands.run(()->elevatorIO.setPosition(goal.getAsDouble()));
+    return this.run(()->elevatorIO.setPosition(goal.getAsDouble()));
   }
 
   public double getPositionMeters(){
@@ -104,6 +105,10 @@ public class Elevator extends SubsystemBase {
 
   public double getPosition(){
     return elevatorIO.getPosition();
+  }
+
+  public double getTargetMeters(){
+    return elevatorIO.getTargetPositionMeters();
   }
 
   @Override

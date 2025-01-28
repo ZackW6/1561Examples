@@ -10,21 +10,26 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinder;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
+import frc.robot.constants.GameData;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.constants.PathplannerConstants;
 import frc.robot.generated.TunerConstants;
@@ -59,13 +64,15 @@ public class SwerveDrive extends SubsystemBase{
              LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM},
               LimelightConstants.FORWARD_LIMELIGHT_NAME,
                LimelightConstants.BACKWARD_LIMELIGHT_NAME);
-        mainRequest = new MainDrive(()->swerveIO.getPose().getRotation(),()->swerveIO.getYawOffset());
+        mainRequest = new MainDrive(()->swerveIO.getPose().getRotation(),()->swerveIO.getYawOffset())
+            .withMaxLinearVelocity(TunerConstants.kSpeedAt12VoltsMps)
+            .withMaxRotationalVelocity(TunerConstants.MAX_ANGULAR_RATE);
 
         setDefaultCommand(applyRequest(()->mainRequest));
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> swerveIO.setControl(requestSupplier.get()));
+        return this.run(() -> swerveIO.setControl(requestSupplier.get()));
     }
 
     @Override
@@ -73,7 +80,12 @@ public class SwerveDrive extends SubsystemBase{
         // if (!Robot.isSimulation()){
         // swerveIO.addVisionMeasurement(new Pose2d(), Timer.getFPGATimestamp(), VecBuilder.fill(0,0,0));
         // double currentTime = Timer.getFPGATimestamp();
-        cameras.updateVisionPose();
+        try {
+            cameras.updateVisionPose();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
         // }
         posePublisher.accept(getPose());
         // System.out.println(Timer.getFPGATimestamp() - currentTime);
@@ -88,14 +100,11 @@ public class SwerveDrive extends SubsystemBase{
     }
 
     public void configurePathPlanner() {
-        new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
-            mainRequest.addRobotSpeeds(0,0,0, "AUTO");
-        }));
         AutoBuilder.configure(
             swerveIO::getPose, // getState of the robot pose
             swerveIO::resetPose,  // Consumer for seeding pose against auto
             swerveIO::getSpeeds,
-            (speeds, feedForward)->swerveIO.setControl(mainRequest.addRobotSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, "AUTO")), // Consumer of ChassisSpeeds to drive the robot
+            (speeds, feedForward)->swerveIO.setControl(mainRequest.addRobotSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond,"AUTO")),//new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
             new PPHolonomicDriveController(new PIDConstants(5, 0, 0),
                                             new PIDConstants(5, 0, 0)),
             PathplannerConstants.pathingConfig,
@@ -109,21 +118,16 @@ public class SwerveDrive extends SubsystemBase{
                     return alliance.get() == DriverStation.Alliance.Red;
                 }
                 return false;
-            },
+            }
             // Reference to this subsystem to set requirements // Change this if the path needs to be flipped on red vs blue
-            this); // Subsystem for requirements
+            ); // Subsystem for requirements
     }
 
     public void configureTeleop(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vrot){
-        setDefaultCommand(applyRequest(()->mainRequest).alongWith(
-            // Commands.run(()->mainRequest.addFieldFacingSpeeds(5, 0, 10, "TELEOP"))));
+        new Trigger(()->DriverStation.isTeleop() && !DriverStation.isDisabled()).whileTrue(addFieldFacingSpeeds(vx, vy, vrot, "TELEOP"));
                 // Commands.run(()->comparison.withSpeeds(new ChassisSpeeds(5,0,10)))));
-            Commands.run(()->mainRequest.addFieldFacingSpeeds(vx.getAsDouble(), vy.getAsDouble(), vrot.getAsDouble(), "TELEOP"))));
             // Commands.run(()->comparison.withVelocityX(vx.getAsDouble()).withVelocityY(vy.getAsDouble()).withRotationalRate(vrot.getAsDouble()))));
-
-        new Trigger(()->DriverStation.isAutonomous()).onTrue(Commands.runOnce(()->{
-            addFieldFacingSpeeds(0,0,0, "TELEOP");
-        }));
+        
     }
 
     public Command addFieldRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){

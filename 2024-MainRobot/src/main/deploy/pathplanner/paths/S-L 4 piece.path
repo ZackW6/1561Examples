@@ -1,5 +1,5 @@
 {
-  "version": 1.0,
+  "version": "2025.0",
   "waypoints": [
     {
       "anchor": {
@@ -24,8 +24,8 @@
         "y": 4.1865072903934974
       },
       "nextControl": {
-        "x": 2.7396358838847545,
-        "y": 4.235509406290626
+        "x": 2.7895146389265655,
+        "y": 4.238989319433078
       },
       "isLocked": false,
       "linkedName": null
@@ -111,33 +111,27 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.44999999999999996,
-      "rotationDegrees": -25.10690525697978,
-      "rotateFast": false
-    },
-    {
-      "waypointRelativePos": 2.5,
-      "rotationDegrees": 39.805343705306434,
-      "rotateFast": true
-    },
-    {
-      "waypointRelativePos": 4.1,
-      "rotationDegrees": 24.66391336835415,
-      "rotateFast": false
-    },
-    {
-      "waypointRelativePos": 4.65,
-      "rotationDegrees": 35.586668961587385,
-      "rotateFast": false
+      "rotationDegrees": -25.10690525697978
     },
     {
       "waypointRelativePos": 1.1500000000000001,
-      "rotationDegrees": -16.212803632127994,
-      "rotateFast": false
+      "rotationDegrees": -16.212803632127994
     },
     {
       "waypointRelativePos": 2.0,
-      "rotationDegrees": -26.565051177078022,
-      "rotateFast": false
+      "rotationDegrees": -26.565051177078026
+    },
+    {
+      "waypointRelativePos": 2.5,
+      "rotationDegrees": 39.805343705306434
+    },
+    {
+      "waypointRelativePos": 4.1,
+      "rotationDegrees": 24.66391336835415
+    },
+    {
+      "waypointRelativePos": 4.65,
+      "rotationDegrees": 35.586668961587385
     }
   ],
   "constraintZones": [
@@ -149,7 +143,9 @@
         "maxVelocity": 0.25,
         "maxAcceleration": 0.5,
         "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
       }
     },
     {
@@ -160,14 +156,18 @@
         "maxVelocity": 0.5,
         "maxAcceleration": 0.5,
         "maxAngularVelocity": 270.0,
-        "maxAngularAcceleration": 360.0
+        "maxAngularAcceleration": 360.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
       }
     }
   ],
+  "pointTowardsZones": [],
   "eventMarkers": [
     {
       "name": "Shoot Pre",
       "waypointRelativePos": 0.35,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -185,6 +185,7 @@
     {
       "name": "Intake 1",
       "waypointRelativePos": 0.5,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -202,6 +203,7 @@
     {
       "name": "Shoot 1",
       "waypointRelativePos": 1.4,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -219,6 +221,7 @@
     {
       "name": "Intake 2",
       "waypointRelativePos": 2.1999999999999997,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -236,6 +239,7 @@
     {
       "name": "Shoot 2",
       "waypointRelativePos": 3.7,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -253,6 +257,7 @@
     {
       "name": "Intake 3",
       "waypointRelativePos": 4.5,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -270,6 +275,7 @@
     {
       "name": "Shoot 3",
       "waypointRelativePos": 5.6,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "parallel",
         "data": {
@@ -289,18 +295,19 @@
     "maxVelocity": 1.0,
     "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 26.565051177078004,
-    "rotateFast": false
+    "rotation": 26.565051177078004
   },
   "reversed": false,
   "folder": "Continuous Paths",
-  "previewStartingState": {
-    "rotation": 0,
-    "velocity": 0
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
   },
   "useDefaultConstraints": false
 }

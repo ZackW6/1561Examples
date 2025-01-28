@@ -58,7 +58,7 @@ public class ObjectDetectionSim implements ObjectDetectionIO{
     
     public Optional<Pose3d> getClosestVisiblePiece(){
         if (!algaeSubscriber.exists()){
-            return null;
+            return Optional.empty();
         }
         ArrayList<Pose3d> objects = new ArrayList<Pose3d>();
         Pose3d cameraPose = new Pose3d(robotPose.get()).transformBy(transform3d);

@@ -8,6 +8,7 @@ public class ElevatorConstants {
     public static final int ELEVATOR_ENCODER_ID = 12;
 
     public static final double ELEVATOR_ENCODER_OFFSET = 0;
+    public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
 
     public static final double P = 100;
     public static final double I = 0;
@@ -26,7 +27,7 @@ public class ElevatorConstants {
     public static final double ELEVATOR_MASS_KG = 20;
 
     public static final double ELEVATOR_MIN_HEIGHT = 0;
-    public static final double ELEVATOR_MAX_HEIGHT = 3;
+    public static final double ELEVATOR_MAX_HEIGHT = 4;
 
     public static final double CRUISE_VELOCITY = 400;
     public static final double MAX_ACCELERATION = 1000;

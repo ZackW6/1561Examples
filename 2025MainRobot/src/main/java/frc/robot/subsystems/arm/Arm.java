@@ -95,7 +95,15 @@ public class Arm extends SubsystemBase {
    * @param goal the position to maintain
    */
   public Command reachGoal(double goal) {
-    return this.runOnce(()->armIO.setPosition(goal));
+    return this.run(()->armIO.setPosition(goal));
+  }
+  /**
+   * Run control loop to reach and maintain goal.
+   *
+   * @param goal the position to maintain
+   */
+  public Command reachGoalDegrees(double goal) {
+    return this.run(()->armIO.setPosition(Units.degreesToRotations(goal)));
   }
   /**
    * Run control loop to reach and maintain changing goal.

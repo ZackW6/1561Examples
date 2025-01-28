@@ -41,25 +41,32 @@ public class MainDrive implements NativeSwerveRequest {
         /**
          * in meters per second
          */
-        public Vector2 speeds;
+        public final Vector2 speeds;
         /**
          * in radians per second
          */
-        public double rotation;
+        public final double rotation;
+        /**
+         * declaration time, made so we know when to remove things
+         */
+        public final double declarationTime;
 
         public CheapChassisSpeeds(Vector2 vec, double rot){
             speeds = vec;
             rotation = rot;
+            declarationTime = Timer.getFPGATimestamp();
         }
 
         public CheapChassisSpeeds(double vx, double vy, double rot){
             speeds = new Vector2(vx, vy);
             rotation = rot;
+            declarationTime = Timer.getFPGATimestamp();
         }
 
         public CheapChassisSpeeds(ChassisSpeeds speed){
             speeds = new Vector2(speed.vxMetersPerSecond, speed.vyMetersPerSecond);
             rotation = speed.omegaRadiansPerSecond;
+            declarationTime = Timer.getFPGATimestamp();
         }
 
         public static CheapChassisSpeeds discretize(
@@ -211,6 +218,7 @@ public class MainDrive implements NativeSwerveRequest {
      * @param key the unique identifier
      */
     public void removeSource(String key) {
+        allSpeeds.remove(key);
         allSpeeds.remove("fieldR"+key);
         allSpeeds.remove("robotR"+key);
         allSpeeds.remove("fieldF"+key);
@@ -375,7 +383,6 @@ public class MainDrive implements NativeSwerveRequest {
     }
 
     /**
-     *
      * @param rps radians per second
      * @return
      */
@@ -385,6 +392,18 @@ public class MainDrive implements NativeSwerveRequest {
     }
 
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
+        String[] keys = allSpeeds.keySet().toArray(new String[0]);
+        CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+
+        for (int i = 0; i < allSpeeds.size(); i++){
+            if (Timer.getFPGATimestamp() - values[i].declarationTime > .05){
+                removeSource(keys[i]);
+            }
+        }
+
+        keys = allSpeeds.keySet().toArray(new String[0]);
+        values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+
         Vector2 finalSpeeds = new Vector2(0, 0);
         double finalRot = 0;
 
@@ -392,8 +411,7 @@ public class MainDrive implements NativeSwerveRequest {
         
         double drivetrainOffset = yawOffset.get().getRadians();
 
-        String[] keys = allSpeeds.keySet().toArray(new String[0]);
-        CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+        
         for (int i = 0; i < allSpeeds.size(); i++){
             Vector2 vec = values[i].speeds;
             
@@ -445,6 +463,18 @@ public class MainDrive implements NativeSwerveRequest {
     private double lastTime = Timer.getFPGATimestamp();
 
     public void applyNative(int id) {
+        String[] keys = allSpeeds.keySet().toArray(new String[0]);
+        CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+
+        for (int i = 0; i < allSpeeds.size(); i++){
+            if (Timer.getFPGATimestamp() - values[i].declarationTime > .05){
+                removeSource(keys[i]);
+            }
+        }
+
+        keys = allSpeeds.keySet().toArray(new String[0]);
+        values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+
         Vector2 finalSpeeds = new Vector2(0, 0);
         double finalRot = 0;
 
@@ -452,8 +482,7 @@ public class MainDrive implements NativeSwerveRequest {
         
         double drivetrainOffset = yawOffset.get().getRadians();
 
-        String[] keys = allSpeeds.keySet().toArray(new String[0]);
-        CheapChassisSpeeds[] values = allSpeeds.values().toArray(new CheapChassisSpeeds[0]);
+        
         for (int i = 0; i < allSpeeds.size(); i++){
             Vector2 vec = values[i].speeds;
             

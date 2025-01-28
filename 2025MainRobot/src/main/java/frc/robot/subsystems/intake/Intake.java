@@ -12,13 +12,16 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.networktables.StructSubscriber;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.constants.IntakeConstants;
+import frc.robot.subsystems.intake.realIntake.DigitalInputLS;
 import frc.robot.subsystems.intake.realIntake.TalonIntake;
+import frc.robot.subsystems.intake.simIntake.DigitalInputSim;
 import frc.robot.subsystems.intake.simIntake.SimIntake;
 
 public class Intake extends SubsystemBase{
@@ -32,10 +35,14 @@ public class Intake extends SubsystemBase{
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
 
+    private final DigitalInputIO limitSwitch;
+
     public Intake(){
         if (Robot.isSimulation()){
-            intakeIO = new SimIntake();
+            limitSwitch = new DigitalInputSim();
+            intakeIO = new SimIntake((DigitalInputSim)limitSwitch);
         }else{
+            limitSwitch = new DigitalInputLS(IntakeConstants.LIMIT_SWITCH_ID);
             intakeIO = new TalonIntake();
         }
     }
@@ -52,12 +59,20 @@ public class Intake extends SubsystemBase{
         return this.runOnce(()->intakeIO.stop());
     }
 
+    public boolean hasPiece(){
+        return limitSwitch.getValue();
+    }
+
     public double getVelocity(){
         return intakeIO.getVelocity();
     }
 
     public double getTargetVelocity(){
         return intakeIO.getTarget();
+    }
+
+    public DigitalInputIO getDigitalInputIO(){
+        return limitSwitch;
     }
 
     @Override
