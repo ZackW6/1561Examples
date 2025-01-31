@@ -29,6 +29,7 @@ public class MainMechanism extends SubsystemBase{
     private final double MAX_ELEVATOR_ERROR = .05;
     private final double MAX_SIGNAL_TIME = .03;
     private final double SHOOT_TIME = .3;
+    public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
 
     private final Arm arm;
 
@@ -44,7 +45,7 @@ public class MainMechanism extends SubsystemBase{
         L4(80,1.8),
         AlgaeU(45,.6),
         AlgaeL(45,.3),
-        AlgaeN(-20,1),
+        AlgaeN(-20,2),
         AlgaeP(0,0);
 
         private double armPosition;
@@ -65,7 +66,8 @@ public class MainMechanism extends SubsystemBase{
 
     public enum IntakeSpeeds{
         Idle(0),
-        Intake(-30),
+        IntakeCoral(7.5),
+        IntakeAlgae(-30),
         Shoot(30);
 
         private double velocity;
@@ -88,15 +90,28 @@ public class MainMechanism extends SubsystemBase{
         if (Robot.isSimulation()){
             MapleSimWorld.addIntakeSimulation("CoralIntake", "Coral", IntakeSide.BACK, .5,.4, new Translation2d(-.1,0));
             MapleSimWorld.addShooterSimulation(()->
-                new Transform3d(0.2 + (arm.getPosition() > 1.0/7.0 ? .24 : 0),0, elevator.getPositionMeters() + ElevatorConstants.ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, (arm.getPosition() > 1.0/7.0 ? -Math.PI/2 : -Units.rotationsToRadians(arm.getPosition())),0))
+                new Transform3d(0.2 + (arm.getPosition() > 1.0/7.0 ? .29 : 0),0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, (arm.getPosition() > 1.0/7.0 ? -Math.PI/2 : -Units.rotationsToRadians(arm.getPosition())),0))
                 , ()->2
                 , "Coral"
                 , "CoralIntake");
-            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() < -10);
+            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 5);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(arm.getPosition() - Positions.Intake.armPosition) < .1);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPositionMeters() - Positions.Intake.elevatorMeters) < .1);
-            MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getDigitalInputIO().setValue(has));
+            MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
             MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 10);
+
+            MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae",IntakeSide.FRONT, .5,.4,new Translation2d(.3,0));
+            MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
+            MapleSimWorld.hasPiece("AlgaeIntake",(has)->intake.getAlgaeDigitalInputIO().setValue(has));
+
+            MapleSimWorld.addShooterSimulation(()->
+                new Transform3d(0.2,0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, -Units.rotationsToRadians(arm.getPosition()),0))
+                , ()->2
+                , "Algae"
+                , "AlgaeIntake");
+            MapleSimWorld.addShootRequirements("AlgaeIntake", ()->intake.getVelocity() > 10);
+
+
         }
     }
 
@@ -113,7 +128,7 @@ public class MainMechanism extends SubsystemBase{
     public Command intake(){
         return Commands.parallel(arm.reachGoalDegrees(Positions.Intake.armDegrees())
             ,elevator.reachGoal(Positions.Intake.elevatorMeters())
-            ,intake.setVelocity(IntakeSpeeds.Intake.value())).until(()->intake.hasPiece());
+            ,intake.setVelocity(IntakeSpeeds.IntakeCoral.value())).until(()->intake.hasCoral());
     }
 
     public Command scoreL1(){
@@ -218,14 +233,36 @@ public class MainMechanism extends SubsystemBase{
     public Command presetAlgaeUpper(){
         return preset(Positions.AlgaeU);
     }
+
+    /**
+     * ends after you get a piece
+     * @return
+     */
+    public Command grabAlgae(Positions level){
+        return Commands.parallel(arm.reachGoalDegrees(level.armDegrees()),
+            elevator.reachGoal(level.elevatorMeters()),
+            intake.setVelocity(IntakeSpeeds.IntakeAlgae.value())).until(()->intake.hasAlgae());
+    }
+
+    /**
+     * ends after you get a piece
+     * @return
+     */
+    public Command grabAlgae(int level){
+        level = MathUtil.clamp(level, 1, 2);
+        if (level == 1){
+            return grabAlgae(Positions.AlgaeL);
+        }else{
+            return grabAlgae(Positions.AlgaeU);
+        }
+    }
+
     /**
      * ends after you get a piece
      * @return
      */
     public Command grabAlgaeUpper(){
-        return Commands.parallel(arm.reachGoalDegrees(Positions.AlgaeU.armDegrees()),
-            elevator.reachGoal(Positions.AlgaeU.elevatorMeters()),
-            intake.setVelocity(IntakeSpeeds.Intake.value())).until(()->intake.hasPiece());
+        return grabAlgae(Positions.AlgaeU);
     }
 
     public Command presetAlgaeLower(){
@@ -236,9 +273,7 @@ public class MainMechanism extends SubsystemBase{
      * @return
      */
     public Command grabAlgaeLower(){
-        return Commands.parallel(arm.reachGoalDegrees(Positions.AlgaeL.armDegrees()),
-            elevator.reachGoal(Positions.AlgaeL.elevatorMeters()),
-            intake.setVelocity(IntakeSpeeds.Intake.value())).until(()->intake.hasPiece());
+        return grabAlgae(Positions.AlgaeL);
     }
 
     public Command presetAlgaeNet(){

@@ -34,15 +34,16 @@ import frc.robot.constants.LimelightConstants;
 import frc.robot.constants.PathplannerConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
-import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
+import frc.robot.subsystems.swerve.swerveHelpers.ShareDrive;
 import frc.robot.subsystems.vision.Vision;
 
-public class SwerveDrive extends SubsystemBase{
-    private final MainDrive mainRequest;
+import frc.robot.subsystems.swerve.accelerometer.*;
 
+public class SwerveDrive extends SubsystemBase{
     private final Vision cameras;
 
     private final SwerveDriveIO swerveIO;
+
 
     //NetworkTables stuff
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
@@ -59,20 +60,19 @@ public class SwerveDrive extends SubsystemBase{
         }else{
             this.swerveIO = TunerConstants.DriveTrain;
         }
-        
+
         cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FORWARD_LIMELIGHT_CAMERA_TRANSFORM,
              LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM},
               LimelightConstants.FORWARD_LIMELIGHT_NAME,
                LimelightConstants.BACKWARD_LIMELIGHT_NAME);
-        mainRequest = new MainDrive(()->swerveIO.getPose().getRotation(),()->swerveIO.getYawOffset())
-            .withMaxLinearVelocity(TunerConstants.kSpeedAt12VoltsMps)
-            .withMaxRotationalVelocity(TunerConstants.MAX_ANGULAR_RATE);
-
-        setDefaultCommand(applyRequest(()->mainRequest));
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return this.run(() -> swerveIO.setControl(requestSupplier.get()));
+    }
+
+    public void setControl(SwerveRequest request) {
+        swerveIO.setControl(request);
     }
 
     @Override
@@ -101,10 +101,10 @@ public class SwerveDrive extends SubsystemBase{
 
     public void configurePathPlanner() {
         AutoBuilder.configure(
-            swerveIO::getPose, // getState of the robot pose
-            swerveIO::resetPose,  // Consumer for seeding pose against auto
+            this::getPose, // getState of the robot pose
+            this::resetPose,  // Consumer for seeding pose against auto
             swerveIO::getSpeeds,
-            (speeds, feedForward)->swerveIO.setControl(mainRequest.addRobotSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond,"AUTO")),//new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
+            (speeds, feedForward)->swerveIO.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
             new PPHolonomicDriveController(new PIDConstants(5, 0, 0),
                                             new PIDConstants(5, 0, 0)),
             PathplannerConstants.pathingConfig,
@@ -118,53 +118,9 @@ public class SwerveDrive extends SubsystemBase{
                     return alliance.get() == DriverStation.Alliance.Red;
                 }
                 return false;
-            }
+            },
             // Reference to this subsystem to set requirements // Change this if the path needs to be flipped on red vs blue
-            ); // Subsystem for requirements
-    }
-
-    public void configureTeleop(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vrot){
-        new Trigger(()->DriverStation.isTeleop() && !DriverStation.isDisabled()).whileTrue(addFieldFacingSpeeds(vx, vy, vrot, "TELEOP"));
-                // Commands.run(()->comparison.withSpeeds(new ChassisSpeeds(5,0,10)))));
-            // Commands.run(()->comparison.withVelocityX(vx.getAsDouble()).withVelocityY(vy.getAsDouble()).withRotationalRate(vrot.getAsDouble()))));
-        
-    }
-
-    public Command addFieldRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addFieldSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public Command addFieldFacingSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addFieldFacingSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public Command addRobotRelativeSpeeds(DoubleSupplier vx, DoubleSupplier vy, DoubleSupplier vr, String key){
-        return Commands.run(()->mainRequest.addRobotSpeeds(vx.getAsDouble(), vy.getAsDouble(), vr.getAsDouble(), key))
-        .finallyDo(()->{
-            mainRequest.removeSource(key);
-        });
-    }
-
-    public void addFieldRelativeSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addFieldSpeeds(vx, vy, vr, key);
-    }
-
-    public void addFieldFacingSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addFieldFacingSpeeds(vx, vy, vr, key);
-    }
-
-    public void addRobotRelativeSpeeds(double vx, double vy, double vr, String key){
-        mainRequest.addRobotSpeeds(vx, vy, vr, key);
-    }
-
-    public void removeSource(String key){
-        mainRequest.removeSource(key);
+            this); // Subsystem for requirements
     }
 
     public Pose2d getPose(){

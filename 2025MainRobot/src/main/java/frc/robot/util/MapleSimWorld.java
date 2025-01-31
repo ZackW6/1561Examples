@@ -23,6 +23,7 @@ import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
 import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 
@@ -63,7 +64,7 @@ public class MapleSimWorld{
 
         public IntakeInfo(IntakeSimulation intakeSimulation, String key){
             this.intakeSimulation = intakeSimulation;
-            
+            intakeSimulation.register();
             try {
                 Field type;
                 type = IntakeSimulation.class.getDeclaredField("targetedGamePieceType");
@@ -73,6 +74,7 @@ public class MapleSimWorld{
                     gamePieceAmount = IntakeSimulation.class.getDeclaredField("gamePiecesInIntakeCount");
                     gamePieceAmount.setAccessible(true);
                     gamePieceAmount.set(intakeSimulation, 1);
+                    System.out.println(intakeSimulation.getGamePiecesAmount());
                 }
             } catch (Exception e){
 
@@ -199,7 +201,7 @@ public class MapleSimWorld{
                 }
             }
         });
-        updateThread.setDaemon(true); 
+        updateThread.setDaemon(true);
         updateThread.start();
     }
 
@@ -211,25 +213,25 @@ public class MapleSimWorld{
         drive = mainDrive;
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,false)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1.5),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(GameData.feederPose(1,false)
                 ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,false)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1.5),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(GameData.feederPose(2,false)
                 ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,true)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1.5),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(GameData.feederPose(1,true)
                 ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,true)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1.5),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(GameData.feederPose(2,true)
                 ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
@@ -238,7 +240,7 @@ public class MapleSimWorld{
     public static void addIntakeSimulation(String uniqueIntakeKey, String target, IntakeSide side, double widthMeters, double lengthMeters, Translation2d position){
         intakeKeys.put(uniqueIntakeKey, new IntakeInfo(
             new IntakeSimulation(
-                "Coral",
+                target,
                 drive,
                 getIntakeRectangle(lengthMeters, widthMeters, new Vector2(position.getX(), position.getY())),
                 1)
@@ -273,19 +275,26 @@ public class MapleSimWorld{
     }
 
     public static void createShootingAlgae(Pose2d from, Transform3d shooterPosition, double calculatedVelocity){
-        Vector2 robotSpeeds = drive.getLinearVelocity();
+
+        Vector2 robotSpeeds = new Vector2();
+        double angularVelocity = 0;
+        if (drive != null){
+            robotSpeeds = drive.getLinearVelocity();
+            angularVelocity = drive.getAngularVelocity();
+        }
+
         ReefscapeAlgaeOnFly algaeOnFly = new ReefscapeAlgaeOnFly(
             // Specify the position of the chassis when the algae is launched
             from.getTranslation(),
             // Specify the translation of the shooter from the robot center (in the shooter’s reference frame)
             shooterPosition.getTranslation().toTranslation2d(),
             // Specify the field-relative speed of the chassis, adding it to the initial velocity of the projectile
-            new ChassisSpeeds(robotSpeeds.x, robotSpeeds.y, drive.getAngularVelocity()),
+            new ChassisSpeeds(robotSpeeds.x, robotSpeeds.y, angularVelocity),
             // The shooter facing direction is the same as the robot’s facing direction
             Rotation2d.fromRadians(from.getRotation().getRadians() + shooterPosition.getRotation().toRotation2d().getRadians()),
                     // Add the shooter’s rotation,
             // Initial height of the flying note
-            Meters.of(shooterPosition.getY()),
+            Meters.of(shooterPosition.getZ()),
             // The launch speed is proportional to the RPM; assumed to be 16 meters/second at 6000 RPM
             MetersPerSecond.of(calculatedVelocity),
             // The angle at which the note is launched

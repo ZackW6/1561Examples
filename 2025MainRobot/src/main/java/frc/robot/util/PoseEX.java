@@ -85,4 +85,12 @@ public class PoseEX {
         Pose2d returnPose = new Pose2d(newX, newY, new Rotation2d());
         return returnPose;
     }
+
+    public static Pose2d closestTo(Pose2d to, Pose2d option1, Pose2d option2){
+        if (to.minus(option1).getTranslation().getNorm() < to.minus(option2).getTranslation().getNorm()){
+            return option1;
+        }else{
+            return option2;
+        }
+    }
 }

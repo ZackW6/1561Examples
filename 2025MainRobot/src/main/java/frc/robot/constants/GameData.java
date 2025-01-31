@@ -21,7 +21,7 @@ import frc.robot.util.PoseEX;
 
 public class GameData {
 
-    private static final double coralPoseForwardOffset = -.4;
+    private static final double coralPoseForwardOffset = -.45;
     private static final double coralPoseRightOffset = .18;
 
     private static final double feederPoseForwardOffset = -.5;
@@ -30,12 +30,22 @@ public class GameData {
     private static final double processorPoseForwardOffset = -.5;
     private static final double processorPoseRightOffset = 0;
 
+    private static final double reefAlgaeForwardOffset = -.45;
+    private static final double reefAlgaeRightOffset = 0;
+
+    private static final double netForwardOffset = -.45;
+    private static final double netRightOffset = 0;
+
     private static final Pose2d[] aprilTagsPose2d;
     private static final Pose3d[] aprilTagsPose3d;
 
     private static final Pose2d[] coralPoses = new Pose2d[12];
 
+    private static final Pose2d[] initAlgaePoses = new Pose2d[6];
+
     private static final Pose2d[] feederPoses = new Pose2d[2];
+
+    private static final Pose2d[] netPoses = new Pose2d[2];
 
     private static final Pose2d processorPose;
     static{
@@ -60,8 +70,18 @@ public class GameData {
         coralPoses[10] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
         coralPoses[11] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
 
+        initAlgaePoses[0] = getAprilTagPose2d(18).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+        initAlgaePoses[1] = getAprilTagPose2d(17).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+        initAlgaePoses[2] = getAprilTagPose2d(22).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+        initAlgaePoses[3] = getAprilTagPose2d(21).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+        initAlgaePoses[4] = getAprilTagPose2d(20).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+        initAlgaePoses[5] = getAprilTagPose2d(19).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
+
         feederPoses[0] = getAprilTagPose2d(13).plus(new Transform2d(-feederPoseForwardOffset,feederPoseRightOffset, Rotation2d.fromDegrees(0)));
         feederPoses[1] = getAprilTagPose2d(12).plus(new Transform2d(-feederPoseForwardOffset,feederPoseRightOffset, Rotation2d.fromDegrees(0)));
+
+        netPoses[0] = getAprilTagPose2d(14).plus(new Transform2d(-netForwardOffset,netRightOffset, Rotation2d.fromDegrees(180)));
+        netPoses[1] = getAprilTagPose2d(4).plus(new Transform2d(-netForwardOffset,netRightOffset, Rotation2d.fromDegrees(180)));
 
         processorPose = getAprilTagPose2d(16).plus(new Transform2d(-processorPoseForwardOffset,processorPoseRightOffset, Rotation2d.fromDegrees(180)));
     }
@@ -84,6 +104,24 @@ public class GameData {
     public static Pose2d coralPose(int place, boolean red){
         int fixedNum = Math.max(Math.min(place,12),1)-1;
         Pose2d pose = coralPoses[fixedNum];
+        if (red){
+            pose = PoseEX.pose180(pose);
+        }
+        return pose;
+    }
+
+    public static Pose2d algaePose(int place, boolean red){
+        int fixedNum = Math.max(Math.min(place,6),1)-1;
+        Pose2d pose = initAlgaePoses[fixedNum];
+        if (red){
+            pose = PoseEX.pose180(pose);
+        }
+        return pose;
+    }
+
+    public static Pose2d netPose(int place, boolean red){
+        int fixedNum = Math.max(Math.min(place,2),1)-1;
+        Pose2d pose = netPoses[fixedNum];
         if (red){
             pose = PoseEX.pose180(pose);
         }

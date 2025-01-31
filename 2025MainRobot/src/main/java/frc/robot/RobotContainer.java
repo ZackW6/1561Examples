@@ -68,8 +68,12 @@ import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.subsystems.vision.objectDetection.ObjectDetection;
 import frc.robot.util.ChoreoEX;
+import frc.robot.util.CustomController;
 import frc.robot.util.DynamicObstacle;
 import frc.robot.util.MapleSimWorld;
+import frc.robot.commands.WheelRadiusCommand;
+
+
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
@@ -79,6 +83,7 @@ public class RobotContainer {
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
+  private final CustomController customController = new CustomController(0);
   
   private final SwerveDrive drivetrain = new SwerveDrive(); // My drivetrain
 
@@ -94,9 +99,9 @@ public class RobotContainer {
 
   private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain, scoringMechanism);
 
-  // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-  //     .withDeadband(TunerConstants.TRANSLATIONAL_DEADBAND).withRotationalDeadband(TunerConstants.ROTATIONAL_DEADBAND)
-  //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+      .withDeadband(TunerConstants.TRANSLATIONAL_DEADBAND).withRotationalDeadband(TunerConstants.ROTATIONAL_DEADBAND)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
@@ -104,37 +109,42 @@ public class RobotContainer {
 
   private void configureBindings() {
     drivetrain.resetPose(new Pose2d(7,5,new Rotation2d()));
-    drivetrain.configureTeleop(
-      ()->-driverController.getLeftY() * 1.00 * MaxSpeed
-      ,()->-driverController.getLeftX() * 1.00 * MaxSpeed
-      ,()->-driverController.getRightX() * 2/3 * MaxAngularRate);
+    customController.fixedButtonPressed(1).whileTrue(factoryCommands.autoScoreCoral(1,4));
+    customController.fixedButtonPressed(2).whileTrue(factoryCommands.autoScoreCoral(2,4));
+    customController.fixedButtonPressed(3).whileTrue(factoryCommands.autoScoreCoral(3,4));
+    customController.fixedButtonPressed(4).whileTrue(factoryCommands.autoScoreCoral(4,4));
+    customController.fixedButtonPressed(5).whileTrue(factoryCommands.autoScoreCoral(5,4));
+    customController.fixedButtonPressed(6).whileTrue(factoryCommands.autoScoreCoral(6,4));
+    customController.fixedButtonPressed(7).whileTrue(factoryCommands.autoScoreCoral(7,4));
+    customController.fixedButtonPressed(8).whileTrue(factoryCommands.autoScoreCoral(8,4));
+    customController.fixedButtonPressed(9).whileTrue(factoryCommands.autoScoreCoral(9,4));
+    customController.fixedButtonPressed(10).whileTrue(factoryCommands.autoScoreCoral(10,4));
+    customController.fixedButtonPressed(11).whileTrue(factoryCommands.autoScoreCoral(11,4));
+    customController.fixedButtonPressed(12).whileTrue(factoryCommands.autoScoreCoral(12,4));
 
-    // driverController.a().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
+    driverController.a().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
 
-    driverController.b().whileTrue(scoringMechanism.intake());
-    driverController.povUp().whileTrue(scoringMechanism.score(1));
-    driverController.povRight().whileTrue(scoringMechanism.score(2));
-    driverController.povDown().whileTrue(scoringMechanism.score(3));
+    driverController.b().onTrue(new WheelRadiusCommand(drivetrain));
+    driverController.povUp().whileTrue(scoringMechanism.grabAlgaeLower());
+    driverController.povRight().whileTrue(scoringMechanism.grabAlgaeUpper());
+    driverController.povDown().whileTrue(scoringMechanism.scoreAlgaeNet());
     driverController.povLeft().whileTrue(scoringMechanism.score(4));
 
     // driverController.x().whileTrue(drivetrain.passiveTowardPose(new Pose2d(3,4.5,Rotation2d.fromDegrees(90)), 5,3, 5, "TEST3"));
     driverController.x().whileTrue(factoryCommands.autoScoreCoral(12,3));
-
-    // driverController.x().whileTrue(factoryCommands.toPoseWhilePointing(new Pose2d(10,5, new Rotation2d())));
-
-    driverController.rightStick().whileTrue(factoryCommands.activePointPose(new Pose2d(3,4.5, new Rotation2d()), MaxAngularRate,5, "point"));
   
-    // drivetrain.setDefaultCommand(
-    //     drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * 1.00 * MaxSpeed)
-    //         .withVelocityY(-driverController.getLeftX() * 1.00 * MaxSpeed)
-    //         .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * 2/3 * MaxAngularRate)
-    // ));
+    drivetrain.setDefaultCommand(
+        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * 1.00 * MaxSpeed)
+            .withVelocityY(-driverController.getLeftX() * 1.00 * MaxSpeed)
+            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * 2/3 * MaxAngularRate)
+    ));
 
     /* Controller Bindings */
 
     driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
     driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
+    driverController.leftTrigger(.5).whileTrue(factoryCommands.autoIntakeCoral(0));
 
     //TODO was deffered, i switched to not, make sure it works in all scenarios
     new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
@@ -177,13 +187,13 @@ public class RobotContainer {
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceF,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceG,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceH,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceI,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceJ,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceK,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceL,4)));
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceL,4)
+        ));
   }
 
   public void configureAutonomousCommands() {

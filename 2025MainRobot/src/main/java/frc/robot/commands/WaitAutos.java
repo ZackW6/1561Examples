@@ -18,12 +18,15 @@ import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.util.DynamicObstacle;
+import frc.robot.constants.GameData;
+
 
 public class WaitAutos {
 
@@ -152,12 +155,11 @@ public class WaitAutos {
 
         Pose2d startPose = beginPose;
         
-        //Get first path
 
         try {
-            //Find start for odom reset
+            //for odom reset
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(branchInstructions[0].from.value()+branchInstructions[0].to.value());
-            startPose = path.getPathPoses().get(0);
+            startPose = new Pose2d(path.getAllPathPoints().get(0).position,path.getAllPathPoints().get(0).rotationTarget.rotation());
         } catch (Exception e) {
             System.out.println(branchInstructions[0].from.value()+branchInstructions[0].to.value()+ " does not exist");
         }
@@ -180,9 +182,22 @@ public class WaitAutos {
     }
 
     private static Command tryPath(String from, String to, int place, int layer){
-        FactoryCommands factoryCommands = FactoryCommands.getInstance().get();
+        FactoryCommands factoryCommands;
         try {
-            return AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to));
+            factoryCommands = FactoryCommands.getInstance().get();
+        } catch (Exception e) {
+            return Commands.none();
+        }
+        
+        try {
+            if (to.startsWith("P")){
+                return autoScoreCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), place, layer, .2);
+            }
+            try {
+                return autoIntakeCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), Integer.parseInt(to.substring(1,2),10), .2);
+            } catch (Exception e2) {
+                return Commands.none();
+            }
         } catch (Exception e) {
             System.out.println(from+to +" path does not exist");
             if (to.startsWith("P")){
@@ -193,7 +208,52 @@ public class WaitAutos {
             } catch (Exception e2) {
                 return Commands.none();
             }
-            
         }
+    }
+
+    private static Command autoScoreCoral(Command path, int place, int level, double straightDist){
+        FactoryCommands factoryCommands;
+        try {
+            factoryCommands = FactoryCommands.getInstance().get();
+        } catch (Exception e) {
+            return Commands.none();
+        }
+        return Commands.race(path
+            .until(()->factoryCommands.drivetrain.getPose()
+                .minus(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
+                .getTranslation().getNorm() < straightDist)
+            .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+            , 5, 3*Math.PI, 5, "toPose"+GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)), Set.of()))
+        ,Commands.race(Commands.waitUntil(()->{
+            Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
+            Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
+            Transform2d comparingTransform = coralPose.minus(drivetrainPose);
+
+            return (comparingTransform.getTranslation().getNorm() < FactoryCommands.positionalToleranceMeters) 
+                && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < FactoryCommands.rotationalToleranceRotations);
+        })
+        ,factoryCommands.scoringMechanism.preset(level,()->{
+            Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
+            Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
+            Transform2d comparingTransform = coralPose.minus(drivetrainPose);
+
+            return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
+        })).andThen(factoryCommands.scoringMechanism.score(level)));
+    }
+
+    private static Command autoIntakeCoral(Command path, int place, double straightDist){
+        FactoryCommands factoryCommands;
+        try {
+            factoryCommands = FactoryCommands.getInstance().get();
+        } catch (Exception e) {
+            return Commands.none();
+        }
+        return Commands.race(path
+            .until(()->factoryCommands.drivetrain.getPose()
+                .minus(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
+                .getTranslation().getNorm() < straightDist)
+            .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+            , 5, 3*Math.PI, 5, "toPose"+GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)),Set.of()))
+            ,factoryCommands.scoringMechanism.intake());
     }
 }

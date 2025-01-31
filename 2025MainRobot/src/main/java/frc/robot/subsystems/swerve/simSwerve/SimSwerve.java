@@ -67,7 +67,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
-import frc.robot.subsystems.swerve.swerveHelpers.MainDrive;
+import frc.robot.subsystems.swerve.swerveHelpers.ShareDrive;
 import frc.robot.util.MapleSimWorld;
 
 public class SimSwerve implements SwerveDriveIO {
@@ -85,7 +85,6 @@ public class SimSwerve implements SwerveDriveIO {
     
     private Thread updateThread = new Thread();
 
-
     public SimSwerve() {
         // For your own code, please configure your drivetrain properly according to the documentation
         DriveTrainSimulationConfig config = SimSwerveConstants.driveTrainSimulationConfig;
@@ -93,7 +92,7 @@ public class SimSwerve implements SwerveDriveIO {
         // Creating the SelfControlledSwerveDriveSimulation instance
         //I SPENT HOURS TO FIND THIS LINE!!!!!!!!!!!!!!!!!!!!!!!!! AHHHHHHHHHHHHHHHHHHHHHHHHHH.
         this.simulatedDrive = new SelfControlledSwerveDriveSimulation(
-                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(.1,.1,0.025), VecBuilder.fill(0,0,0));
+                new SwerveDriveSimulation(config, new Pose2d(7, 5, new Rotation2d())), VecBuilder.fill(0.1,0.1,0.1), VecBuilder.fill(0,0,0));
 
         // Register the drivetrain simulation to the simulation world
         SimulatedArena.getInstance().addDriveTrainSimulation(simulatedDrive.getDriveTrainSimulation());
@@ -126,8 +125,8 @@ public class SimSwerve implements SwerveDriveIO {
         request.apply(new SwerveControlParameters(), new SwerveModule[]{});
         boolean fieldRelative = false;
         boolean discretize = true;
-        if (request instanceof MainDrive){
-            speeds = ((MainDrive)request).Speeds;
+        if (request instanceof ShareDrive){
+            speeds = ((ShareDrive)request).Speeds;
         }
         if (request instanceof SwerveRequest.ApplyFieldSpeeds){
             speeds = ((SwerveRequest.ApplyFieldSpeeds)request).Speeds;
@@ -137,9 +136,11 @@ public class SimSwerve implements SwerveDriveIO {
             speeds = ((SwerveRequest.ApplyRobotSpeeds)request).Speeds;
         }
         if (request instanceof SwerveRequest.FieldCentric){
+            Translation2d translation = new Translation2d(((SwerveRequest.FieldCentric)request).VelocityX,((SwerveRequest.FieldCentric)request).VelocityY);
+
             speeds = new ChassisSpeeds(
-                ((SwerveRequest.FieldCentric)request).VelocityX,
-                ((SwerveRequest.FieldCentric)request).VelocityY,
+                translation.getX() * Math.cos(yawOffset.getRadians()) - translation.getY() * Math.sin(yawOffset.getRadians()),
+                translation.getX() * Math.sin(yawOffset.getRadians()) + translation.getY() * Math.cos(yawOffset.getRadians()),
                 ((SwerveRequest.FieldCentric)request).RotationalRate);
             fieldRelative = true;
         }
@@ -220,7 +221,8 @@ public class SimSwerve implements SwerveDriveIO {
         if (currentTimeToFPGA(timestep) < resetTime){
             return;
         }
-        simulatedDrive.addVisionEstimation(pose, currentTimeToFPGA(timestep), stdDev);
+        //TODO broken currently
+        simulatedDrive.addVisionEstimation(pose, currentTimeToFPGA(timestep), VecBuilder.fill(0,0,0));
     }
 
     private double currentTimeToFPGA(double currentTime) {
@@ -252,7 +254,7 @@ public class SimSwerve implements SwerveDriveIO {
 
     @Override
     public Rotation2d getYaw() {
-        return simulatedDrive.getActualPoseInSimulationWorld().getRotation();
+        return simulatedDrive.getOdometryEstimatedPose().getRotation();
     }
 
     @Override
@@ -262,7 +264,7 @@ public class SimSwerve implements SwerveDriveIO {
 
     @Override
     public ChassisSpeeds getSpeeds() {
-        return simulatedDrive.getActualSpeedsRobotRelative();
+        return simulatedDrive.getMeasuredSpeedsRobotRelative(true);
     }
 
     @Override

@@ -8,7 +8,6 @@ public class ElevatorConstants {
     public static final int ELEVATOR_ENCODER_ID = 12;
 
     public static final double ELEVATOR_ENCODER_OFFSET = 0;
-    public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
 
     public static final double P = 100;
     public static final double I = 0;

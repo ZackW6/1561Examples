@@ -102,7 +102,7 @@ import com.ctre.phoenix6.Utils;
             // Create simulated camera properties. These can be set to mimic your actual camera.
             var cameraProp = new SimCameraProperties();
             cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
-            cameraProp.setCalibError(0,0);//.04,.01);//0.35, 0.10);
+            cameraProp.setCalibError(0.35, 0.10);
             cameraProp.setFPS(15);
             cameraProp.setAvgLatencyMs(50);//50);
             cameraProp.setLatencyStdDevMs(15);//15);
@@ -164,7 +164,7 @@ import com.ctre.phoenix6.Utils;
          int i = 0;
          double totalDist = 0;
          double totalArea = 0;
-         double delay = Timer.getFPGATimestamp()-visionEst.get().timestampSeconds;
+         double delay = .05;
          for (PhotonTrackedTarget target : visionEst.get().targetsUsed){
             RawFiducial fiducial = new RawFiducial(target.fiducialId,
              target.yaw,
@@ -180,7 +180,7 @@ import com.ctre.phoenix6.Utils;
          }
          PoseEstimate estimate = new PoseEstimate(
             visionEst.get().estimatedPose.toPose2d(),
-            Utils.getCurrentTimeSeconds()-delay,
+            Utils.fpgaToCurrentTime(visionEst.get().timestampSeconds),
             delay,
             size,
             0,

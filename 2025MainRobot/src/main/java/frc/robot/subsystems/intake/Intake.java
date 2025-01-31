@@ -35,14 +35,17 @@ public class Intake extends SubsystemBase{
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
 
-    private final DigitalInputIO limitSwitch;
+    private final DigitalInputIO coralLimitSwitch;
+    private final DigitalInputIO algaeLimitSwitch;
 
     public Intake(){
         if (Robot.isSimulation()){
-            limitSwitch = new DigitalInputSim();
-            intakeIO = new SimIntake((DigitalInputSim)limitSwitch);
+            coralLimitSwitch = new DigitalInputSim();
+            algaeLimitSwitch = new DigitalInputSim();
+            intakeIO = new SimIntake((DigitalInputSim)coralLimitSwitch);
         }else{
-            limitSwitch = new DigitalInputLS(IntakeConstants.LIMIT_SWITCH_ID);
+            coralLimitSwitch = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID);
+            algaeLimitSwitch = new DigitalInputLS(IntakeConstants.ALGAE_LIMIT_SWITCH_ID);
             intakeIO = new TalonIntake();
         }
     }
@@ -59,8 +62,12 @@ public class Intake extends SubsystemBase{
         return this.runOnce(()->intakeIO.stop());
     }
 
-    public boolean hasPiece(){
-        return limitSwitch.getValue();
+    public boolean hasCoral(){
+        return coralLimitSwitch.getValue();
+    }
+
+    public boolean hasAlgae(){
+        return algaeLimitSwitch.getValue();
     }
 
     public double getVelocity(){
@@ -71,8 +78,12 @@ public class Intake extends SubsystemBase{
         return intakeIO.getTarget();
     }
 
-    public DigitalInputIO getDigitalInputIO(){
-        return limitSwitch;
+    public DigitalInputIO getCoralDigitalInputIO(){
+        return coralLimitSwitch;
+    }
+
+    public DigitalInputIO getAlgaeDigitalInputIO(){
+        return algaeLimitSwitch;
     }
 
     @Override

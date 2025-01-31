@@ -126,7 +126,7 @@ public class Vision {
             if (poseWithinRange(measurement.pose, average, .2)){
                 drivetrain.addVisionMeasurement(
                     measurement.pose,
-                    Utils.fpgaToCurrentTime(measurement.timeStamp),VecBuilder.fill(0,0,0));//measurement.stdDev);
+                    Utils.fpgaToCurrentTime(measurement.timeStamp),measurement.stdDev);
             }
         }
     }
@@ -174,11 +174,13 @@ public class Vision {
             ambiguity+=fiducial.ambiguity;
         }
 
-        if (ambiguity/botPose.rawFiducials.length > .2){
+        if (ambiguity/botPose.rawFiducials.length > .5){
             seenPublisher[index].accept(new Pose3d[]{});
             visionPubliser[index].accept(botPose.pose);
             return Optional.empty();
         }
+
+
         VisionMeasurement measurement;
         if(Math.abs(Units.radiansToDegrees(drivetrain.getSpeeds().omegaRadiansPerSecond)) > maxRotationalAcceleration){
             
