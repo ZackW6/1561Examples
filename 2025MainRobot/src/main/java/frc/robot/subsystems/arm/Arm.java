@@ -88,7 +88,7 @@ public class Arm extends SubsystemBase {
   public void setPosition(double position){
     armIO.setPosition(position);
   }
-
+  
   /**
    * Run control loop to reach and maintain goal.
    *

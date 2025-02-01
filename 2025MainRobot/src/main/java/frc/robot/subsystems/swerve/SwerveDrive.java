@@ -34,10 +34,7 @@ import frc.robot.constants.LimelightConstants;
 import frc.robot.constants.PathplannerConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
-import frc.robot.subsystems.swerve.swerveHelpers.ShareDrive;
 import frc.robot.subsystems.vision.Vision;
-
-import frc.robot.subsystems.swerve.accelerometer.*;
 
 public class SwerveDrive extends SubsystemBase{
     private final Vision cameras;
