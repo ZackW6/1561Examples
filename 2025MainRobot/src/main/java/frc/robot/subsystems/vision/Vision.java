@@ -23,9 +23,7 @@ import edu.wpi.first.networktables.NetworkTablesJNI;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
-import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.constants.GameData;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.subsystems.swerve.SwerveDriveIO;
@@ -33,6 +31,8 @@ import frc.robot.subsystems.swerve.realSwerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.subsystems.vision.realVision.LimelightVision;
 import frc.robot.subsystems.vision.simVision.SimVision;
+import frc.robot.util.LimelightHelpers;
+import frc.robot.util.LimelightHelpers.RawFiducial;
 
 public class Vision {
 

@@ -230,7 +230,8 @@ public class WaitAutos {
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
             return (comparingTransform.getTranslation().getNorm() < FactoryCommands.positionalToleranceMeters) 
-                && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < FactoryCommands.rotationalToleranceRotations);
+                && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < FactoryCommands.rotationalToleranceRotations)
+                && factoryCommands.drivetrain.getDriveIO().getSpeeds().vyMetersPerSecond < .1;
         })
         ,factoryCommands.scoringMechanism.preset(level,()->{
             Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();

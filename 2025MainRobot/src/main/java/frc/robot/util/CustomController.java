@@ -27,14 +27,16 @@ public class CustomController {
         buttonMappings.put(10, new int[]{2, 8}); // J
         buttonMappings.put(11, new int[]{3, 8}); // K
         buttonMappings.put(12, new int[]{4, 8}); // L
-        buttonMappings.put(13, new int[]{1, 10}); // L1
-        buttonMappings.put(14, new int[]{2, 10}); // L2
-        buttonMappings.put(15, new int[]{3, 10}); // L3
-        buttonMappings.put(16, new int[]{4, 10}); // L4
-        buttonMappings.put(17, new int[]{9, 10}); // Specifying Coral
-        buttonMappings.put(18, new int[]{9, 11}); // Specifying Algae
-        buttonMappings.put(19, new int[]{1, 11}); // Processor
-        buttonMappings.put(20, new int[]{2, 11}); // Barge
+        buttonMappings.put(13, new int[]{1, 9}); // L1
+        buttonMappings.put(14, new int[]{2, 9}); // L2
+        buttonMappings.put(15, new int[]{3, 9}); // L3
+        buttonMappings.put(16, new int[]{4, 9}); // L4
+        buttonMappings.put(17, new int[]{8, 9}); // Processor
+        buttonMappings.put(18, new int[]{8, 9}); // Barge
+        buttonMappings.put(19, new int[]{1, 10}); // Feeder 1
+        buttonMappings.put(20, new int[]{2, 10}); // Feeder 2
+        buttonMappings.put(21, new int[]{3, 10}); // Feeder Left
+        buttonMappings.put(22, new int[]{4, 10}); // Feeder Right
     }
 
     private boolean getRawButton(int num) {

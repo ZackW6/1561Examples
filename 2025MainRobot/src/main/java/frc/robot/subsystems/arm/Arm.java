@@ -71,7 +71,7 @@ public class Arm extends SubsystemBase {
   private final NetworkTable armTable = robot.getSubTable("Arm");
 
   private final NetworkTable table = robot.getSubTable("Elevator");
-  private final StructSubscriber<Pose3d> elevatorSubscriber = table.getStructTopic("ElevatorHeight",Pose3d.struct).subscribe(new Pose3d());
+  private final StructSubscriber<Pose3d> elevatorSubscriber = table.getStructTopic("ElevatorStage3",Pose3d.struct).subscribe(new Pose3d());
 
   private final StructPublisher<Pose3d> armPublisher = armTable
     .getStructTopic("ArmAngle", Pose3d.struct).publish();
@@ -125,6 +125,6 @@ public class Arm extends SubsystemBase {
   @Override
   public void periodic(){
     double height = elevatorSubscriber.get().getZ();
-    armPublisher.accept(new Pose3d(.26,0,height + ArmConstants.JOINT_START_HEIGHT_METERS,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
+    armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
   }
 }

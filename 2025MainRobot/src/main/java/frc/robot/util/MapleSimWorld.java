@@ -214,30 +214,30 @@ public class MapleSimWorld{
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,false)).getTranslation().getNorm() < 2)
         .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
-            MapleSimWorld.createShootingCoral(GameData.feederPose(1,false)
-                ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
+            MapleSimWorld.createShootingCoral(
+                new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,false)).getTranslation().getNorm() < 2)
         .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
-            MapleSimWorld.createShootingCoral(GameData.feederPose(2,false)
-                ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
+            MapleSimWorld.createShootingCoral(
+                new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,true)).getTranslation().getNorm() < 2)
         .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
-            MapleSimWorld.createShootingCoral(GameData.feederPose(1,true)
-                ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
+            MapleSimWorld.createShootingCoral(
+                new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,true)).getTranslation().getNorm() < 2)
         .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
-            MapleSimWorld.createShootingCoral(GameData.feederPose(2,true)
-                ,new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
+            MapleSimWorld.createShootingCoral(
+                new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
     }
 
-    public static void addIntakeSimulation(String uniqueIntakeKey, String target, IntakeSide side, double widthMeters, double lengthMeters, Translation2d position){
+    public static void addIntakeSimulation(String uniqueIntakeKey, String target, double widthMeters, double lengthMeters, Translation2d position){
         intakeKeys.put(uniqueIntakeKey, new IntakeInfo(
             new IntakeSimulation(
                 target,

@@ -114,5 +114,32 @@ public class TalonElevator implements ElevatorIO{
         motorLeader.getConfigurator().apply(talonFXConfigs);
         motorFollower.getConfigurator().apply(talonFXConfigs);
     }
+
+    @Override
+    public void assignPID(double P, double I, double D) {
+        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+        slot0Configs.kP = ElevatorConstants.P;
+        slot0Configs.kI = ElevatorConstants.I;
+        slot0Configs.kD = ElevatorConstants.D;
+        motorLeader.getConfigurator().apply(talonFXConfigs);
+        motorFollower.getConfigurator().apply(talonFXConfigs);
+    }
+
+    @Override
+    public void assignSGVA(double S, double G, double V, double A) {
+        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+        slot0Configs.kS = S;
+        slot0Configs.kV = V;
+        slot0Configs.kA = A;
+        slot0Configs.kG = G;
+        motorLeader.getConfigurator().apply(talonFXConfigs);
+        motorFollower.getConfigurator().apply(talonFXConfigs);
+    }
+
+    @Override
+    public double[] recievePIDs() {
+        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+        return new double[]{slot0Configs.kP,slot0Configs.kI,slot0Configs.kD,slot0Configs.kS,slot0Configs.kG,slot0Configs.kV,slot0Configs.kA};
+    }
     
 }

@@ -4,16 +4,27 @@ import java.util.function.DoubleSupplier;
 
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.networktables.StructSubscriber;
+import edu.wpi.first.units.measure.Per;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import frc.robot.Robot;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.elevator.Elevator;
@@ -23,7 +34,9 @@ import frc.robot.util.MapleSimWorld;
 /**
  * every call pertaining to main scoring subsystems should be called through here
  */
-public class MainMechanism extends SubsystemBase{
+public class MainMechanism {
+
+    private final Notifier notifier;
 
     private final double MAX_ARM_ERROR = .05;
     private final double MAX_ELEVATOR_ERROR = .05;
@@ -31,18 +44,29 @@ public class MainMechanism extends SubsystemBase{
     private final double SHOOT_TIME = .3;
     public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
 
-    private final Arm arm;
+    public final Arm arm;
 
-    private final Intake intake;
+    public final Intake intake;
 
-    private final Elevator elevator;
+    public final Elevator elevator;
 
-    public enum Positions{
+    private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
+    private final NetworkTable armTable = robot.getSubTable("Arm");
+
+    private final StructSubscriber<Pose3d> armSubscriber = armTable.getStructTopic("ArmAngle",Pose3d.struct).subscribe(new Pose3d());
+
+    private final StructPublisher<Pose3d> coralPublisher = armTable.getStructTopic("CoralIfHad",Pose3d.struct).publish();
+
+    private final NetworkTable odom = robot.getSubTable("Odometry");
+    private StructSubscriber<Pose2d> poseSubscriber = odom
+        .getStructTopic("RobotPose",Pose2d.struct).subscribe(new Pose2d());
+
+    public static enum Positions{
         Intake(0,0),
         L1(0,.1),
         L2(35,.5),
         L3(35,1),
-        L4(80,1.8),
+        L4(70,1.8),
         AlgaeU(45,.6),
         AlgaeL(45,.3),
         AlgaeN(-20,2),
@@ -64,7 +88,7 @@ public class MainMechanism extends SubsystemBase{
         }
     }
 
-    public enum IntakeSpeeds{
+    public static enum IntakeSpeeds{
         Idle(0),
         IntakeCoral(7.5),
         IntakeAlgae(-30),
@@ -81,6 +105,9 @@ public class MainMechanism extends SubsystemBase{
     }
 
     public MainMechanism(Arm arm, Intake intake, Elevator elevator){
+        notifier = new Notifier(this::periodic);
+        notifier.startPeriodic(0.02);
+
         this.arm = arm;
         this.intake = intake;
         this.elevator = elevator;
@@ -88,9 +115,22 @@ public class MainMechanism extends SubsystemBase{
         intake.setDefaultCommand(intake.setVelocity(Positions.Intake.elevatorMeters()));
         elevator.setDefaultCommand(elevator.reachGoal(IntakeSpeeds.Idle.value()));
         if (Robot.isSimulation()){
-            MapleSimWorld.addIntakeSimulation("CoralIntake", "Coral", IntakeSide.BACK, .5,.4, new Translation2d(-.1,0));
-            MapleSimWorld.addShooterSimulation(()->
-                new Transform3d(0.2 + (arm.getPosition() > 1.0/7.0 ? .29 : 0),0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, (arm.getPosition() > 1.0/7.0 ? -Math.PI/2 : -Units.rotationsToRadians(arm.getPosition())),0))
+            poseSubscriber = NetworkTableInstance.getDefault().getTable("RealData")
+                .getStructTopic("RealPose", Pose2d.struct).subscribe(new Pose2d());
+            MapleSimWorld.addIntakeSimulation("CoralIntake", "Coral", .5,.4, new Translation2d(-.1,0));
+            // MapleSimWorld.addShooterSimulation(()->
+            //     new Transform3d(0.2 + (arm.getPosition() > 1.0/7.0 ? .29 : 0),0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, (arm.getPosition() > 1.0/7.0 ? -Math.PI/2 : -Units.rotationsToRadians(arm.getPosition())),0))
+            //     , ()->2
+            //     , "Coral"
+            //     , "CoralIntake");
+            MapleSimWorld.addShooterSimulation(()->{
+                Pose3d armPose = armSubscriber.get(new Pose3d());
+                double yOffset = ArmConstants.ARM_LENGTH_METERS * Math.cos(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                double xOffset = ArmConstants.ARM_LENGTH_METERS * Math.sin(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                return new Transform3d(armPose.getX() + xOffset,0, armPose.getZ() + yOffset
+                    ,new Rotation3d(0, -armPose.getRotation().getY() - Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_ANGLE),0));
+                }
+                
                 , ()->2
                 , "Coral"
                 , "CoralIntake");
@@ -100,7 +140,7 @@ public class MainMechanism extends SubsystemBase{
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
             MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 10);
 
-            MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae",IntakeSide.FRONT, .5,.4,new Translation2d(.3,0));
+            MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
             MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
             MapleSimWorld.hasPiece("AlgaeIntake",(has)->intake.getAlgaeDigitalInputIO().setValue(has));
 
@@ -113,11 +153,17 @@ public class MainMechanism extends SubsystemBase{
 
 
         }
+        Runtime.getRuntime().addShutdownHook(new Thread(notifier::close));
+    }
+
+    private Command toState(Positions position){
+        return arm.reachGoalDegrees(Positions.L4.armDegrees()).until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
+            .andThen(arm.reachGoalDegrees(position.armDegrees()))
+            .alongWith(elevator.reachGoal(position.elevatorMeters()));
     }
 
     public Command idle(){
-        return arm.reachGoalDegrees(Positions.Intake.armDegrees())
-            .alongWith(elevator.reachGoal(Positions.Intake.elevatorMeters()))
+        return toState(Positions.Intake)
             .alongWith(intake.setVelocity(IntakeSpeeds.Idle.value()));
     }
 
@@ -126,9 +172,8 @@ public class MainMechanism extends SubsystemBase{
      * @return
      */
     public Command intake(){
-        return Commands.parallel(arm.reachGoalDegrees(Positions.Intake.armDegrees())
-            ,elevator.reachGoal(Positions.Intake.elevatorMeters())
-            ,intake.setVelocity(IntakeSpeeds.IntakeCoral.value())).until(()->intake.hasCoral());
+        return toState(Positions.Intake)
+            .alongWith(intake.setVelocity(IntakeSpeeds.IntakeCoral.value())).until(()->intake.hasCoral());
     }
 
     public Command scoreL1(){
@@ -160,10 +205,9 @@ public class MainMechanism extends SubsystemBase{
     }
 
     public Command score(Positions position){
-        return Commands.race(arm.reachGoalDegrees(position.armDegrees())
-            ,elevator.reachGoal(position.elevatorMeters())
+        return Commands.race(toState(position)
             ,Commands.waitSeconds(MAX_SIGNAL_TIME)
-            .andThen(Commands.waitUntil(()->Math.abs(arm.getTarget()-arm.getPosition()) < MAX_ARM_ERROR 
+            .andThen(Commands.waitUntil(()->Math.abs(Units.degreesToRotations(position.armDegrees())-arm.getPosition()) < MAX_ARM_ERROR 
                 && Math.abs(elevator.getTargetMeters()-elevator.getPositionMeters()) < MAX_ELEVATOR_ERROR))
             .andThen(Commands.deadline(Commands.waitSeconds(SHOOT_TIME),
                 intake.setVelocity(IntakeSpeeds.Shoot.value()))));
@@ -175,9 +219,7 @@ public class MainMechanism extends SubsystemBase{
      * @return
      */
     public Command preset(Positions position){
-        return Commands.parallel(arm.reachGoalDegrees(position.armDegrees())
-            ,elevator.reachGoal(position.elevatorMeters()),
-            intake.setVelocity(IntakeSpeeds.Idle.value()));
+        return preset(position, ()->0);
     }
 
     /**
@@ -186,7 +228,8 @@ public class MainMechanism extends SubsystemBase{
      * @return
      */
     public Command preset(Positions position, DoubleSupplier amount){
-        return Commands.parallel(arm.reachGoalDegrees(position.armDegrees())
+        return Commands.parallel(arm.reachGoalDegrees(Positions.L4.armDegrees()).until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
+                .andThen(arm.reachGoalDegrees(position.armDegrees()))
             ,elevator.reachGoal(()->position.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(), 0, 1)),
             intake.setVelocity(IntakeSpeeds.Idle.value()));
     }
@@ -239,8 +282,7 @@ public class MainMechanism extends SubsystemBase{
      * @return
      */
     public Command grabAlgae(Positions level){
-        return Commands.parallel(arm.reachGoalDegrees(level.armDegrees()),
-            elevator.reachGoal(level.elevatorMeters()),
+        return Commands.parallel(toState(level),
             intake.setVelocity(IntakeSpeeds.IntakeAlgae.value())).until(()->intake.hasAlgae());
     }
 
@@ -288,5 +330,18 @@ public class MainMechanism extends SubsystemBase{
     }
     public Command scoreAlgaeProcessor(){
         return score(Positions.AlgaeP);
+    }
+
+    public void periodic(){
+        if (intake.hasCoral()){
+            Pose3d armPose = armSubscriber.get(new Pose3d());
+                double yOffset = ArmConstants.ARM_LENGTH_METERS * Math.cos(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                double xOffset = ArmConstants.ARM_LENGTH_METERS * Math.sin(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+            Transform3d t = new Transform3d(armPose.getX() + xOffset,0, armPose.getZ() + yOffset
+            ,new Rotation3d(0, armPose.getRotation().getY() + Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_ANGLE),0));
+            coralPublisher.accept(new Pose3d(poseSubscriber.get()).plus(t));
+        }else{
+            coralPublisher.accept(new Pose3d());
+        }
     }
 }

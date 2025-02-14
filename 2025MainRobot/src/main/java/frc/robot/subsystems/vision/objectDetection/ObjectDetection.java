@@ -22,11 +22,11 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 import frc.robot.constants.LimelightConstants;
 import frc.robot.subsystems.vision.objectDetection.realObjectDetection.LimelightObjectDetection;
 import frc.robot.subsystems.vision.objectDetection.simObjectDetection.ObjectDetectionSim;
+import frc.robot.util.LimelightHelpers;
 import frc.robot.util.PoseEX;
 
 public class ObjectDetection extends SubsystemBase {

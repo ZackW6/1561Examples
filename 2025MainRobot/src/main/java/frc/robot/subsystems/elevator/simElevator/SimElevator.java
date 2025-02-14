@@ -1,5 +1,7 @@
 package frc.robot.subsystems.elevator.simElevator;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -75,5 +77,20 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     @Override
     public double getTargetPositionMeters() {
         return targetPosition;
+    }
+
+    @Override
+    public void assignPID(double P, double I, double D) {
+        pidController = new PIDController(P, I, D);
+    }
+
+    @Override
+    public void assignSGVA(double S, double G, double V, double A) {
+        //NA
+    }
+
+    @Override
+    public double[] recievePIDs() {
+        return new double[]{pidController.getP(),pidController.getI(),pidController.getD(),0,0,0,0};
     }
 }

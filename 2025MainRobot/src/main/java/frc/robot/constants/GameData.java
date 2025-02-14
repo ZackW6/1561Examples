@@ -27,6 +27,8 @@ public class GameData {
     private static final double feederPoseForwardOffset = -.5;
     private static final double feederPoseRightOffset = 0;
 
+    public static final double optionalFeederRightOffset = .5;
+
     private static final double processorPoseForwardOffset = -.5;
     private static final double processorPoseRightOffset = 0;
 

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.commands.PathOnTheFly.PathConfig;
 import frc.robot.constants.GameData;
 import frc.robot.generated.TunerConstants;
@@ -32,12 +33,14 @@ import frc.robot.util.PoseEX;
 
 public class FactoryCommands {
 
-    public static final double positionalToleranceMeters = .1;
+    public static final double positionalToleranceMeters = .05;
     public static final double rotationalToleranceRotations = .05;
 
-    public SwerveDrive drivetrain;
+    public final SwerveDrive drivetrain;
 
-    public MainMechanism scoringMechanism;
+    public final MainMechanism scoringMechanism;
+
+    public final Set<Subsystem> scoringSubsytems;
 
     private static FactoryCommands instance;
     
@@ -56,6 +59,8 @@ public class FactoryCommands {
         this.shareRequest = new ShareDrive(()->drivetrain.getPose().getRotation(),()->drivetrain.getDriveIO().getYawOffset())
             .withMaxLinearVelocity(TunerConstants.kSpeedAt12VoltsMps)
             .withMaxRotationalVelocity(TunerConstants.MAX_ANGULAR_RATE);
+
+        scoringSubsytems = Set.of(drivetrain, scoringMechanism.arm, scoringMechanism.elevator, scoringMechanism.intake);
     }
 
     public static Optional<FactoryCommands> getInstance(){
@@ -158,10 +163,15 @@ public class FactoryCommands {
         ,1.2),Set.of());
     }
 
-    public Command autoToFeeder(int place){
+    public Command autoToFeeder(int place, double rightOffset){
         int clampedNum = Math.max(Math.min(place,2),1);
         return Commands.defer(()->toPose(GameData.feederPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+        .plus(new Transform2d(0,rightOffset, new Rotation2d()))
         ,3),Set.of());
+    }
+
+    public Command autoToFeeder(int place){
+        return autoToFeeder(place,0);
     }
 
     public Command autoToProcessor(){
@@ -185,7 +195,8 @@ public class FactoryCommands {
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
             return (comparingTransform.getTranslation().getNorm() < positionalToleranceMeters) 
-                && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < rotationalToleranceRotations);
+                && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < rotationalToleranceRotations)
+                && drivetrain.getDriveIO().getSpeeds().vyMetersPerSecond < .1;
         })
         ,scoringMechanism.preset(level,()->{
             Pose2d drivetrainPose = drivetrain.getPose();
@@ -238,8 +249,16 @@ public class FactoryCommands {
         })).andThen(scoringMechanism.score(Positions.AlgaeP)));
     }
 
+    public Command autoScoreAlgae(int level){
+        return Commands.either(autoScoreProcessor(), autoScoreNet(), ()->level == 1);
+    }
+
     public Command autoIntakeCoral(int place){
         return Commands.race(autoToFeeder(place), scoringMechanism.intake());
+    }
+
+    public Command autoIntakeCoral(int place, double rightOffset){
+        return Commands.race(autoToFeeder(place, rightOffset), scoringMechanism.intake());
     }
 
     public Command autoIntakeAlgae(int place){

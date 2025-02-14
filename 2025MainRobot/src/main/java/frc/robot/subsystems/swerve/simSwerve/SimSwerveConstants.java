@@ -27,7 +27,7 @@ public class SimSwerveConstants {
                 .withTrackLengthTrackWidth(Inches.of(24), Inches.of(24))
                 // Configures the bumper size (dimensions of the robot bumper)
                 .withBumperSize(Inches.of(30), Inches.of(30))
-                .withRobotMass(Kilograms.of(50));
+                .withRobotMass(Kilograms.of(60));
         // public final static DriveTrainSimulationConfig driveTrainSimulationConfig = new DriveTrainSimulationConfig(Kilograms.of(50)
         // , Inches.of(30)
         // , Inches.of(30)

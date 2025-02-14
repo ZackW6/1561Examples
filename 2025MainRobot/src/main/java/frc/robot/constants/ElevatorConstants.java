@@ -26,7 +26,7 @@ public class ElevatorConstants {
     public static final double ELEVATOR_MASS_KG = 20;
 
     public static final double ELEVATOR_MIN_HEIGHT = 0;
-    public static final double ELEVATOR_MAX_HEIGHT = 4;
+    public static final double ELEVATOR_MAX_HEIGHT = 2;
 
     public static final double CRUISE_VELOCITY = 400;
     public static final double MAX_ACCELERATION = 1000;

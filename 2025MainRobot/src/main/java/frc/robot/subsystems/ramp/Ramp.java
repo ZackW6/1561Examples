@@ -1,7 +1,8 @@
-package frc.robot.subsystems.climber;
+package frc.robot.subsystems.ramp;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -37,23 +38,25 @@ import frc.robot.subsystems.arm.realArm.TalonArm;
 import frc.robot.subsystems.arm.simArm.SimArm;
 import frc.robot.subsystems.climber.realClimber.TalonClimber;
 import frc.robot.subsystems.climber.simClimber.SimClimber;
+import frc.robot.subsystems.ramp.realRamp.TalonRamp;
+import frc.robot.subsystems.ramp.simRamp.SimRamp;
 
-public class Climber extends SubsystemBase {
+public class Ramp extends SubsystemBase {
   
     private final ArmIO climberIO;
   
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
-    private final NetworkTable climberTable = robot.getSubTable("Climber");
+    private final NetworkTable rampTable = robot.getSubTable("Ramp");
   
-    private final StructPublisher<Pose3d> climberPublisher = climberTable
-      .getStructTopic("ClimberAngle", Pose3d.struct).publish();
+    private final StructPublisher<Pose3d> rampPublisher = rampTable
+      .getStructTopic("RampAngle", Pose3d.struct).publish();
   
     /** Subsystem constructor. */
-    public Climber() {
+    public Ramp() {
       if (Robot.isSimulation()){
-        climberIO = new SimClimber();
+        climberIO = new SimRamp();
       }else{
-        climberIO = new TalonClimber();
+        climberIO = new TalonRamp();
       }
     }
   
@@ -96,7 +99,7 @@ public class Climber extends SubsystemBase {
   
     @Override
     public void periodic(){
-      climberPublisher.accept(new Pose3d(0,-.31,.14,new Rotation3d(Units.rotationsToRadians(getPosition()) - Math.PI/2,0,0)));
+      rampPublisher.accept(new Pose3d(-.25,0,0.8,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
     }
   }
   

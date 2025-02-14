@@ -17,4 +17,10 @@ public interface ElevatorIO {
     public double getPositionMeters();
 
     public double getTargetPositionMeters();
+
+    public void assignPID(double P, double I, double D);
+
+    public void assignSGVA(double S, double G, double V, double A);
+
+    public double[] recievePIDs();
 }

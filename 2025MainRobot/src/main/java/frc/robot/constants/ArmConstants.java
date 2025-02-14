@@ -7,7 +7,7 @@ import frc.robot.Robot;
 public class ArmConstants{
 
     public static final double ARM_WEIGHT_KG = 3;
-    public static final double ARM_LENGTH_METERS = .3;
+    public static final double ARM_LENGTH_METERS = .36;
     public static final double MAX_ARM_ANGLE_RAD = Units.rotationsToRadians(.5);
     public static final double MIN_ARM_ANGLE_RAD = Units.rotationsToRadians(-.5);
     public static final double ARM_ENCODER_DIST_PER_PULSE = 2.0 * Math.PI / 4096;
@@ -37,6 +37,8 @@ public class ArmConstants{
     public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0);
     
     public static final double JOINT_START_HEIGHT_METERS = .2;
+    public static final double ARM_END_DEFFECTOR_SCORE_ANGLE = 0.05;//Rotations
+    public static final double ARM_END_DEFFECTOR_SCORE_OFFSET = -Units.degreesToRotations(32.8);//Rotations
 
     /* Arm Current Limiting */ //TODO: Change/Fix these values
     public static final int ARM_CURRENT_LIMIT = 40;

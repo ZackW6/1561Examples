@@ -1,7 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.LimelightHelpers;
+import frc.robot.util.LimelightHelpers;
 
 public interface VisionIO {
 

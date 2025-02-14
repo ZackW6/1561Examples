@@ -52,6 +52,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.constants.ElevatorConstants;
+import frc.robot.subsystems.PIDTunable;
 import frc.robot.subsystems.elevator.realElevator.TalonElevator;
 import frc.robot.subsystems.elevator.simElevator.SimElevator;
 
@@ -66,8 +68,12 @@ public class Elevator extends SubsystemBase {
   /**
    * height given by this affects the subscriber in arm, be aware if you want to change the name
    */
-  private final StructPublisher<Pose3d> elevatorPublisher = elevTable
-    .getStructTopic("ElevatorHeight", Pose3d.struct).publish();
+  private final StructPublisher<Pose3d> elevatorStage1 = elevTable
+    .getStructTopic("ElevatorStage1", Pose3d.struct).publish();
+  private final StructPublisher<Pose3d> elevatorStage2 = elevTable
+    .getStructTopic("ElevatorStage2", Pose3d.struct).publish();
+  private final StructPublisher<Pose3d> elevatorStage3 = elevTable
+    .getStructTopic("ElevatorStage3", Pose3d.struct).publish();
 
   /** Subsystem constructor. */
   public Elevator() {
@@ -76,6 +82,7 @@ public class Elevator extends SubsystemBase {
     }else{
       elevatorIO = new TalonElevator();
     }
+    PIDTunable.createPIDChooser("ElevatorTuner", (data)->acceptPIDConstants(data[0], data[1], data[2], data[3], data[4], data[5], data[6]),recievePIDConstants());
   }
 
   public void setPosition(double position){
@@ -111,8 +118,20 @@ public class Elevator extends SubsystemBase {
     return elevatorIO.getTargetPositionMeters();
   }
 
+  public void acceptPIDConstants(double P, double I, double D, double S, double G, double V, double A){
+    elevatorIO.assignPID(P, I, D);
+    elevatorIO.assignSGVA(S,G,V,A);
+  }
+
+  public double[] recievePIDConstants(){
+    return elevatorIO.recievePIDs();
+  }
+
   @Override
   public void periodic(){
-    elevatorPublisher.accept(new Pose3d(0,0,getPositionMeters(),new Rotation3d()));
+    double position = getPositionMeters();
+    elevatorStage1.accept(new Pose3d(0,0,Math.min(position,.7),new Rotation3d()));
+    elevatorStage2.accept(new Pose3d(0,0,Math.min(position,1.4),new Rotation3d()));
+    elevatorStage3.accept(new Pose3d(0,0,position,new Rotation3d()));
   }
 }

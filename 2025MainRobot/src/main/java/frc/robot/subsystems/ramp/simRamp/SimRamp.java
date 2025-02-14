@@ -1,4 +1,4 @@
-package frc.robot.subsystems.climber.simClimber;
+package frc.robot.subsystems.ramp.simRamp;
 
 
 import edu.wpi.first.math.controller.PIDController;
@@ -6,10 +6,10 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.ArmConstants;
-import frc.robot.constants.ClimberConstants;
+import frc.robot.constants.RampConstants;
 import frc.robot.subsystems.arm.ArmIO;
 
-public class SimClimber implements ArmIO{
+public class SimRamp implements ArmIO{
     
     private final DCMotor gearbox = DCMotor.getKrakenX60(1);
 
@@ -24,16 +24,16 @@ public class SimClimber implements ArmIO{
     private final SingleJointedArmSim singleJointedArmSim =
       new SingleJointedArmSim(
           gearbox,
-          ClimberConstants.CLIMBER_ROTOR_TO_SENSOR_RATIO * ClimberConstants.CLIMBER_SENSOR_TO_MECHANISM_RATIO,
-          SingleJointedArmSim.estimateMOI(ClimberConstants.CLIMBER_LENGTH_METERS, ClimberConstants.CLIMBER_WEIGHT_KG),
-          ClimberConstants.CLIMBER_LENGTH_METERS,
-          ClimberConstants.MIN_CLIMBER_ANGLE_RAD,
-          ClimberConstants.MAX_CLIMBER_ANGLE_RAD,
+          RampConstants.RAMP_ROTOR_TO_SENSOR_RATIO * RampConstants.RAMP_SENSOR_TO_MECHANISM_RATIO,
+          SingleJointedArmSim.estimateMOI(RampConstants.RAMP_LENGTH_METERS, RampConstants.RAMP_WEIGHT_KG),
+          RampConstants.RAMP_LENGTH_METERS,
+          RampConstants.MIN_RAMP_ANGLE_RAD,
+          RampConstants.MAX_RAMP_ANGLE_RAD,
           true,
           Units.rotationsToRadians(0)
         );
 
-    public SimClimber(){
+    public SimRamp(){
         updateThread = new Thread(()->{
             while(true){
                 try {
