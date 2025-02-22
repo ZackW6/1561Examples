@@ -88,7 +88,7 @@ public class Climber extends SubsystemBase {
      * @param goal the position to maintain
      */
 
-    //Reach goal in Decimals
+    //Update goal value
     public Command reachGoal(DoubleSupplier goal) {
       return this.run(()->climberIO.setPosition(goal.getAsDouble()));
     }
