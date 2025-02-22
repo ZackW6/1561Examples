@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import java.security.KeyStore.PrivateKeyEntry;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import edu.wpi.first.networktables.NetworkTable;
@@ -13,12 +14,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class PIDTunable {
     private PIDTunable(){
-        
+
     }
-    public static void createPIDChooser(String id, Consumer<double[]> consumer, double[] initPIDvals){
-        if (initPIDvals.length < 7) {
-            throw new IllegalArgumentException("initPIDvals must have at least 7 elements");
-        }
+    public static void createPIDChooser(String id, Consumer<double[]> consumer, double[] initVals){
+        double[] initPIDvals = Arrays.copyOf(initVals, 7);
 
         Notifier notifier;
 
@@ -45,7 +44,6 @@ public class PIDTunable {
         entryV.setDefaultDouble(initPIDvals[5]);
         entryA = table.getEntry("A");
         entryA.setDefaultDouble(initPIDvals[6]);
-
         notifier = new Notifier(()->{
             consumer.accept(new double[]{
                 entryP.getDouble(initPIDvals[0]),

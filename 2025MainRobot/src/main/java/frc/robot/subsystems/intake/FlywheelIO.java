@@ -16,4 +16,8 @@ public interface FlywheelIO {
     public double getVelocity();
 
     public double getTarget();
+
+    public double getCurrent();
+
+    public double getAcceleration();
 }

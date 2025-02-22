@@ -25,9 +25,6 @@ public class SimIntake implements FlywheelIO{
 
     private double targetVelocity = 0;
 
-    private final double minIntakeVelocity = 10;
-    private final DigitalInputSim inputSim;
-
     private boolean stopped = false;
 
     private Thread updateThread;
@@ -35,8 +32,7 @@ public class SimIntake implements FlywheelIO{
      gearbox,
       0);
 
-    public SimIntake(DigitalInputSim inputSim){
-        this.inputSim = inputSim;
+    public SimIntake(){
         updateThread = new Thread(()->{
             while(true){
                 try {
@@ -78,5 +74,15 @@ public class SimIntake implements FlywheelIO{
     @Override
     public double getTarget() {
         return targetVelocity;
+    }
+
+    @Override
+    public double getCurrent() {
+        return intakeSim.getCurrentDrawAmps();
+    }
+
+    @Override
+    public double getAcceleration() {
+        return (Units.radiansToRotations(intakeSim.getAngularAccelerationRadPerSecSq()));
     }
 }

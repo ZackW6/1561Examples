@@ -13,6 +13,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.networktables.StructSubscriber;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,6 +29,8 @@ import frc.robot.subsystems.intake.simIntake.SimIntake;
 public class Intake extends SubsystemBase{
     private final FlywheelIO intakeIO;
 
+    private final Notifier hasPieceChecker;
+
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable intakeTable = robot.getSubTable("Intake");
 
@@ -35,19 +39,41 @@ public class Intake extends SubsystemBase{
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
 
-    private final DigitalInputIO coralLimitSwitch;
-    private final DigitalInputIO algaeLimitSwitch;
+    private final DigitalInputIO coralLimitSwitch1;
+    private final DigitalInputIO coralLimitSwitch2;
+    private final DigitalInputIO coralLaser;
+
+    private boolean hasPiece = false;
+    private double lastTime = Timer.getFPGATimestamp();
 
     public Intake(){
         if (Robot.isSimulation()){
-            coralLimitSwitch = new DigitalInputSim();
-            algaeLimitSwitch = new DigitalInputSim();
-            intakeIO = new SimIntake((DigitalInputSim)coralLimitSwitch);
+            coralLimitSwitch1 = new DigitalInputSim();
+            coralLimitSwitch2 = new DigitalInputSim();
+            coralLaser = new DigitalInputSim();
+
+            intakeIO = new SimIntake();
         }else{
-            coralLimitSwitch = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID);
-            algaeLimitSwitch = new DigitalInputLS(IntakeConstants.ALGAE_LIMIT_SWITCH_ID);
+            coralLimitSwitch1 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID1);
+            coralLimitSwitch2 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID2);
+            coralLaser = new DigitalInputLS(IntakeConstants.CORAL_LASER_ID);
             intakeIO = new TalonIntake();
         }
+        hasPieceChecker = new Notifier(()->{
+            boolean temp = false;
+            if (coralLimitSwitch2.getValue() || coralLimitSwitch1.getValue()){
+                temp = true;
+                lastTime = Timer.getFPGATimestamp();
+            }else{
+                if (Timer.getFPGATimestamp() - lastTime > .4 && Math.abs(intakeIO.getVelocity()) > 5){
+                    temp = false;
+                }
+            }
+            hasPiece = coralLaser.getValue() || temp;
+        });
+        hasPieceChecker.startPeriodic(0.02);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(hasPieceChecker::close));
     }
 
     public Command setVelocity(DoubleSupplier rps){
@@ -63,11 +89,16 @@ public class Intake extends SubsystemBase{
     }
 
     public boolean hasCoral(){
-        return coralLimitSwitch.getValue();
+        return hasPiece;
+        // return coralLimitSwitch1.getValue() || coralLimitSwitch2.getValue() || coralLaser.getValue();
+    }
+
+    public boolean definiteCoral(){
+        return coralLaser.getValue();
     }
 
     public boolean hasAlgae(){
-        return algaeLimitSwitch.getValue();
+        return intakeIO.getCurrent() > 10 && Math.abs(intakeIO.getAcceleration()) < .1 && Math.abs(intakeIO.getVelocity() - intakeIO.getTarget()) > .2;
     }
 
     public double getVelocity(){
@@ -79,12 +110,12 @@ public class Intake extends SubsystemBase{
     }
 
     public DigitalInputIO getCoralDigitalInputIO(){
-        return coralLimitSwitch;
+        return coralLimitSwitch1;
     }
 
-    public DigitalInputIO getAlgaeDigitalInputIO(){
-        return algaeLimitSwitch;
-    }
+    // public DigitalInputIO getAlgaeDigitalInputIO(){
+    //     return algaeLimitSwitch;
+    // }
 
     @Override
     public void periodic() {

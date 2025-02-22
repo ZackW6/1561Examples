@@ -7,6 +7,8 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
 import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
+import com.pathplanner.lib.auto.CommandUtil;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -80,7 +82,7 @@ public class FactoryCommands {
      * @param maxAngle
      * @return
      */
-    public Command towardPose(Pose2d pose, double speedCap, double radianPSCap, double minDist, String key){
+    public Command towardPose(Pose2d pose, double speedCap, double radianPSCap, double minDist){
         return Commands.run(()->{
 
             Vector2 vector = new Vector2(pose.getX()-drivetrain.getPose().getX(), pose.getY()-drivetrain.getPose().getY());
@@ -109,7 +111,7 @@ public class FactoryCommands {
      * @param maxAngle
      * @return
      */
-    public Command passiveTowardTranslation(Translation2d translation, double speedCap, double radianPSCap, double minDist, String key){
+    public Command passiveTowardTranslation(Translation2d translation, double speedCap, double radianPSCap, double minDist){
         return Commands.run(()->{
 
             Vector2 vector = new Vector2(translation.getX()-drivetrain.getPose().getX(), translation.getY()-drivetrain.getPose().getY());
@@ -148,7 +150,7 @@ public class FactoryCommands {
         return PathOnTheFly.AutoToPoint.getToPoint(pose, new PathConfig(4,5,
             Rotation2d.fromRadians(3*Math.PI),Rotation2d.fromDegrees(720),0,0))
             .until(()->drivetrain.getPose().minus(pose).getTranslation().getNorm() < straightDist)
-            .andThen(towardPose(pose, 5, 3*Math.PI, 5, "toPose"+pose));
+            .andThen(towardPose(pose, 5, 3*Math.PI, 5));
     }
 
     public Command autoToCoral(int place){

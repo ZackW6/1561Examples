@@ -47,6 +47,16 @@ public class TalonIntake implements FlywheelIO{
     public double getTarget() {
         return (intakeMotor.getDifferentialClosedLoopReference().getValueAsDouble());
     }
+
+    @Override
+    public double getAcceleration() {
+        return intakeMotor.getAcceleration().getValueAsDouble();
+    }
+
+    @Override
+    public double getCurrent() {
+        return intakeMotor.getStatorCurrent().getValueAsDouble();
+    }
     
     private void configMotor(){
         talonFXConfigs = new TalonFXConfiguration();

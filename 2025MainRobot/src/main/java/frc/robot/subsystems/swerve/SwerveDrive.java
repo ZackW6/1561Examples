@@ -55,7 +55,7 @@ public class SwerveDrive extends SubsystemBase{
         if (Robot.isSimulation()){
             this.swerveIO = new SimSwerve();
         }else{
-            this.swerveIO = TunerConstants.DriveTrain;
+            this.swerveIO = TunerConstants.createDrivetrain();
         }
 
         cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FORWARD_LIMELIGHT_CAMERA_TRANSFORM,

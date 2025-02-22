@@ -5,8 +5,9 @@ public class IntakeConstants {
     public static final double GEARING = 3;
 
     public static final int INTAKE_MOTOR_ID = 11;
-    public static final int CORAL_LIMIT_SWITCH_ID = 0;
-    public static final int ALGAE_LIMIT_SWITCH_ID = 1;
+    public static final int CORAL_LIMIT_SWITCH_ID1 = 0;
+    public static final int CORAL_LIMIT_SWITCH_ID2 = 1;
+    public static final int CORAL_LASER_ID = 2;
     // Add 0.25 V output to overcome static friction
 
     public static final double kS = 0; // An error of 1 rps results in 0.11 V output

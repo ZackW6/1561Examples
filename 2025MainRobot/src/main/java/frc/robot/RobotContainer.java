@@ -1,23 +1,15 @@
- // final Optional<EstimatedRobotPose> optionalEstimatedPoseRight = vision1.update();
-        // if (optionalEstimatedPoseRight.isPresent()) {
-        //     final EstimatedRobotPose estimatedPose = optionalEstimatedPoseRight.get();          
-        //     poseEstimator.updateVisionMeasurement(estimatedPose.toPose2d(), estimatedPose.timestampSeconds);
-        // }
-        
-        // final Optional<EstimatedRobotPose> optionalEstimatedPoseLeft = vision2.update();
-        // if (optionalEstimatedPoseLeft.isPresent()) {
-        //     final EstimatedRobotPose estimatedPose = optionalEstimatedPoseLeft.get();          
-        //     poseEstimator.updateVisionMeasurement(estimatedPose.toPose2d(), estimatedPose.timestampSeconds);
-        // }
-        
-        // poseEstimator.update(/*ccw gyro rotation*/, /*module positions array*/);// Copyright (c) FIRST and other WPILib contributors.
+// Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.json.simple.parser.ParseException;
@@ -47,6 +39,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -74,7 +67,8 @@ import frc.robot.util.ChoreoEX;
 import frc.robot.util.CustomController;
 import frc.robot.util.DynamicObstacle;
 import frc.robot.util.MapleSimWorld;
-import frc.robot.commands.WheelRadiusCommand;
+// import frc.robot.commands.WheelRadiusCommand;
+import frc.robot.util.PoseEX;
 
 
 public class RobotContainer {
@@ -111,7 +105,7 @@ public class RobotContainer {
   private final OptionController optionController = new OptionController(customController, factoryCommands, ()-> intake.hasCoral(), ()-> intake.hasAlgae());
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(TunerConstants.TRANSLATIONAL_DEADBAND).withRotationalDeadband(TunerConstants.ROTATIONAL_DEADBAND)
+      .withDeadband(0).withRotationalDeadband(0)
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -164,7 +158,7 @@ public class RobotContainer {
     //TODO was deffered, i switched to not, make sure it works in all scenarios
     new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
       // DynamicObstacle.setDynamicObstacles("testNodeSize", drivetrain.getPose().getTranslation());
-      DynamicObstacle.setDynamicObstacles("avoidAlgae",drivetrain.getPose().getTranslation());
+      // DynamicObstacle.setDynamicObstacles("avoidAlgae",drivetrain.getPose().getTranslation());
       if (Robot.isSimulation()){
         drivetrain.seedFieldRelative(Rotation2d.fromDegrees(90));
         return;
@@ -185,8 +179,25 @@ public class RobotContainer {
     DataLogManager.logNetworkTables(true);
     
     configureAutonomousCommands();
-    autoChooser = AutoBuilder.buildAutoChooser();
+    
+    autoChooser = buildAutoChooser("", (data) -> data);
+
+    autoChooser.onChange((data)->{
+      try{
+        PathPlannerAuto auto = new PathPlannerAuto(data.getName());
+        drivetrain.resetPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red
+          ? PoseEX.pose180(auto.getStartingPose())
+          : auto.getStartingPose());
+      } catch(Exception e){
+        drivetrain.resetPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red
+          ? PoseEX.pose180(WaitAutos.getStartingPose(data.getName()))
+          : WaitAutos.getStartingPose(data.getName()));
+      }
+    });
+    
     SmartDashboard.putData("Auto Chooser", autoChooser);
+
+    SmartDashboard.putData(CommandScheduler.getInstance());
 
     configureBindings();
 
@@ -194,19 +205,43 @@ public class RobotContainer {
     // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     
     autoChooser.addOption("WaitAuto",
-      WaitAutos.createBranchCommand(new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)),
+      WaitAutos.createBranchCommand("WaitAuto", new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceF,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceA,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceA,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceB,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceG,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceH,3),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceI,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceJ,3),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceK,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceL,3)
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceH,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceI,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceJ,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceB,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceF,3),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceG,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceH,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceI,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceJ,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,3),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceB,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceF,2),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceG,2),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceH,2),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceI,2),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceJ,2),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,2),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,2)
       ));
   }
 
@@ -217,5 +252,48 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return autoChooser.getSelected();
+  }
+
+  public static SendableChooser<Command> buildAutoChooser(
+      String defaultAutoName,
+      Function<Stream<PathPlannerAuto>, Stream<PathPlannerAuto>> optionsModifier) {
+    if (!AutoBuilder.isConfigured()) {
+      throw new RuntimeException(
+          "AutoBuilder was not configured before attempting to build an auto chooser");
+    }
+
+    SendableChooser<Command> chooser = new SendableChooser<>();
+    List<String> autoNames = AutoBuilder.getAllAutoNames();
+
+    PathPlannerAuto defaultOption = null;
+    List<PathPlannerAuto> options = new ArrayList<>();
+
+    for (String autoName : autoNames) {
+      PathPlannerAuto auto;
+      try {
+        auto = new PathPlannerAuto(autoName);
+      } catch (Exception e) {
+        auto = new PathPlannerAuto("");
+      }
+      
+      if (!defaultAutoName.isEmpty() && defaultAutoName.equals(autoName)) {
+        defaultOption = auto;
+      } else {
+        options.add(auto);
+      }
+    }
+
+    if (defaultOption == null) {
+      chooser.setDefaultOption("None", Commands.none());
+    } else {
+      chooser.setDefaultOption(defaultOption.getName(), defaultOption);
+      chooser.addOption("None", Commands.none());
+    }
+
+    optionsModifier
+        .apply(options.stream())
+        .forEach(auto -> chooser.addOption(auto.getName(), auto));
+
+    return chooser;
   }
 }

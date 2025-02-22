@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -29,6 +30,12 @@ import frc.robot.constants.GameData;
 
 
 public class WaitAutos {
+
+    private static HashMap<String, Pose2d> createdPaths = new HashMap<>();
+
+    private WaitAutos(){
+
+    }
 
     public static class BranchInstruction{
 
@@ -149,8 +156,15 @@ public class WaitAutos {
      * @param reason - acquired piece or not yet
      * @param branchInstructions - this is the list of pieces you want to get and where you want to score them.
      */
-    public static Command createBranchCommand(Pose2d beginPose, BranchInstruction... branchInstructions){
-        DynamicObstacle.setDynamicObstacles("avoidAlgae",beginPose.getTranslation());
+    public static Command createBranchCommand(String nameOfAuto, Pose2d beginPose, String dynamicObstacles, BranchInstruction... branchInstructions){
+
+        boolean avoidObstacles = false;
+        if (dynamicObstacles.length() == 0){
+            DynamicObstacle.clearDynamicObstacles(beginPose.getTranslation());
+        }else{
+            DynamicObstacle.setDynamicObstacles(dynamicObstacles,beginPose.getTranslation());
+            avoidObstacles = true;
+        }
         SequentialCommandGroup commandGroup = new SequentialCommandGroup();
 
         Pose2d startPose = beginPose;
@@ -164,31 +178,40 @@ public class WaitAutos {
             System.out.println(branchInstructions[0].from.value()+branchInstructions[0].to.value()+ " does not exist");
         }
 
-
+        createdPaths.put(nameOfAuto, startPose);
 
         for (int i = 0; i < branchInstructions.length; i++){
             String fromID = branchInstructions[i].from.value();
             String shootID = branchInstructions[i].to.value();
             int place = branchInstructions[i].to.num;
             if (i == branchInstructions.length-1){
-                commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer));
+                commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer, avoidObstacles));
                 continue;
             }
-            commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer).andThen(tryPath(shootID, branchInstructions[i+1].from.value(), place, 0)));
+            commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer, avoidObstacles).andThen(tryPath(shootID, branchInstructions[i+1].from.value(), place, 0, avoidObstacles)));
         }
 
         return AutoBuilder.resetOdom(startPose)
-            .andThen(commandGroup);
+            .andThen(commandGroup).withName(nameOfAuto);
     }
 
-    private static Command tryPath(String from, String to, int place, int layer){
+    private static Command tryPath(String from, String to, int place, int layer, boolean avoidObstacles){
         FactoryCommands factoryCommands;
         try {
             factoryCommands = FactoryCommands.getInstance().get();
         } catch (Exception e) {
             return Commands.none();
         }
-        
+        if (avoidObstacles){
+            if (to.startsWith("P")){
+                return factoryCommands.autoScoreCoral(place, layer);
+            }
+            try {
+                return factoryCommands.autoIntakeCoral(Integer.parseInt(to.substring(1,2),10));
+            } catch (Exception e2) {
+                return Commands.none();
+            }
+        }
         try {
             if (to.startsWith("P")){
                 return autoScoreCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), place, layer, .2);
@@ -223,7 +246,7 @@ public class WaitAutos {
                 .minus(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
                 .getTranslation().getNorm() < straightDist)
             .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-            , 5, 3*Math.PI, 5, "toPose"+GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)), Set.of()))
+            , 5, 3*Math.PI, 5), Set.of()))
         ,Commands.race(Commands.waitUntil(()->{
             Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
@@ -254,7 +277,20 @@ public class WaitAutos {
                 .minus(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
                 .getTranslation().getNorm() < straightDist)
             .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-            , 5, 3*Math.PI, 5, "toPose"+GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)),Set.of()))
+            , 5, 3*Math.PI, 5),Set.of()))
             ,factoryCommands.scoringMechanism.intake());
+    }
+
+    /**
+     * defaults 
+     * @param autoName
+     * @return
+     */
+    public static Pose2d getStartingPose(String autoName){
+        if (createdPaths.containsKey(autoName)){
+            return createdPaths.get(autoName);
+        }else{
+            return new Pose2d();
+        }
     }
 }

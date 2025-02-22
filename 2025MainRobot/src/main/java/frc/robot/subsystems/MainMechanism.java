@@ -140,16 +140,16 @@ public class MainMechanism {
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
             MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 10);
 
-            MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
-            MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
-            MapleSimWorld.hasPiece("AlgaeIntake",(has)->intake.getAlgaeDigitalInputIO().setValue(has));
+            // MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
+            // MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
+            // MapleSimWorld.hasPiece("AlgaeIntake",(has)->intake.getAlgaeDigitalInputIO().setValue(has));
 
-            MapleSimWorld.addShooterSimulation(()->
-                new Transform3d(0.2,0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, -Units.rotationsToRadians(arm.getPosition()),0))
-                , ()->2
-                , "Algae"
-                , "AlgaeIntake");
-            MapleSimWorld.addShootRequirements("AlgaeIntake", ()->intake.getVelocity() > 10);
+            // MapleSimWorld.addShooterSimulation(()->
+            //     new Transform3d(0.2,0, elevator.getPositionMeters() + ELEVATOR_END_DEFFECTOR_OFFSET,new Rotation3d(0, -Units.rotationsToRadians(arm.getPosition()),0))
+            //     , ()->2
+            //     , "Algae"
+            //     , "AlgaeIntake");
+            // MapleSimWorld.addShootRequirements("AlgaeIntake", ()->intake.getVelocity() > 10);
 
 
         }
@@ -172,8 +172,10 @@ public class MainMechanism {
      * @return
      */
     public Command intake(){
-        return toState(Positions.Intake)
-            .alongWith(intake.setVelocity(IntakeSpeeds.IntakeCoral.value())).until(()->intake.hasCoral());
+        return Commands.race(toState(Positions.Intake),
+            intake.setVelocity(IntakeSpeeds.IntakeCoral.value()),
+            Commands.waitUntil(()->intake.hasCoral()).andThen(Commands.waitSeconds(.5)))
+            .until(()->intake.definiteCoral());
     }
 
     public Command scoreL1(){
