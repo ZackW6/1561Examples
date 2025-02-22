@@ -101,7 +101,7 @@ public class Climber extends SubsystemBase {
       return climberIO.getTarget();
     }
 
-    //Send current climber position and orientation data to Network table
+    //Send current climber position and orientation data to Network table, is main loop of Climber
     @Override
     public void periodic(){
       climberPublisher.accept(new Pose3d(0,-.31,.14,new Rotation3d(Units.rotationsToRadians(getPosition()) - Math.PI/2,0,0)));

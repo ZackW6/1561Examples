@@ -10,9 +10,11 @@ import frc.robot.constants.ClimberConstants;
 import frc.robot.subsystems.arm.ArmIO;
 
 public class SimClimber implements ArmIO{
-    
+
+    //Set what motor to use
     private final DCMotor gearbox = DCMotor.getKrakenX60(1);
 
+    //Set PID vals
     private PIDController pidController = new PIDController(110, 0, 7);
 
     private double targetPosition = 0;
@@ -21,6 +23,7 @@ public class SimClimber implements ArmIO{
 
     private Thread updateThread;
 
+    //Created SingleJointedArmSim with set values
     private final SingleJointedArmSim singleJointedArmSim =
       new SingleJointedArmSim(
           gearbox,
@@ -33,17 +36,23 @@ public class SimClimber implements ArmIO{
           Units.rotationsToRadians(0)
         );
 
+    //Main Loop of SimClimber
     public SimClimber(){
         updateThread = new Thread(()->{
             while(true){
                 try {
                     if (stopped){
+                        //Stop motor
                         singleJointedArmSim.setInputVoltage(0);
                     }else{
+                        //Move arm based on Positions
                         singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
                     }
+                    //Update Vals every 20 ms
                     singleJointedArmSim.update(.02);
+                    //Sleep every ms
                     Thread.sleep(20);
+                //If exception is caught, print stackTrace of Exceptions
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
