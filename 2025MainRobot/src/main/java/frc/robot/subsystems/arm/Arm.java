@@ -97,7 +97,7 @@ public class Arm extends SubsystemBase {
    * @param goal the position to maintain
    */
 
-  //Move arm to first goal
+  //Set Arm goal in Rotations
   public Command reachGoal(double goal) {
     return this.run(()->armIO.setPosition(goal));
   }
@@ -107,7 +107,7 @@ public class Arm extends SubsystemBase {
    * @param goal the position to maintain
    */
 
-  //Move arm to second goal
+  //Set arm goal in Degrees
   public Command reachGoalDegrees(double goal) {
     return this.run(()->armIO.setPosition(Units.degreesToRotations(goal)));
   }
@@ -117,7 +117,7 @@ public class Arm extends SubsystemBase {
    * @param goal the position to maintain
    */
 
-  //Move arm to third goal
+  //Set arm goal in Decimals
   public Command reachGoal(DoubleSupplier goal) {
     return this.run(()->armIO.setPosition(goal.getAsDouble()));
   }
@@ -133,7 +133,7 @@ public class Arm extends SubsystemBase {
   }
 
   @Override
-  //Get elevator for arm
+  //Send Current position and orientation data of Arm to Network table and get Elevator data
   public void periodic(){
     double height = elevatorSubscriber.get().getZ();
     armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
