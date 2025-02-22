@@ -11,8 +11,10 @@ import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 
 public class SimArm implements ArmIO{
 
+    //Set what motor to use
     private final DCMotor gearbox = DCMotor.getFalcon500(1);
-    
+
+    //Set PID valsz
     private PIDController pidController = new PIDController(110, 0, 7);
 
     private double targetPosition = 0;
@@ -20,6 +22,8 @@ public class SimArm implements ArmIO{
     private boolean stopped = false;
 
     private Thread updateThread;
+
+    //Create SingleJointedArm with set values
     private final SingleJointedArmSim singleJointedArmSim =
       new SingleJointedArmSim(
           gearbox,
@@ -32,17 +36,24 @@ public class SimArm implements ArmIO{
           Units.rotationsToRadians(0)
         );
 
+    //Main Loop for SimArm
     public SimArm(){
         updateThread = new Thread(()->{
             while(true){
                 try {
                     if (stopped){
+                        //Stop Arm
                         singleJointedArmSim.setInputVoltage(0);
                     }else{
+                        //Move arm based on target Values
                         singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
                     }
+                    //Update positions every 20 ms
                     singleJointedArmSim.update(.02);
+                    //Sleep every 20 ms
                     Thread.sleep(20);
+
+                    //If exception is caught, print stackTrace of Exceptions
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
