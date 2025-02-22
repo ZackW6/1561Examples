@@ -41,7 +41,8 @@ import frc.robot.subsystems.climber.simClimber.SimClimber;
 public class Climber extends SubsystemBase {
   
     private final ArmIO climberIO;
-  
+
+    //Send Climber data to NetworkTable
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable climberTable = robot.getSubTable("Climber");
   
@@ -66,6 +67,8 @@ public class Climber extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+  
+    //Reach Goal Position in Rotations
     public Command reachGoal(double goal) {
       return this.run(()->climberIO.setPosition(goal));
     }
@@ -74,6 +77,8 @@ public class Climber extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+
+    //Reach goal position in Degrees
     public Command reachGoalDegrees(double goal) {
       return this.run(()->climberIO.setPosition(Units.degreesToRotations(goal)));
     }
@@ -82,6 +87,8 @@ public class Climber extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+
+    //Reach goal in Decimals
     public Command reachGoal(DoubleSupplier goal) {
       return this.run(()->climberIO.setPosition(goal.getAsDouble()));
     }
@@ -93,7 +100,8 @@ public class Climber extends SubsystemBase {
     public double getTarget(){
       return climberIO.getTarget();
     }
-  
+
+    //Send current climber position and orientation data to Network table
     @Override
     public void periodic(){
       climberPublisher.accept(new Pose3d(0,-.31,.14,new Rotation3d(Units.rotationsToRadians(getPosition()) - Math.PI/2,0,0)));
