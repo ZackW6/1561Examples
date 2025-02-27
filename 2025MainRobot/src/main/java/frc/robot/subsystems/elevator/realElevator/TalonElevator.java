@@ -20,11 +20,16 @@ import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 
 public class TalonElevator implements ElevatorIO{
+
+    //Instance of Talon Configs
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+    //Instance of Limits
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
+    //Magic
     private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
 
+    //Initialize motors and encoder
     private final TalonFX motorLeader;
     private final TalonFX motorFollower;
     private final CANcoder encoder;
@@ -34,6 +39,7 @@ public class TalonElevator implements ElevatorIO{
     private final double drumCircumferenceMeters = 2 * Math.PI * ElevatorConstants.ELEVATOR_DRUM_RADIUS;
 
     public TalonElevator(){
+        //Create and set motors and encoders up
         motorLeader = new TalonFX(ElevatorConstants.ELEVATOR_LEADER_ID);
         motorFollower = new TalonFX(ElevatorConstants.ELEVATOR_FOLLOWER_ID);
         encoder = new CANcoder(ElevatorConstants.ELEVATOR_ENCODER_ID);

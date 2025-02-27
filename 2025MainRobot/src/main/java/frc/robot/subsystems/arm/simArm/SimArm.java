@@ -11,7 +11,7 @@ import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 
 public class SimArm implements ArmIO{
 
-    //Set what motor to use
+    //Set what motor to use and how many motors to use
     private final DCMotor gearbox = DCMotor.getFalcon500(1);
 
     //Set PID valsz

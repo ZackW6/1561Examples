@@ -11,7 +11,7 @@ import frc.robot.subsystems.arm.ArmIO;
 
 public class SimClimber implements ArmIO{
 
-    //Set what motor to use
+    //Set what motor to use and how many motors to use
     private final DCMotor gearbox = DCMotor.getKrakenX60(1);
 
     //Set PID vals

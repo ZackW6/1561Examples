@@ -16,9 +16,12 @@ import frc.robot.subsystems.intake.FlywheelIO;
 
 public class TalonIntake implements FlywheelIO{
     
+    //Get instance of talon configs
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+    //Get instance of Limits
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
+    //Magic
     private final MotionMagicVelocityTorqueCurrentFOC torqueCurrentFOC = new MotionMagicVelocityTorqueCurrentFOC(0);
 
     private final TalonFX intakeMotor;
