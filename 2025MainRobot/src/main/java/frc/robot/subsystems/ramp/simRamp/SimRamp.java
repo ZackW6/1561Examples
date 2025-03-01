@@ -11,8 +11,10 @@ import frc.robot.subsystems.arm.ArmIO;
 
 public class SimRamp implements ArmIO{
     
+    //Set what gear and how many gears to use
     private final DCMotor gearbox = DCMotor.getKrakenX60(1);
 
+    //Set PID values
     private PIDController pidController = new PIDController(110, 0, 7);
 
     private double targetPosition = 0;
@@ -21,6 +23,7 @@ public class SimRamp implements ArmIO{
 
     private Thread updateThread;
 
+    //Create new single jointed arm with set vlas
     private final SingleJointedArmSim singleJointedArmSim =
       new SingleJointedArmSim(
           gearbox,
