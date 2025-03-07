@@ -58,10 +58,14 @@ public class SwerveDrive extends SubsystemBase{
             this.swerveIO = TunerConstants.createDrivetrain();
         }
 
-        cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FORWARD_LIMELIGHT_CAMERA_TRANSFORM,
-             LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM},
-              LimelightConstants.FORWARD_LIMELIGHT_NAME,
-               LimelightConstants.BACKWARD_LIMELIGHT_NAME);
+        cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FR_LIMELIGHT_CAMERA_TRANSFORM,
+            LimelightConstants.FL_LIMELIGHT_CAMERA_TRANSFORM,
+            //  LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM
+            },
+              LimelightConstants.FR_LIMELIGHT_NAME,
+              LimelightConstants.FL_LIMELIGHT_NAME
+            //    LimelightConstants.BACKWARD_LIMELIGHT_NAME
+               );
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -74,18 +78,14 @@ public class SwerveDrive extends SubsystemBase{
 
     @Override
     public void periodic(){
-        // if (!Robot.isSimulation()){
-        // swerveIO.addVisionMeasurement(new Pose2d(), Timer.getFPGATimestamp(), VecBuilder.fill(0,0,0));
-        // double currentTime = Timer.getFPGATimestamp();
         try {
+            //TODO this will be in a seperate thread eventually, I just want to profile it on a robot first
             cameras.updateVisionPose();
         } catch (Exception e) {
-            // TODO: handle exception
+
         }
         
-        // }
         posePublisher.accept(getPose());
-        // System.out.println(Timer.getFPGATimestamp() - currentTime);
     }
 
     public void resetPose(Pose2d pose){

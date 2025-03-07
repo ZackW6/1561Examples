@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CustomController",
+      "request": "launch",
+      "mainClass": "frc.robot.util.CustomController",
+      "projectName": "2025MainRobot"
+    },
+    {
+      "type": "java",
       "name": "Main",
       "request": "launch",
       "mainClass": "frc.robot.Main",

@@ -66,7 +66,7 @@ public class MainMechanism {
         L1(0,.1),
         L2(35,.5),
         L3(35,1),
-        L4(70,1.8),
+        L4(70,1.5),
         AlgaeU(45,.6),
         AlgaeL(45,.3),
         AlgaeN(-20,2),
@@ -111,7 +111,12 @@ public class MainMechanism {
         this.arm = arm;
         this.intake = intake;
         this.elevator = elevator;
-        arm.setDefaultCommand(arm.reachGoalDegrees(Positions.Intake.armDegrees()));
+        arm.setDefaultCommand(arm.reachGoalDegrees(()->{
+            if (elevator.getPosition() < .2){
+                return Positions.Intake.armDegrees();
+            }
+            return Positions.L4.armDegrees();
+        }));
         intake.setDefaultCommand(intake.setVelocity(Positions.Intake.elevatorMeters()));
         elevator.setDefaultCommand(elevator.reachGoal(IntakeSpeeds.Idle.value()));
         if (Robot.isSimulation()){
@@ -156,10 +161,17 @@ public class MainMechanism {
         Runtime.getRuntime().addShutdownHook(new Thread(notifier::close));
     }
 
+    /**
+     * keep in mind, toState ends automatically!!!
+     * @param position
+     * @return
+     */
     private Command toState(Positions position){
-        return arm.reachGoalDegrees(Positions.L4.armDegrees()).until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
-            .andThen(arm.reachGoalDegrees(position.armDegrees()))
-            .alongWith(elevator.reachGoal(position.elevatorMeters()));
+        return arm.reachGoalDegrees(Positions.L4.armDegrees())
+            .until(()->Math.abs(arm.getTarget()-arm.getPosition()) < MAX_ARM_ERROR)
+            .andThen(elevator.reachGoal(position.elevatorMeters()))
+            .until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
+            .andThen(arm.reachGoalDegreesOnce(position.armDegrees()));
     }
 
     public Command idle(){
@@ -172,10 +184,9 @@ public class MainMechanism {
      * @return
      */
     public Command intake(){
-        return Commands.race(toState(Positions.Intake),
-            intake.setVelocity(IntakeSpeeds.IntakeCoral.value()),
-            Commands.waitUntil(()->intake.hasCoral()).andThen(Commands.waitSeconds(.5)))
-            .until(()->intake.definiteCoral());
+        return Commands.deadline(Commands.waitUntil(()->intake.hasCoral()),
+            toState(Positions.Intake),
+            intake.setVelocity(IntakeSpeeds.IntakeCoral.value()));
     }
 
     public Command scoreL1(){
@@ -207,12 +218,11 @@ public class MainMechanism {
     }
 
     public Command score(Positions position){
-        return Commands.race(toState(position)
-            ,Commands.waitSeconds(MAX_SIGNAL_TIME)
+        return toState(position)
             .andThen(Commands.waitUntil(()->Math.abs(Units.degreesToRotations(position.armDegrees())-arm.getPosition()) < MAX_ARM_ERROR 
                 && Math.abs(elevator.getTargetMeters()-elevator.getPositionMeters()) < MAX_ELEVATOR_ERROR))
             .andThen(Commands.deadline(Commands.waitSeconds(SHOOT_TIME),
-                intake.setVelocity(IntakeSpeeds.Shoot.value()))));
+                intake.setVelocity(IntakeSpeeds.Shoot.value())));
     }
 
     /**
@@ -221,7 +231,7 @@ public class MainMechanism {
      * @return
      */
     public Command preset(Positions position){
-        return preset(position, ()->0);
+        return preset(position, ()->1);
     }
 
     /**
@@ -230,10 +240,11 @@ public class MainMechanism {
      * @return
      */
     public Command preset(Positions position, DoubleSupplier amount){
-        return Commands.parallel(arm.reachGoalDegrees(Positions.L4.armDegrees()).until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
-                .andThen(arm.reachGoalDegrees(position.armDegrees()))
-            ,elevator.reachGoal(()->position.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(), 0, 1)),
-            intake.setVelocity(IntakeSpeeds.Idle.value()));
+        return Commands.parallel(arm.reachGoalDegrees(Positions.L4.armDegrees())
+                .until(()->Math.abs(Units.rotationsToDegrees(arm.getPosition())-Positions.L4.armDegrees()) < Units.rotationsToDegrees(MAX_ARM_ERROR))
+                .andThen(elevator.reachGoal(()->position.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(), 0, 1)))
+                .until(()->Math.abs(position.elevatorMeters()-elevator.getPositionMeters()) < MAX_ELEVATOR_ERROR)
+                .andThen(arm.reachGoalDegrees(position.armDegrees())));
     }
 
     public Command preset(int level, DoubleSupplier amount){

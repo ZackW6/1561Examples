@@ -81,7 +81,7 @@ public class TalonClimber implements ArmIO{
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
-        talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        // talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         talonFXConfigs.Feedback.SensorToMechanismRatio = ClimberConstants.CLIMBER_SENSOR_TO_MECHANISM_RATIO;
         talonFXConfigs.Feedback.RotorToSensorRatio = ClimberConstants.CLIMBER_ROTOR_TO_SENSOR_RATIO;
         

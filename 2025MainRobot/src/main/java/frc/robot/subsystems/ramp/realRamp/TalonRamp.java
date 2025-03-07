@@ -81,7 +81,7 @@ public class TalonRamp implements ArmIO{
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
-        talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        // talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         talonFXConfigs.Feedback.SensorToMechanismRatio = RampConstants.RAMP_SENSOR_TO_MECHANISM_RATIO;
         talonFXConfigs.Feedback.RotorToSensorRatio = RampConstants.RAMP_ROTOR_TO_SENSOR_RATIO;
         

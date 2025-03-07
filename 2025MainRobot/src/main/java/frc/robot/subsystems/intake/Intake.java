@@ -29,8 +29,6 @@ import frc.robot.subsystems.intake.simIntake.SimIntake;
 public class Intake extends SubsystemBase{
     private final FlywheelIO intakeIO;
 
-    private final Notifier hasPieceChecker;
-
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable intakeTable = robot.getSubTable("Intake");
 
@@ -42,9 +40,6 @@ public class Intake extends SubsystemBase{
     private final DigitalInputIO coralLimitSwitch1;
     private final DigitalInputIO coralLimitSwitch2;
     private final DigitalInputIO coralLaser;
-
-    private boolean hasPiece = false;
-    private double lastTime = Timer.getFPGATimestamp();
 
     public Intake(){
         if (Robot.isSimulation()){
@@ -59,21 +54,6 @@ public class Intake extends SubsystemBase{
             coralLaser = new DigitalInputLS(IntakeConstants.CORAL_LASER_ID);
             intakeIO = new TalonIntake();
         }
-        hasPieceChecker = new Notifier(()->{
-            boolean temp = false;
-            if (coralLimitSwitch2.getValue() || coralLimitSwitch1.getValue()){
-                temp = true;
-                lastTime = Timer.getFPGATimestamp();
-            }else{
-                if (Timer.getFPGATimestamp() - lastTime > .4 && Math.abs(intakeIO.getVelocity()) > 5){
-                    temp = false;
-                }
-            }
-            hasPiece = coralLaser.getValue() || temp;
-        });
-        hasPieceChecker.startPeriodic(0.02);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(hasPieceChecker::close));
     }
 
     public Command setVelocity(DoubleSupplier rps){
@@ -89,7 +69,7 @@ public class Intake extends SubsystemBase{
     }
 
     public boolean hasCoral(){
-        return hasPiece;
+        return coralLaser.getValue();
         // return coralLimitSwitch1.getValue() || coralLimitSwitch2.getValue() || coralLaser.getValue();
     }
 
@@ -98,7 +78,7 @@ public class Intake extends SubsystemBase{
     }
 
     public boolean hasAlgae(){
-        return intakeIO.getCurrent() > 10 && Math.abs(intakeIO.getAcceleration()) < .1 && Math.abs(intakeIO.getVelocity() - intakeIO.getTarget()) > .2;
+        return false;
     }
 
     public double getVelocity(){
@@ -110,7 +90,7 @@ public class Intake extends SubsystemBase{
     }
 
     public DigitalInputIO getCoralDigitalInputIO(){
-        return coralLimitSwitch1;
+        return coralLaser;
     }
 
     // public DigitalInputIO getAlgaeDigitalInputIO(){

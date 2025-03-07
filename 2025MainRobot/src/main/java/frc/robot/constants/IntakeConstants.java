@@ -17,7 +17,7 @@ public class IntakeConstants {
     public static final double kI = 0; // For flywheels, this should be 0
     public static final double kD = 0; // For flywheels, this should be 0
 
-    public static final double INTAKE_SENSOR_TO_MECHANISM_RATIO = 1;
+    public static final double INTAKE_SENSOR_TO_MECHANISM_RATIO = 2;
 
     /* Intake Current Limiting */
     public static final int INTAKE_CURRENT_LIMIT = 30;

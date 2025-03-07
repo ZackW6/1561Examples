@@ -3,6 +3,7 @@ package frc.robot;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
@@ -213,5 +214,13 @@ public class OptionController {
                 .until(()->initReefPosition != reefPosition)
                 .andThen(algaeIntakeTillInterruptSwap()).unless(hasAlgae);
         },Set.of());
+    }
+
+    public Command getScoreLevel(){
+        return factoryCommands.scoringMechanism.preset(reefLevel);
+    }
+
+    public void setReefLevel(int value){
+        reefLevel = MathUtil.clamp(value, 1, 4);
     }
 }

@@ -1,17 +1,80 @@
 package frc.robot.util;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.Scanner;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import java.util.HashMap;
+
 
 public class CustomController {
+    private String currentLoad = "{}";
+
+    private ArrayList<Integer> allInputs = new ArrayList<>();
+
+    private final Notifier checkButtons;
     private final GenericHID genericHID;
     private final HashMap<Integer, int[]> buttonMappings = new HashMap<>();
 
+    private final String portName = "COM5";
+
+    private boolean connected = false;
+
     public CustomController(int port) {
         genericHID = new GenericHID(port);
+        checkButtons = new Notifier(this::checkFiles);
+        checkButtons.startPeriodic(.01);
+        Runtime.getRuntime().addShutdownHook(new Thread(checkButtons::close));
         initializeMappings();
+    }
+
+    private void checkFiles(){
+        System.out.println(connected);
+        allInputs.clear();
+        try (FileInputStream serialInput = new java.io.FileInputStream(portName)) {
+            int data;
+            StringBuilder receivedData = new StringBuilder();
+
+            while ((char)(data = serialInput.read()) != 'E') { // Read until END
+                receivedData.append((char) data);
+            }
+
+            currentLoad = receivedData.toString();
+            connected = true;
+        } catch (Exception e) {
+            System.out.println("BAD PORT");
+            connected = false;
+            return;
+        }
+        try {
+            String allNums = currentLoad.substring(currentLoad.indexOf("{"),currentLoad.indexOf("}")).toString()
+                .replace(",","")
+                .replace("{","")
+                .replace("}","");
+
+            for (char c : allNums.toCharArray()){
+                allInputs.add(Integer.parseInt(String.valueOf(c)));
+            }
+
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        System.out.println(allInputs);
     }
 
     private void initializeMappings() {
@@ -40,7 +103,8 @@ public class CustomController {
     }
 
     private boolean getRawButton(int num) {
-        return genericHID.getRawButton(MathUtil.clamp(num, 1, 11));
+        return allInputs.contains(MathUtil.clamp(num - 1,0,9));
+        // return genericHID.getRawButton(MathUtil.clamp(num, 1, 11));
     }
 
     public Trigger rawButtonPressed(int num) {
@@ -54,4 +118,25 @@ public class CustomController {
     public Trigger fixedButtonPressed(int num) {
         return new Trigger(() -> getFixedButton(num));
     }
+
+    public boolean connected(){
+        return connected;
+    }
+
+    // public static void main(String[] args) {
+    //     try {
+    //         // Open the serial port as a file (Windows: COMx, Linux/macOS: /dev/ttyUSBx or /dev/ttyACMx)
+    //         FileInputStream serialInput = new java.io.FileInputStream("COM5"); // Change to your actual port
+
+    //         while (true) {
+    //             if (serialInput.read() > 0) {  // Check if data is available
+    //                 int data = serialInput.read();  // Read one byte
+    //                 System.out.print((char) data);  // Print as a character (modify as needed)
+    //             }
+    //         }
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+        
+    // }
 }
