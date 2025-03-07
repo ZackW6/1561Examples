@@ -20,6 +20,8 @@ import frc.robot.constants.RampConstants;
 import frc.robot.subsystems.arm.ArmIO;
 
 public class TalonRamp implements ArmIO{
+
+    
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 

@@ -20,20 +20,25 @@ import frc.robot.constants.ArmConstants;
 import frc.robot.subsystems.arm.ArmIO;
 
 public class TalonArm implements ArmIO{
+
+    //Instance of TalonConfig
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+    //Instance of Current Limits
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
+    //Magic
     private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
 
     private final TalonFX armMotor;
     private final CANcoder encoder;
 
+    //Config Motor to correct IDs
     public TalonArm(){
         armMotor = new TalonFX(ArmConstants.ARM_MOTOR_ID);
         encoder = new CANcoder(ArmConstants.ARM_ENCODER_ID);
         configMotor();
     }
-
+    
     @Override
     public void setPosition(double position) {
         armMotor.setControl(m_request.withPosition(position).withSlot(0));

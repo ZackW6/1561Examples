@@ -20,13 +20,18 @@ import frc.robot.constants.ClimberConstants;
 import frc.robot.subsystems.arm.ArmIO;
 
 public class TalonClimber implements ArmIO{
+    
+    //Instance of TalonConfig
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+    //Instance of Current Limits
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
+    //Magic
     private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
 
     private final TalonFX armMotor;
 
+    //Config Motor to correct IDs
     public TalonClimber(){
         armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID);
         configMotor();

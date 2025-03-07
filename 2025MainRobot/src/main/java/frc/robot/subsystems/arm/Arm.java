@@ -67,6 +67,7 @@ public class Arm extends SubsystemBase {
   
   private final ArmIO armIO;
 
+  //Send Arm data to NetworkTable
   private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
   private final NetworkTable armTable = robot.getSubTable("Arm");
 
@@ -85,6 +86,7 @@ public class Arm extends SubsystemBase {
     }
   }
 
+  //Set position of arm
   public void setPosition(double position){
     armIO.setPosition(position);
   }
@@ -94,6 +96,8 @@ public class Arm extends SubsystemBase {
    *
    * @param goal the position to maintain
    */
+
+  //Set Arm goal in Rotations
   public Command reachGoal(double goal) {
     return this.run(()->armIO.setPosition(goal));
   }
@@ -102,6 +106,8 @@ public class Arm extends SubsystemBase {
    *
    * @param goal the position to maintain
    */
+
+  //Set arm goal in Degrees
   public Command reachGoalDegrees(double goal) {
     return this.run(()->armIO.setPosition(Units.degreesToRotations(goal)));
   }
@@ -126,19 +132,24 @@ public class Arm extends SubsystemBase {
    *
    * @param goal the position to maintain
    */
+
+  //Update goal values
   public Command reachGoal(DoubleSupplier goal) {
     return this.run(()->armIO.setPosition(goal.getAsDouble()));
   }
 
+  //Get position of Arm
   public double getPosition(){
     return armIO.getPosition();
   }
-  
+
+  //Get target
   public double getTarget(){
     return armIO.getTarget();
   }
 
   @Override
+  //Send Current position and orientation data of Arm to Network table and get Elevator data, is Main loop of arm
   public void periodic(){
     double height = elevatorSubscriber.get().getZ();
     armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));

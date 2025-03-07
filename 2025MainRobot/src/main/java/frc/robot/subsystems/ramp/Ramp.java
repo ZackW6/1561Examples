@@ -45,6 +45,7 @@ public class Ramp extends SubsystemBase {
   
     private final ArmIO climberIO;
   
+    //Send climber data to network table
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable rampTable = robot.getSubTable("Ramp");
   
@@ -59,7 +60,7 @@ public class Ramp extends SubsystemBase {
         climberIO = new TalonRamp();
       }
     }
-  
+    
     public void setPosition(double position){
         climberIO.setPosition(position);
     }
@@ -69,6 +70,8 @@ public class Ramp extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+
+    //Reach goal position in rotations
     public Command reachGoal(double goal) {
       return this.run(()->climberIO.setPosition(goal));
     }
@@ -77,6 +80,8 @@ public class Ramp extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+
+     //Reach goal in Degrees
     public Command reachGoalDegrees(double goal) {
       return this.run(()->climberIO.setPosition(Units.degreesToRotations(goal)));
     }
@@ -85,6 +90,8 @@ public class Ramp extends SubsystemBase {
      *
      * @param goal the position to maintain
      */
+
+    //Update goal value
     public Command reachGoal(DoubleSupplier goal) {
       return this.run(()->climberIO.setPosition(goal.getAsDouble()));
     }
@@ -97,6 +104,7 @@ public class Ramp extends SubsystemBase {
       return climberIO.getTarget();
     }
   
+    //Send current position and orientation data of Ramp to network table and updates position, is main loop of ramp
     @Override
     public void periodic(){
       rampPublisher.accept(new Pose3d(-.25,0,0.8,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));

@@ -62,6 +62,7 @@ public class Elevator extends SubsystemBase {
   
   private final ElevatorIO elevatorIO;
 
+  //Send climber data to Network Table 
   private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
   private final NetworkTable elevTable = robot.getSubTable("Elevator");
 
@@ -94,6 +95,8 @@ public class Elevator extends SubsystemBase {
    *
    * @param goal the position to maintain
    */
+
+   //Reach goal position in rotations
   public Command reachGoal(double goal) {
     return this.run(()->elevatorIO.setPosition(goal));
   }
@@ -102,10 +105,14 @@ public class Elevator extends SubsystemBase {
    *
    * @param goal the position to maintain
    */
+
+  //Update goal value
   public Command reachGoal(DoubleSupplier goal) {
     return this.run(()->elevatorIO.setPosition(goal.getAsDouble()));
   }
 
+
+  
   public double getPositionMeters(){
     return elevatorIO.getPositionMeters();
   }
@@ -118,6 +125,7 @@ public class Elevator extends SubsystemBase {
     return elevatorIO.getTargetPositionMeters();
   }
 
+  //Assigns PID and SGVA values
   public void acceptPIDConstants(double P, double I, double D, double S, double G, double V, double A){
     elevatorIO.assignPID(P, I, D);
     elevatorIO.assignSGVA(S,G,V,A);
@@ -127,6 +135,7 @@ public class Elevator extends SubsystemBase {
     return elevatorIO.recievePIDs();
   }
 
+  //Send current position and orientation data of elevator to network table and updates position, is main loop of elevator
   @Override
   public void periodic(){
     double position = getPositionMeters();

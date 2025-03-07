@@ -29,6 +29,7 @@ import frc.robot.subsystems.intake.simIntake.SimIntake;
 public class Intake extends SubsystemBase{
     private final FlywheelIO intakeIO;
 
+    //Send data to Network table
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable intakeTable = robot.getSubTable("Intake");
 
@@ -37,6 +38,7 @@ public class Intake extends SubsystemBase{
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
 
+    //Create limit switches and laser
     private final DigitalInputIO coralLimitSwitch1;
     private final DigitalInputIO coralLimitSwitch2;
     private final DigitalInputIO coralLaser;
@@ -46,7 +48,6 @@ public class Intake extends SubsystemBase{
             coralLimitSwitch1 = new DigitalInputSim();
             coralLimitSwitch2 = new DigitalInputSim();
             coralLaser = new DigitalInputSim();
-
             intakeIO = new SimIntake();
         }else{
             coralLimitSwitch1 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID1);
@@ -56,10 +57,12 @@ public class Intake extends SubsystemBase{
         }
     }
 
+    //set velocity in rotations
     public Command setVelocity(DoubleSupplier rps){
         return this.run(() -> intakeIO.setVelocity(rps.getAsDouble()));
     }
 
+    //Update velocity in rotations
     public Command setVelocity(double rps){
         return this.run(() -> intakeIO.setVelocity(rps));
     }
@@ -73,6 +76,7 @@ public class Intake extends SubsystemBase{
         // return coralLimitSwitch1.getValue() || coralLimitSwitch2.getValue() || coralLaser.getValue();
     }
 
+    //Make sure there is coral
     public boolean definiteCoral(){
         return coralLaser.getValue();
     }
@@ -98,6 +102,7 @@ public class Intake extends SubsystemBase{
     // }
 
     @Override
+    //publish velocity data to network table and is main loop of intake
     public void periodic() {
         intakeVelocityPublisher.accept(getVelocity());
         intakeTargetPublisher.accept(getTargetVelocity());

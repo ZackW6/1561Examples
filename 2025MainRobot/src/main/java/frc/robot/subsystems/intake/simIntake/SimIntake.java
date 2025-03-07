@@ -19,8 +19,11 @@ import frc.robot.subsystems.intake.FlywheelIO;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 
 public class SimIntake implements FlywheelIO{
+
+    //Set what type of gear and how many gears to use
     private final DCMotor gearbox = DCMotor.getFalcon500(1);
     
+    //Set PID values
     private PIDController pidController = new PIDController(20, 0, 0);
 
     private double targetVelocity = 0;
@@ -28,6 +31,8 @@ public class SimIntake implements FlywheelIO{
     private boolean stopped = false;
 
     private Thread updateThread;
+
+    //Create new intake with set values
     private final FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(gearbox,0.032,IntakeConstants.GEARING),
      gearbox,
       0);
@@ -37,13 +42,18 @@ public class SimIntake implements FlywheelIO{
             while(true){
                 try {
                     if (stopped){
+                        //Stop intake
                         intakeSim.setInputVoltage(0);
                     }else{
+                        //Run intake with set values
                         intakeSim.setInputVoltage(pidController.calculate(getVelocity(), targetVelocity));
                     }
+                    //Update every 20 ms
                     intakeSim.update(.02);
+                    //Sleep every 20 ms
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
+                    //Print StackTrace if exception is caught
                     e.printStackTrace();
                 }
             }

@@ -11,18 +11,22 @@ import frc.robot.subsystems.elevator.ElevatorIO;
 
 public class SimElevator extends SubsystemBase implements ElevatorIO{
 
+    //Set what motor to use and how many motors to sue
     private final DCMotor gearbox = DCMotor.getFalcon500(2);
-    
+
+    //Set what PID vals to use
     private PIDController pidController = new PIDController(30, 0, 0);
 
     private double targetPosition = 0;
 
     private boolean stopped = false;
 
+    //Find Circumference of drum in meters
     private final double drumCircumferenceMeters = 2 * Math.PI * ElevatorConstants.ELEVATOR_DRUM_RADIUS;
 
     private Thread updateThread;
 
+    //Create elevator with set values
     private final ElevatorSim elevatorSim =
       new ElevatorSim(
           gearbox,
@@ -34,18 +38,24 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
           true,
           0);
   
+    //Main loop of Elevator
     public SimElevator(){
         updateThread = new Thread(()->{
             while(true){
                 try {
                     if (stopped){
+                        //Stop Elevator
                         elevatorSim.setInputVoltage(0);
                     }else{
+                        //Move elevator based on positions
                         elevatorSim.setInputVoltage(pidController.calculate(getPositionMeters(), targetPosition));
                     }
+                    //Update vals every 20 ms
                     elevatorSim.update(.02);
+                    //Sleep every 20 ms
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
+                    //If exception caught, print StackTrace of exceptions
                     e.printStackTrace();
                 }
             }
