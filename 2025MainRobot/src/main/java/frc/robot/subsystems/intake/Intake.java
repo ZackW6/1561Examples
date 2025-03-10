@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.hardware.CANrange;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -38,7 +39,7 @@ public class Intake extends SubsystemBase{
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
 
-    //Create limit switches and laser
+    //Create limit switches and lazer
     private final DigitalInputIO coralLimitSwitch1;
     private final DigitalInputIO coralLimitSwitch2;
     private final DigitalInputIO coralLaser;

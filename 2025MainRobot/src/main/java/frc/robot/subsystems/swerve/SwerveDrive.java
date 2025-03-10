@@ -23,6 +23,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -51,6 +52,8 @@ public class SwerveDrive extends SubsystemBase{
     private final StructPublisher<Pose2d> posePublisher = odom
         .getStructTopic("RobotPose", Pose2d.struct).publish();
 
+    private final Notifier visionUpdates;
+
     public SwerveDrive(){
         if (Robot.isSimulation()){
             this.swerveIO = new SimSwerve();
@@ -60,12 +63,27 @@ public class SwerveDrive extends SubsystemBase{
 
         cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FR_LIMELIGHT_CAMERA_TRANSFORM,
             LimelightConstants.FL_LIMELIGHT_CAMERA_TRANSFORM,
-            //  LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM
+             LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM
             },
               LimelightConstants.FR_LIMELIGHT_NAME,
-              LimelightConstants.FL_LIMELIGHT_NAME
-            //    LimelightConstants.BACKWARD_LIMELIGHT_NAME
+              LimelightConstants.FL_LIMELIGHT_NAME,
+               LimelightConstants.BACKWARD_LIMELIGHT_NAME
                );
+
+        visionUpdates = new Notifier(()->{
+            double time = Timer.getFPGATimestamp();
+            try {
+                //TODO this will be in a seperate thread eventually, I just want to profile it on a robot first
+                cameras.updateVisionPose();
+            } catch (Exception e) {
+    
+            }
+            if (Timer.getFPGATimestamp() - time > .03){
+                System.out.println("Vision Overrun");
+            }
+        });
+        Runtime.getRuntime().addShutdownHook(new Thread(visionUpdates::close));
+        visionUpdates.startPeriodic(.02);
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -78,13 +96,6 @@ public class SwerveDrive extends SubsystemBase{
 
     @Override
     public void periodic(){
-        try {
-            //TODO this will be in a seperate thread eventually, I just want to profile it on a robot first
-            cameras.updateVisionPose();
-        } catch (Exception e) {
-
-        }
-        
         posePublisher.accept(getPose());
     }
 

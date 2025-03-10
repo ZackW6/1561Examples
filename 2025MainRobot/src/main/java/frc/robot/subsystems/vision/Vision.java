@@ -199,7 +199,7 @@ public class Vision {
             //     Utils.fpgaToCurrentTime(botPose.timestampSeconds),VecBuilder.fill(0,0,999));//linearInterpolation[0],linearInterpolation[1],.1));//linearInterpolation[0],linearInterpolation[1],999999));
             measurement = new VisionMeasurement(botPose.pose,
              botPose.timestampSeconds,
-             VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],linearInterpolation[2]));//linearInterpolation[0],linearInterpolation[1],999999));
+             VecBuilder.fill(linearInterpolation[0],linearInterpolation[1],999999));//linearInterpolation[0],linearInterpolation[1],999999));
         }
 
         visionPubliser[index].accept(botPose.pose);

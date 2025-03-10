@@ -29,6 +29,7 @@ import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.ramp.Ramp;
 import frc.robot.util.MapleSimWorld;
 
 /**
@@ -40,6 +41,7 @@ public class MainMechanism {
 
     private final double MAX_ARM_ERROR = .05;
     private final double MAX_ELEVATOR_ERROR = .05;
+    private final double MAX_RAMP_ERROR = .05;
     private final double MAX_SIGNAL_TIME = .03;
     private final double SHOOT_TIME = .3;
     public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
@@ -49,6 +51,8 @@ public class MainMechanism {
     public final Intake intake;
 
     public final Elevator elevator;
+
+    public final Ramp ramp;
 
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable armTable = robot.getSubTable("Arm");
@@ -60,6 +64,10 @@ public class MainMechanism {
     private final NetworkTable odom = robot.getSubTable("Odometry");
     private StructSubscriber<Pose2d> poseSubscriber = odom
         .getStructTopic("RobotPose",Pose2d.struct).subscribe(new Pose2d());
+
+    private final double rampUpPosition = -.25;
+    private final double rampDownPosition = 0;
+    private final double rampJigglePosition = -.04;
 
     public static enum Positions{
         Intake(0,0),
@@ -104,13 +112,14 @@ public class MainMechanism {
         }
     }
 
-    public MainMechanism(Arm arm, Intake intake, Elevator elevator){
+    public MainMechanism(Arm arm, Intake intake, Elevator elevator, Ramp ramp){
         notifier = new Notifier(this::periodic);
         notifier.startPeriodic(0.02);
 
         this.arm = arm;
         this.intake = intake;
         this.elevator = elevator;
+        this.ramp = ramp;
         arm.setDefaultCommand(arm.reachGoalDegrees(()->{
             if (elevator.getPosition() < .2){
                 return Positions.Intake.armDegrees();
@@ -119,6 +128,7 @@ public class MainMechanism {
         }));
         intake.setDefaultCommand(intake.setVelocity(Positions.Intake.elevatorMeters()));
         elevator.setDefaultCommand(elevator.reachGoal(IntakeSpeeds.Idle.value()));
+        ramp.setDefaultCommand(ramp.reachGoal(rampUpPosition));
         if (Robot.isSimulation()){
             poseSubscriber = NetworkTableInstance.getDefault().getTable("RealData")
                 .getStructTopic("RealPose", Pose2d.struct).subscribe(new Pose2d());
@@ -141,7 +151,7 @@ public class MainMechanism {
                 , "CoralIntake");
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 5);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(arm.getPosition() - Positions.Intake.armPosition) < .1);
-            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPositionMeters() - Positions.Intake.elevatorMeters) < .1);
+            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPosition() - Positions.Intake.elevatorMeters) < .1);
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
             MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 10);
 
@@ -167,11 +177,11 @@ public class MainMechanism {
      * @return
      */
     private Command toState(Positions position){
-        return arm.reachGoalDegrees(Positions.L4.armDegrees())
+        return Commands.deadline(arm.reachGoalDegrees(Positions.L4.armDegrees())
             .until(()->Math.abs(arm.getTarget()-arm.getPosition()) < MAX_ARM_ERROR)
             .andThen(elevator.reachGoal(position.elevatorMeters()))
-            .until(()->Math.abs(position.elevatorMeters()-elevator.getTargetMeters()) < MAX_ELEVATOR_ERROR)
-            .andThen(arm.reachGoalDegreesOnce(position.armDegrees()));
+            .until(()->Math.abs(position.elevatorMeters()-elevator.getPosition()) < MAX_ELEVATOR_ERROR)
+            .andThen(arm.reachGoalDegreesOnce(position.armDegrees())));
     }
 
     public Command idle(){
@@ -184,9 +194,18 @@ public class MainMechanism {
      * @return
      */
     public Command intake(){
-        return Commands.deadline(Commands.waitUntil(()->intake.hasCoral()),
-            toState(Positions.Intake),
-            intake.setVelocity(IntakeSpeeds.IntakeCoral.value()));
+        return Commands.parallel(
+            toState(Positions.Intake)
+            ,intake.setVelocity(IntakeSpeeds.IntakeCoral.value())
+            ,jiggleRamp()).until(()->intake.hasCoral())
+            .andThen(Commands.deadline(intake.stop(), ramp.reachGoal(rampUpPosition)));
+    }
+
+    public Command jiggleRamp(){
+        return (ramp.reachGoal(rampDownPosition)
+            .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < MAX_RAMP_ERROR)
+            .andThen(ramp.reachGoal(rampJigglePosition)
+                .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < MAX_RAMP_ERROR))).repeatedly();
     }
 
     public Command scoreL1(){
@@ -218,11 +237,10 @@ public class MainMechanism {
     }
 
     public Command score(Positions position){
-        return toState(position)
+        return toState(position).deadlineFor(ramp.reachGoal(rampUpPosition))
             .andThen(Commands.waitUntil(()->Math.abs(Units.degreesToRotations(position.armDegrees())-arm.getPosition()) < MAX_ARM_ERROR 
-                && Math.abs(elevator.getTargetMeters()-elevator.getPositionMeters()) < MAX_ELEVATOR_ERROR))
-            .andThen(Commands.deadline(Commands.waitSeconds(SHOOT_TIME),
-                intake.setVelocity(IntakeSpeeds.Shoot.value())));
+                && Math.abs(elevator.getTarget()-elevator.getPosition()) < MAX_ELEVATOR_ERROR))
+            .andThen(intake.setVelocity(IntakeSpeeds.Shoot.value()).withTimeout(SHOOT_TIME));
     }
 
     /**
@@ -240,11 +258,11 @@ public class MainMechanism {
      * @return
      */
     public Command preset(Positions position, DoubleSupplier amount){
-        return Commands.parallel(arm.reachGoalDegrees(Positions.L4.armDegrees())
-                .until(()->Math.abs(Units.rotationsToDegrees(arm.getPosition())-Positions.L4.armDegrees()) < Units.rotationsToDegrees(MAX_ARM_ERROR))
-                .andThen(elevator.reachGoal(()->position.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(), 0, 1)))
-                .until(()->Math.abs(position.elevatorMeters()-elevator.getPositionMeters()) < MAX_ELEVATOR_ERROR)
-                .andThen(arm.reachGoalDegrees(position.armDegrees())));
+        return Commands.deadline(arm.reachGoalDegrees(Positions.L4.armDegrees())
+            .until(()->Math.abs(Units.rotationsToDegrees(arm.getPosition())-Positions.L4.armDegrees()) < Units.rotationsToDegrees(MAX_ARM_ERROR))
+            .andThen(elevator.reachGoal(()->position.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(), 0, 1))).deadlineFor(ramp.reachGoal(rampUpPosition))
+            .until(()->Math.abs(position.elevatorMeters()-elevator.getPosition()) < MAX_ELEVATOR_ERROR)
+            .andThen(arm.reachGoalDegrees(position.armDegrees())));
     }
 
     public Command preset(int level, DoubleSupplier amount){
@@ -261,29 +279,29 @@ public class MainMechanism {
     }
 
     public Command score(int level){
-        if (level == 4){
-            return scoreL4();
+        switch (level) {
+            case 4:
+                return scoreL4();
+            case 3:
+                return scoreL3();
+            case 2:
+                return scoreL2();        
+            default:
+                return scoreL1();
         }
-        if (level == 3){
-            return scoreL3();
-        }
-        if (level == 2){
-            return scoreL2();
-        }
-        return scoreL1();
     }
 
     public Command preset(int level){
-        if (level == 4){
-            return presetL4();
+        switch (level) {
+            case 4:
+                return presetL4();
+            case 3:
+                return presetL3();
+            case 2:
+                return presetL2();        
+            default:
+                return presetL1();
         }
-        if (level == 3){
-            return presetL3();
-        }
-        if (level == 2){
-            return presetL2();
-        }
-        return presetL1();
     }
 
     public Command presetAlgaeUpper(){

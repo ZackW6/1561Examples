@@ -38,8 +38,8 @@ public class FactoryCommands {
     public static final double positionalToleranceMeters = .05;
     public static final double rotationalToleranceRotations = .05;
 
-    private final PIDController speedsPID = new PIDController(5, 0, 0);
-    private final PIDController rotationPID = new PIDController(10, 0, 0);
+    private final PIDController speedsPID = new PIDController(2, 0, 0);
+    private final PIDController rotationPID = new PIDController(2, 0, 0);
 
     public final SwerveDrive drivetrain;
 

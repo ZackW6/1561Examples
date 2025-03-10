@@ -111,34 +111,18 @@ public class Elevator extends SubsystemBase {
     return this.run(()->elevatorIO.setPosition(goal.getAsDouble()));
   }
 
-
-  
-  public double getPositionMeters(){
-    return elevatorIO.getPositionMeters();
-  }
-
   public double getPosition(){
     return elevatorIO.getPosition();
   }
 
-  public double getTargetMeters(){
-    return elevatorIO.getTargetPositionMeters();
-  }
-
-  //Assigns PID and SGVA values
-  public void acceptPIDConstants(double P, double I, double D, double S, double G, double V, double A){
-    elevatorIO.assignPID(P, I, D);
-    elevatorIO.assignSGVA(S,G,V,A);
-  }
-
-  public double[] recievePIDConstants(){
-    return elevatorIO.recievePIDs();
+  public double getTarget(){
+    return elevatorIO.getTarget();
   }
 
   //Send current position and orientation data of elevator to network table and updates position, is main loop of elevator
   @Override
   public void periodic(){
-    double position = getPositionMeters();
+    double position = getPosition();
     elevatorStage1.accept(new Pose3d(0,0,Math.min(position,.7),new Rotation3d()));
     elevatorStage2.accept(new Pose3d(0,0,Math.min(position,1.4),new Rotation3d()));
     elevatorStage3.accept(new Pose3d(0,0,position,new Rotation3d()));

@@ -4,12 +4,34 @@
 
 package frc.robot;
 
+import java.io.IOException;
+
+import org.opencv.core.Core;
+
+import edu.wpi.first.cscore.CameraServerJNI;
+import edu.wpi.first.math.jni.WPIMathJNI;
+import edu.wpi.first.networktables.BooleanArrayPublisher;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.NetworkTablesJNI;
+import edu.wpi.first.util.CombinedRuntimeLoader;
+import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.CustomController;
 
 public final class Main {
+  static Thread thread;
   private Main() {}
 
   public static void main(String... args) {
+    createCustomController();
     RobotBase.startRobot(Robot::new);
+  }
+
+  public static void createCustomController(){
+    CustomController customController = new CustomController(1);
   }
 }

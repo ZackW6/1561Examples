@@ -54,6 +54,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -135,9 +136,24 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         return Rotation2d.fromRadians(SwerveJNI.JNI_GetOperatorForwardDirection(m_drivetrainId));
     }
 
+    private double resetTime = -1;
+    @Override
+    public void resetPose(Pose2d pose) {
+        resetTime = Timer.getFPGATimestamp();
+        // TODO Auto-generated method stub
+        super.resetPose(pose);
+    }
+
     @Override
     public void addVisionMeasurement(Pose2d pose, double timestep, Vector<N3> stdDev) {
+        if (currentTimeToFPGA(timestep) < resetTime){
+            return;
+        }
         super.addVisionMeasurement(pose, timestep, stdDev);
+    }
+
+    private double currentTimeToFPGA(double currentTime) {
+        return (Timer.getFPGATimestamp() - Utils.getCurrentTimeSeconds()) + currentTime;
     }
 
     @Override

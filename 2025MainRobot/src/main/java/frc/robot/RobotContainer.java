@@ -59,7 +59,8 @@ public class RobotContainer {
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
-  private final CustomController customController = new CustomController(0);
+
+  private final CustomController customController = new CustomController(1);
   
   private final SwerveDrive drivetrain = new SwerveDrive(); // My drivetrain
 
@@ -68,12 +69,12 @@ public class RobotContainer {
   private final Intake intake = new Intake();
 
   private final Arm arm = new Arm();
-
-  private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator);
-
+  
   private final Climber climber = new Climber();
 
   private final Ramp ramp = new Ramp();
+
+  private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator, ramp);
 
   private final ClimbMechanism climbMechanism = new ClimbMechanism(climber, ramp);
   // private final ObjectDetection objectDetection = new ObjectDetection("Test",
@@ -105,6 +106,18 @@ public class RobotContainer {
     /* Controller Bindings */
     // createManualControls();
     createAutoPathControls();
+
+    customController.rawButtonPressed(1).onTrue(Commands.print("1"));
+    customController.rawButtonPressed(2).onTrue(Commands.print("2"));
+    customController.rawButtonPressed(3).onTrue(Commands.print("3"));
+    customController.rawButtonPressed(4).onTrue(Commands.print("4"));
+    customController.rawButtonPressed(5).onTrue(Commands.print("5"));
+    customController.rawButtonPressed(6).onTrue(Commands.print("6"));
+    customController.rawButtonPressed(7).onTrue(Commands.print("7"));
+    customController.rawButtonPressed(8).onTrue(Commands.print("8"));
+    customController.rawButtonPressed(9).onTrue(Commands.print("9"));
+    customController.rawButtonPressed(10).onTrue(Commands.print("10"));
+    
 
     driverController.y().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
@@ -260,8 +273,9 @@ public class RobotContainer {
   }
 
   public void configureAutonomousCommands() {
-    NamedCommands.registerCommand("intake", Commands.none());
-    NamedCommands.registerCommand("place", Commands.none());
+    NamedCommands.registerCommand("intake", scoringMechanism.intake());
+    NamedCommands.registerCommand("presetL4", scoringMechanism.presetL4());
+    NamedCommands.registerCommand("placeL4", scoringMechanism.scoreL4());
   }
 
   public Command getAutonomousCommand() {

@@ -39,8 +39,6 @@ public class TalonElevator implements ElevatorIO{
     private final Notifier PIDAdjuster;
     // private final CANcoder encoder;
 
-    private final double drumCircumferenceMeters = 2 * Math.PI * ElevatorConstants.ELEVATOR_DRUM_RADIUS;
-
     public TalonElevator(){
         //Create and set motors and encoders up
         motorLeader = new TalonFX(ElevatorConstants.ELEVATOR_LEADER_ID);
@@ -70,12 +68,7 @@ public class TalonElevator implements ElevatorIO{
     }
 
     @Override
-    public double getPositionMeters() {
-        return (motorLeader.getPosition().getValueAsDouble());
-    }
-
-    @Override
-    public double getTargetPositionMeters() {
+    public double getTarget() {
         return (motorLeader.getDifferentialClosedLoopReference().getValueAsDouble());
     }
 
@@ -148,42 +141,23 @@ public class TalonElevator implements ElevatorIO{
         motorFollower.getConfigurator().apply(talonFXConfigs);
     }
 
-    @Override
-    public void assignPID(double P, double I, double D) {
-        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-        slot0Configs.kP = ElevatorConstants.P1;
-        slot0Configs.kI = ElevatorConstants.I1;
-        slot0Configs.kD = ElevatorConstants.D1;
-        motorLeader.getConfigurator().apply(talonFXConfigs);
-        motorFollower.getConfigurator().apply(talonFXConfigs);
-    }
-
-    @Override
-    public void assignSGVA(double S, double G, double V, double A) {
-        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-        slot0Configs.kS = S;
-        slot0Configs.kV = V;
-        slot0Configs.kA = A;
-        slot0Configs.kG = G;
-        motorLeader.getConfigurator().apply(talonFXConfigs);
-        motorFollower.getConfigurator().apply(talonFXConfigs);
-    }
-
-    @Override
-    public double[] recievePIDs() {
-        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-        return new double[]{slot0Configs.kP,slot0Configs.kI,slot0Configs.kD,slot0Configs.kS,slot0Configs.kG,slot0Configs.kV,slot0Configs.kA};
-    }
-
     private void periodic(){
-        if (getPositionMeters() < ElevatorConstants.CARRIAGE_POSITION){
-            motorLeader.setControl(m_request.withSlot(0));
-        }else if (getPositionMeters() < ElevatorConstants.STAGE_ONE_POSITION){
-            motorLeader.setControl(m_request.withSlot(1));
-        }else if (getPositionMeters() < ElevatorConstants.STAGE_TWO_POSITION){
-            motorLeader.setControl(m_request.withSlot(2));
+        if (getPosition() < getTarget()){
+            if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
+                motorLeader.setControl(m_request.withSlot(0));
+            }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
+                motorLeader.setControl(m_request.withSlot(1));
+            }else{
+                motorLeader.setControl(m_request.withSlot(2));
+            }
         }else{
-            motorLeader.setControl(m_request.withSlot(0));
+            if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
+                motorLeader.setControl(m_request.withSlot(2));
+            }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
+                motorLeader.setControl(m_request.withSlot(1));
+            }else{
+                motorLeader.setControl(m_request.withSlot(0));
+            }
         }
     }
 }

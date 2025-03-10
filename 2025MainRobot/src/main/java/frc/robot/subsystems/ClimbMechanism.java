@@ -52,7 +52,6 @@ public class ClimbMechanism {
         this.climber = climber;
         this.ramp = ramp;
         climber.setDefaultCommand(climber.reachGoalDegrees(ClimbPositions.OFF.climberDegrees()));
-        ramp.setDefaultCommand(ramp.reachGoalDegrees(ClimbPositions.OFF.rampDegrees()));
     }
 
     public Command runState(ClimbPositions position){

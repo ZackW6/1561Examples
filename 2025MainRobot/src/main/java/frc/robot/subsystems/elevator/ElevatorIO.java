@@ -8,20 +8,7 @@ public interface ElevatorIO {
 
     public void stop();
 
-    /**
-     * of mechanism rotations, not encoder or motor
-     * @return
-     */
     public double getPosition();
 
-    public double getPositionMeters();
-
-    public double getTargetPositionMeters();
-
-    public void assignPID(double P, double I, double D);
-
-    //Assign Static, Gravitational, Velocity, Acceleration FeedForward
-    public void assignSGVA(double S, double G, double V, double A);
-
-    public double[] recievePIDs();
+    public double getTarget();
 }

@@ -21,16 +21,13 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
 
     private boolean stopped = false;
 
-    //Find Circumference of drum in meters
-    private final double drumCircumferenceMeters = 2 * Math.PI * ElevatorConstants.ELEVATOR_DRUM_RADIUS;
-
     private Thread updateThread;
 
     //Create elevator with set values
     private final ElevatorSim elevatorSim =
       new ElevatorSim(
           gearbox,
-          ElevatorConstants.ELEVATOR_SENSOR_TO_MECHANISM_RATIO * ElevatorConstants.ELEVATOR_ROTOR_TO_SENSOR_RATIO,
+          ElevatorConstants.TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO * ElevatorConstants.ELEVATOR_ROTOR_TO_SENSOR_RATIO * 2, //The *2 is a lie, sorry
           ElevatorConstants.ELEVATOR_MASS_KG,
           ElevatorConstants.ELEVATOR_DRUM_RADIUS,
           ElevatorConstants.ELEVATOR_MIN_HEIGHT,
@@ -48,7 +45,7 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
                         elevatorSim.setInputVoltage(0);
                     }else{
                         //Move elevator based on positions
-                        elevatorSim.setInputVoltage(pidController.calculate(getPositionMeters(), targetPosition));
+                        elevatorSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
                     }
                     //Update vals every 20 ms
                     elevatorSim.update(.02);
@@ -76,31 +73,11 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
 
     @Override
     public double getPosition() {
-        return (elevatorSim.getPositionMeters()/drumCircumferenceMeters);
-    }
-
-    @Override
-    public double getPositionMeters() {
         return elevatorSim.getPositionMeters();
     }
 
     @Override
-    public double getTargetPositionMeters() {
+    public double getTarget() {
         return targetPosition;
-    }
-
-    @Override
-    public void assignPID(double P, double I, double D) {
-        pidController = new PIDController(P, I, D);
-    }
-
-    @Override
-    public void assignSGVA(double S, double G, double V, double A) {
-        //NA
-    }
-
-    @Override
-    public double[] recievePIDs() {
-        return new double[]{pidController.getP(),pidController.getI(),pidController.getD(),0,0,0,0};
     }
 }
