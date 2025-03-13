@@ -34,7 +34,7 @@ public class ArmConstants{
     public static final double JERK = 5000;
 
     
-    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0);
+    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(.578);
     
     public static final double JOINT_START_HEIGHT_METERS = .2;
     public static final double ARM_END_DEFFECTOR_SCORE_ANGLE = 0.05;//Rotations

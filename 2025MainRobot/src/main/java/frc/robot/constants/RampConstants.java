@@ -12,17 +12,16 @@ public class RampConstants{
     public static final double MIN_RAMP_ANGLE_RAD = Units.rotationsToRadians(-.5);
     public static final double RAMP_ENCODER_DIST_PER_PULSE = 2.0 * Math.PI / 4096;
 
-    public static final int RAMP_MOTOR_ID = 10;
-    public static final int RAMP_ENCODER_ID = 10;
+    public static final int RAMP_MOTOR_ID = 30;
 
     public static final double kS = 0;
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 190;
-    public static final double kI = .2;
-    public static final double kD = 50;
-    public static final double kG = 8.574609375;//8.4749;
+    public static final double kP = 10;
+    public static final double kI = 0;
+    public static final double kD = 0;
+    public static final double kG = 0;//8.4749;
 
     public static final double RAMP_SENSOR_TO_MECHANISM_RATIO = 10;
     public static final double RAMP_ROTOR_TO_SENSOR_RATIO = 1;

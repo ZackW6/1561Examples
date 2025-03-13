@@ -43,7 +43,7 @@ public class ElevatorConstants {
     //64.875 inch rise
     public static final double DRUM_CIRCUMFRANCE_METERS = 2 * Math.PI * ELEVATOR_DRUM_RADIUS;
     public static final double TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO = (25/3.0);
-    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO * DRUM_CIRCUMFRANCE_METERS;
+    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO / DRUM_CIRCUMFRANCE_METERS ;
     public static final double ELEVATOR_ROTOR_TO_SENSOR_RATIO = 1;
 
     

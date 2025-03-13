@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -27,10 +28,13 @@ public class TalonArm implements ArmIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    // private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    private final PositionVoltage m_request = new PositionVoltage(0);
 
     private final TalonFX armMotor;
     private final CANcoder encoder;
+
+    private final double armPretendOffset = 0;
 
     //Config Motor to correct IDs
     public TalonArm(){
@@ -41,7 +45,7 @@ public class TalonArm implements ArmIO{
     
     @Override
     public void setPosition(double position) {
-        armMotor.setControl(m_request.withPosition(position).withSlot(0));
+        armMotor.setControl(m_request.withPosition(position + armPretendOffset).withSlot(0));
     }
 
     @Override
@@ -51,12 +55,12 @@ public class TalonArm implements ArmIO{
 
     @Override
     public double getPosition() {
-        return armMotor.getPosition().getValueAsDouble();
+        return armMotor.getPosition().getValueAsDouble()+armPretendOffset;
     }
 
     @Override
     public double getTarget() {
-        return (armMotor.getDifferentialClosedLoopReference().getValueAsDouble());
+        return armMotor.getDifferentialClosedLoopReference().getValueAsDouble()+armPretendOffset;
     }
 
     private void configMotor(){
@@ -83,17 +87,6 @@ public class TalonArm implements ArmIO{
         slot0Configs.kD = ArmConstants.kD; //60.082; // A velocity error of 1 rps results in 0.1 V output
         slot0Configs.kG = ArmConstants.kG;
         slot0Configs.GravityType = GravityTypeValue.Arm_Cosine;
-
-        Slot1Configs slot1Configs = talonFXConfigs.Slot1;
-        slot1Configs.kS = ArmConstants.kS; // Add 0.25 V output to overcome static friction
-        slot1Configs.kV = ArmConstants.kV; // A velocity target of 1 rps results in 0.12 V output
-        slot1Configs.kA = ArmConstants.kA; // An acceleration of 1 rps/s requires 0.01 V output
-        slot1Configs.kP = ArmConstants.kP; // A position error of 2.5 rotations results in 12 V output
-        slot1Configs.kI = ArmConstants.kI; // no output for integrated error
-        slot1Configs.kD = ArmConstants.kD; // A velocity error of 1 rps results in 0.1 V output
-        slot1Configs.kG = ArmConstants.kG;
-        slot1Configs.GravityType = GravityTypeValue.Arm_Cosine;
-        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
         talonFXConfigs.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();

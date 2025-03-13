@@ -12,17 +12,16 @@ public class ClimberConstants{
     public static final double MIN_CLIMBER_ANGLE_RAD = Units.rotationsToRadians(-.5);
     public static final double CLIMBER_ENCODER_DIST_PER_PULSE = 2.0 * Math.PI / 4096;
 
-    public static final int CLIMBER_MOTOR_ID = 10;
-    public static final int CLIMBER_ENCODER_ID = 10;
+    public static final int CLIMBER_MOTOR_ID = 40;
 
     public static final double kS = 0;
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 190;
-    public static final double kI = .2;
-    public static final double kD = 50;
-    public static final double kG = 8.574609375;//8.4749;
+    public static final double kP = 10;
+    public static final double kI = 0;
+    public static final double kD = 0;
+    public static final double kG = 0;//8.4749;
 
     public static final double CLIMBER_SENSOR_TO_MECHANISM_RATIO = 1;
     public static final double CLIMBER_ROTOR_TO_SENSOR_RATIO = 10;

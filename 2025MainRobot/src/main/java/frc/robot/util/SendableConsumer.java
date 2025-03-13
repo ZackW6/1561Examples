@@ -34,13 +34,15 @@ public class SendableConsumer {
     }
 
     public static void createSendableChooser(String id, String[] items, Consumer<double[]> consumers, double[] initVals){
+
         Notifier notifier;
 
         NetworkTableEntry[] entry = new NetworkTableEntry[items.length];
         NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard").getSubTable(id);
-        
+
         for (int i = 0; i < items.length; i++){
             entry[i] = table.getEntry(items[i]);
+            entry[i].setDefaultDouble(initVals[i]);
         }
 
         notifier = new Notifier(()->{

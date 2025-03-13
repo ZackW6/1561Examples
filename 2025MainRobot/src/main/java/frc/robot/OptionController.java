@@ -183,7 +183,7 @@ public class OptionController {
             int initReefPosition = reefPosition;
             int initReefLevel = reefLevel;
             return factoryCommands.autoScoreCoral(initReefPosition, initReefLevel)
-                .until(()->initReefPosition != reefPosition || initReefLevel != reefLevel)
+                .until(()->initReefPosition != reefPosition || (initReefLevel != reefLevel && initReefLevel != 4))
                 .andThen(coralTillInterruptSwap()).unless(()->!hasCoral.getAsBoolean());
         },Set.of());
     }
@@ -217,7 +217,15 @@ public class OptionController {
     }
 
     public Command getScoreLevel(){
-        return factoryCommands.scoringMechanism.preset(reefLevel);
+        return Commands.defer(()->factoryCommands.scoringMechanism.preset(reefLevel), factoryCommands.scoringSubsytems);
+    }
+
+    public Command getAlgaeIntakeLevel(){
+        return Commands.defer(()->factoryCommands.scoringMechanism.grabAlgae((reefLevel+1)/2), factoryCommands.scoringSubsytems);
+    }
+
+    public Command getAlgaeLevel(){
+        return Commands.defer(()->factoryCommands.scoringMechanism.scoreAlgae(algaeScoreLevel), factoryCommands.scoringSubsytems);
     }
 
     public void setReefLevel(int value){

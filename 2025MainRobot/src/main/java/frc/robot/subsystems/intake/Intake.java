@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.constants.IntakeConstants;
+import frc.robot.subsystems.intake.realIntake.CANRange;
 import frc.robot.subsystems.intake.realIntake.DigitalInputLS;
 import frc.robot.subsystems.intake.realIntake.TalonIntake;
 import frc.robot.subsystems.intake.simIntake.DigitalInputSim;
@@ -53,7 +54,7 @@ public class Intake extends SubsystemBase{
         }else{
             coralLimitSwitch1 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID1);
             coralLimitSwitch2 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID2);
-            coralLaser = new DigitalInputLS(IntakeConstants.CORAL_LASER_ID);
+            coralLaser = new CANRange(IntakeConstants.CORAL_LASER_ID, .05);
             intakeIO = new TalonIntake();
         }
     }
@@ -75,11 +76,6 @@ public class Intake extends SubsystemBase{
     public boolean hasCoral(){
         return coralLaser.getValue();
         // return coralLimitSwitch1.getValue() || coralLimitSwitch2.getValue() || coralLaser.getValue();
-    }
-
-    //Make sure there is coral
-    public boolean definiteCoral(){
-        return coralLaser.getValue();
     }
 
     public boolean hasAlgae(){

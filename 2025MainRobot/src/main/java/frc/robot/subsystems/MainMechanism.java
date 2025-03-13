@@ -70,15 +70,15 @@ public class MainMechanism {
     private final double rampJigglePosition = -.04;
 
     public static enum Positions{
-        Intake(0,0),
+        Intake(-160,0),
         L1(0,.1),
-        L2(35,.5),
-        L3(35,1),
-        L4(70,1.5),
+        L2(-35,.5),
+        L3(-35,1),
+        L4(0,1.5),
         AlgaeU(45,.6),
         AlgaeL(45,.3),
         AlgaeN(-20,2),
-        AlgaeP(0,0);
+        AlgaeP(20,0);
 
         private double armPosition;
         private double elevatorMeters;
@@ -100,6 +100,7 @@ public class MainMechanism {
         Idle(0),
         IntakeCoral(7.5),
         IntakeAlgae(-30),
+        HoldAlgae(-10),
         Shoot(30);
 
         private double velocity;
@@ -120,13 +121,14 @@ public class MainMechanism {
         this.intake = intake;
         this.elevator = elevator;
         this.ramp = ramp;
+        
         arm.setDefaultCommand(arm.reachGoalDegrees(()->{
             if (elevator.getPosition() < .2){
                 return Positions.Intake.armDegrees();
             }
             return Positions.L4.armDegrees();
         }));
-        intake.setDefaultCommand(intake.setVelocity(Positions.Intake.elevatorMeters()));
+        intake.setDefaultCommand(intake.setVelocity(()->intake.hasAlgae() ? IntakeSpeeds.HoldAlgae.value() : 0));
         elevator.setDefaultCommand(elevator.reachGoal(IntakeSpeeds.Idle.value()));
         ramp.setDefaultCommand(ramp.reachGoal(rampUpPosition));
         if (Robot.isSimulation()){
@@ -177,11 +179,11 @@ public class MainMechanism {
      * @return
      */
     private Command toState(Positions position){
-        return Commands.deadline(arm.reachGoalDegrees(Positions.L4.armDegrees())
+        return arm.reachGoalDegrees(Positions.L4.armDegrees()) // Goes to the other side of the elevator top bar
             .until(()->Math.abs(arm.getTarget()-arm.getPosition()) < MAX_ARM_ERROR)
             .andThen(elevator.reachGoal(position.elevatorMeters()))
             .until(()->Math.abs(position.elevatorMeters()-elevator.getPosition()) < MAX_ELEVATOR_ERROR)
-            .andThen(arm.reachGoalDegreesOnce(position.armDegrees())));
+            .andThen(arm.reachGoalDegreesOnce(position.armDegrees()));
     }
 
     public Command idle(){
@@ -334,6 +336,19 @@ public class MainMechanism {
      * ends after you get a piece
      * @return
      */
+    public Command scoreAlgae(int level){
+        level = MathUtil.clamp(level, 1, 2);
+        if (level == 1){
+            return scoreAlgaeProcessor();
+        }else{
+            return scoreAlgaeNet();
+        }
+    }
+
+    /**
+     * ends after you get a piece
+     * @return
+     */
     public Command grabAlgaeUpper(){
         return grabAlgae(Positions.AlgaeU);
     }
@@ -361,6 +376,10 @@ public class MainMechanism {
     }
     public Command scoreAlgaeProcessor(){
         return score(Positions.AlgaeP);
+    }
+
+    public Command testPosition(DoubleSupplier elevatorMeters, DoubleSupplier armDegrees, DoubleSupplier intakeSpeed){
+        return elevator.reachGoal(elevatorMeters).alongWith(arm.reachGoalDegrees(armDegrees)).alongWith(intake.setVelocity(intakeSpeed));
     }
 
     public void periodic(){
