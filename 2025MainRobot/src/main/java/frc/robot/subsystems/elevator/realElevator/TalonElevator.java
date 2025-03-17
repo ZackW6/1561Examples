@@ -31,8 +31,8 @@ public class TalonElevator implements ElevatorIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    // private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    private final PositionVoltage m_request = new PositionVoltage(0);
+    private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    // private final PositionVoltage m_request = new PositionVoltage(0);
 
     //Initialize motors and encoder
     private final TalonFX motorLeader;
@@ -144,6 +144,7 @@ public class TalonElevator implements ElevatorIO{
     }
 
     private void periodic(){
+        // motorLeader.setControl(m_request.withSlot(0));
         if (getPosition() < getTarget()){
             if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
                 motorLeader.setControl(m_request.withSlot(0));

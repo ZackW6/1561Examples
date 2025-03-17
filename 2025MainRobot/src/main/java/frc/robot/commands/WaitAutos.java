@@ -247,22 +247,22 @@ public class WaitAutos {
                 .getTranslation().getNorm() < straightDist)
             .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
             , 5, 3*Math.PI, 5), Set.of()))
-        ,Commands.race(Commands.waitUntil(()->{
+        ,Commands.deadline(Commands.waitUntil(()->{
             Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
-            return (comparingTransform.getTranslation().getNorm() < FactoryCommands.positionalToleranceMeters) 
+            return (comparingTransform.getTranslation().getNorm() < FactoryCommands.positionalToleranceMeters)
                 && (coralPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < FactoryCommands.rotationalToleranceRotations)
                 && factoryCommands.drivetrain.getDriveIO().getSpeeds().vyMetersPerSecond < .1;
         })
-        ,factoryCommands.scoringMechanism.preset(level,()->{
+        ,factoryCommands.scoringMechanism.presetCoral(level,()->{
             Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
             return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
-        })).andThen(factoryCommands.scoringMechanism.score(level)));
+        })).andThen(factoryCommands.scoringMechanism.scoreCoral(level)));
     }
 
     private static Command autoIntakeCoral(Command path, int place, double straightDist){

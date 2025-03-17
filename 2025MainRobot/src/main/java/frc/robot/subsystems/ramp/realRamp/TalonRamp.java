@@ -26,8 +26,8 @@ public class TalonRamp implements ArmIO{
     private TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
-    // private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    private final PositionVoltage m_request = new PositionVoltage(0);
+    private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    // private final PositionVoltage m_request = new PositionVoltage(0);
 
     private final TalonFX armMotor;
 

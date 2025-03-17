@@ -28,8 +28,8 @@ public class TalonClimber implements ArmIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    // private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    private final PositionVoltage m_request = new PositionVoltage(0);
+    private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    // private final PositionVoltage m_request = new PositionVoltage(0);
 
     private final TalonFX armMotor;
 

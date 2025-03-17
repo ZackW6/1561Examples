@@ -32,6 +32,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -76,6 +77,11 @@ public class Arm extends SubsystemBase {
 
   private final StructPublisher<Pose3d> armPublisher = armTable
     .getStructTopic("ArmAngle", Pose3d.struct).publish();
+
+  private final DoublePublisher trueArmAngle = armTable
+    .getDoubleTopic("TrueArmAngle").publish();
+  private final DoublePublisher armTarget = armTable
+    .getDoubleTopic("TrueArmTarget").publish();
 
   /** Subsystem constructor. */
   public Arm() {
@@ -128,6 +134,14 @@ public class Arm extends SubsystemBase {
     return this.runOnce(()->armIO.setPosition(Units.degreesToRotations(goal)));
   }
   /**
+   * Run control loop to reach and maintain goal.
+   *
+   * @param goal the position to maintain
+   */
+  public Command reachGoalOnce(double goal) {
+    return this.runOnce(()->armIO.setPosition(goal));
+  }
+  /**
    * Run control loop to reach and maintain changing goal.
    *
    * @param goal the position to maintain
@@ -153,5 +167,7 @@ public class Arm extends SubsystemBase {
   public void periodic(){
     double height = elevatorSubscriber.get().getZ();
     armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
+    trueArmAngle.accept(getPosition());
+    armTarget.accept(getTarget());
   }
 }

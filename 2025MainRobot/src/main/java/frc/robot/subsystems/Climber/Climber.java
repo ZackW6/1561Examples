@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -48,6 +49,12 @@ public class Climber extends SubsystemBase {
   
     private final StructPublisher<Pose3d> climberPublisher = climberTable
       .getStructTopic("ClimberAngle", Pose3d.struct).publish();
+
+    private final DoublePublisher climberAngle = climberTable
+      .getDoubleTopic("TrueClimberAngle").publish();
+
+    private final DoublePublisher climberTarget = climberTable
+      .getDoubleTopic("TrueClimberTarget").publish();
   
     /** Subsystem constructor. */
     public Climber() {
@@ -105,6 +112,8 @@ public class Climber extends SubsystemBase {
     @Override
     public void periodic(){
       climberPublisher.accept(new Pose3d(0,-.31,.14,new Rotation3d(Units.rotationsToRadians(getPosition()) - Math.PI/2,0,0)));
+      climberAngle.accept(getPosition());
+      climberTarget.accept(getTarget());
     }
   }
   

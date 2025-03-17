@@ -127,7 +127,7 @@ public class OptionController {
             feederPosition = 3;
         })).and(()->controller.getFixedButton(21)).onTrue(Commands.runOnce(()->{
             feederPosition = 2;
-        }));;
+        }));
     }
 
     /**
@@ -139,7 +139,7 @@ public class OptionController {
         ,Commands.either(coralTillInterruptSwap()
             , coralIntakeTillInterruptSwap()
             , hasCoral)
-        ,hasAlgae),factoryCommands.scoringSubsytems);
+        ,hasAlgae),factoryCommands.mainSubsytems);
     }
 
     /**
@@ -151,7 +151,7 @@ public class OptionController {
             , Commands.either(algaeTillInterruptSwap()
                 , algaeIntakeTillInterruptSwap()
                 , hasAlgae)
-            ,hasCoral),factoryCommands.scoringSubsytems);
+            ,hasCoral),factoryCommands.mainSubsytems);
     }
 
     /**
@@ -163,7 +163,7 @@ public class OptionController {
         ,Commands.either(coralTillInterruptSwap()
             , coralIntakeTillInterruptSwap()
             , hasCoral)
-        ,hasAlgae),factoryCommands.scoringSubsytems).andThen(Commands.defer(()->getAutoCoral(), factoryCommands.scoringSubsytems));
+        ,hasAlgae),factoryCommands.mainSubsytems).andThen(Commands.defer(()->getAutoCoral(), factoryCommands.mainSubsytems));
     }
 
     /**
@@ -175,7 +175,7 @@ public class OptionController {
             , Commands.either(algaeTillInterruptSwap()
                 , algaeIntakeTillInterruptSwap()
                 , hasAlgae)
-            ,hasCoral),factoryCommands.scoringSubsytems).andThen(Commands.defer(()->getAutoAlgae(), factoryCommands.scoringSubsytems));
+            ,hasCoral),factoryCommands.mainSubsytems).andThen(Commands.defer(()->getAutoAlgae(), factoryCommands.mainSubsytems));
     }
 
     private Command coralTillInterruptSwap(){
@@ -217,15 +217,15 @@ public class OptionController {
     }
 
     public Command getScoreLevel(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.preset(reefLevel), factoryCommands.scoringSubsytems);
+        return Commands.defer(()->factoryCommands.scoringMechanism.presetCoral(reefLevel), factoryCommands.presetSubsytems);
     }
 
     public Command getAlgaeIntakeLevel(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.grabAlgae((reefLevel+1)/2), factoryCommands.scoringSubsytems);
+        return Commands.defer(()->factoryCommands.scoringMechanism.intakeAlgae((reefLevel+1)/2), factoryCommands.presetSubsytems);
     }
 
     public Command getAlgaeLevel(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.scoreAlgae(algaeScoreLevel), factoryCommands.scoringSubsytems);
+        return Commands.defer(()->factoryCommands.scoringMechanism.scoreAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
     }
 
     public void setReefLevel(int value){

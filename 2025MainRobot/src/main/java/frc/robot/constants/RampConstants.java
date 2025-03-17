@@ -23,7 +23,7 @@ public class RampConstants{
     public static final double kD = 0;
     public static final double kG = 0;//8.4749;
 
-    public static final double RAMP_SENSOR_TO_MECHANISM_RATIO = 10;
+    public static final double RAMP_SENSOR_TO_MECHANISM_RATIO = 10.625;
     public static final double RAMP_ROTOR_TO_SENSOR_RATIO = 1;
 
 
@@ -32,7 +32,6 @@ public class RampConstants{
     public static final double MAX_ACCELERATION = 1000;
     public static final double JERK = 5000;
 
-    
     public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0);
     
     public static final double JOINT_START_HEIGHT_METERS = .2;

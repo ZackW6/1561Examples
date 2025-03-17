@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -51,7 +52,10 @@ public class Ramp extends SubsystemBase {
   
     private final StructPublisher<Pose3d> rampPublisher = rampTable
       .getStructTopic("RampAngle", Pose3d.struct).publish();
-  
+    private final DoublePublisher rampAngle = rampTable
+      .getDoubleTopic("TrueRampAngle").publish();
+    private final DoublePublisher rampTarget = rampTable
+      .getDoubleTopic("TrueRampTarget").publish();
     /** Subsystem constructor. */
     public Ramp() {
       if (Robot.isSimulation()){
@@ -108,6 +112,8 @@ public class Ramp extends SubsystemBase {
     @Override
     public void periodic(){
       rampPublisher.accept(new Pose3d(-.25,0,0.8,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
+      rampAngle.accept(getPosition());
+      rampTarget.accept(getTarget());
     }
   }
   

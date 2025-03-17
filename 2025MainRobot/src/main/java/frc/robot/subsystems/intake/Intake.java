@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -24,6 +25,7 @@ import frc.robot.Robot;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.subsystems.intake.realIntake.CANRange;
 import frc.robot.subsystems.intake.realIntake.DigitalInputLS;
+import frc.robot.subsystems.intake.realIntake.MotorDI;
 import frc.robot.subsystems.intake.realIntake.TalonIntake;
 import frc.robot.subsystems.intake.simIntake.DigitalInputSim;
 import frc.robot.subsystems.intake.simIntake.SimIntake;
@@ -39,22 +41,29 @@ public class Intake extends SubsystemBase{
         .getDoubleTopic("IntakeVelocity").publish();
     private final DoublePublisher intakeTargetPublisher = intakeTable
         .getDoubleTopic("IntakeTargetVelocity").publish();
+    private final BooleanPublisher hasCoralPublisher = intakeTable
+        .getBooleanTopic("HasCoral").publish();
+    private final BooleanPublisher hasAlgaePublisher = intakeTable
+        .getBooleanTopic("HasCoral").publish();
 
     //Create limit switches and lazer
     private final DigitalInputIO coralLimitSwitch1;
     private final DigitalInputIO coralLimitSwitch2;
     private final DigitalInputIO coralLaser;
+    private final DigitalInputIO algaeSense;
 
     public Intake(){
         if (Robot.isSimulation()){
             coralLimitSwitch1 = new DigitalInputSim();
             coralLimitSwitch2 = new DigitalInputSim();
             coralLaser = new DigitalInputSim();
+            algaeSense = new DigitalInputSim();
             intakeIO = new SimIntake();
         }else{
             coralLimitSwitch1 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID1);
             coralLimitSwitch2 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID2);
             coralLaser = new CANRange(IntakeConstants.CORAL_LASER_ID, .05);
+            algaeSense = new MotorDI(-5);
             intakeIO = new TalonIntake();
         }
     }
@@ -79,7 +88,7 @@ public class Intake extends SubsystemBase{
     }
 
     public boolean hasAlgae(){
-        return false;
+        return algaeSense.getValue();
     }
 
     public double getVelocity(){
@@ -94,14 +103,16 @@ public class Intake extends SubsystemBase{
         return coralLaser;
     }
 
-    // public DigitalInputIO getAlgaeDigitalInputIO(){
-    //     return algaeLimitSwitch;
-    // }
+    public DigitalInputIO getAlgaeDigitalInputIO(){
+        return algaeSense;
+    }
 
     @Override
     //publish velocity data to network table and is main loop of intake
     public void periodic() {
         intakeVelocityPublisher.accept(getVelocity());
         intakeTargetPublisher.accept(getTargetVelocity());
+        hasAlgaePublisher.accept(hasAlgae());
+        hasCoralPublisher.accept(hasCoral());
     }
 }

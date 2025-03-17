@@ -19,13 +19,13 @@ public class ArmConstants{
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 10;
+    public static final double kP = 5;
     public static final double kI = 0;
     public static final double kD = 0;
-    public static final double kG = 0;//8.4749;
+    public static final double kG = -26;//8.4749;
 
-    public static final double ARM_SENSOR_TO_MECHANISM_RATIO = 16;
-    public static final double ARM_ROTOR_TO_SENSOR_RATIO = 1;
+    public static final double ARM_SENSOR_TO_MECHANISM_RATIO = 1;
+    public static final double ARM_ROTOR_TO_SENSOR_RATIO = 8;
 
 
     // TODO: Make the arm positive when it goes up.

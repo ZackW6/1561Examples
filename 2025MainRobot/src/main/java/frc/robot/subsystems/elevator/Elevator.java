@@ -32,6 +32,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -75,6 +76,11 @@ public class Elevator extends SubsystemBase {
     .getStructTopic("ElevatorStage2", Pose3d.struct).publish();
   private final StructPublisher<Pose3d> elevatorStage3 = elevTable
     .getStructTopic("ElevatorStage3", Pose3d.struct).publish();
+
+  private final DoublePublisher elevatorTotalHeight = elevTable
+    .getDoubleTopic("ElevatorHeight").publish();
+  private final DoublePublisher elevatorTarget = elevTable
+    .getDoubleTopic("ElevatorTarget").publish();
 
   /** Subsystem constructor. */
   public Elevator() {
@@ -126,5 +132,7 @@ public class Elevator extends SubsystemBase {
     elevatorStage1.accept(new Pose3d(0,0,Math.min(position,.7),new Rotation3d()));
     elevatorStage2.accept(new Pose3d(0,0,Math.min(position,1.4),new Rotation3d()));
     elevatorStage3.accept(new Pose3d(0,0,position,new Rotation3d()));
+    elevatorTotalHeight.accept(position);
+    elevatorTarget.accept(getTarget());
   }
 }

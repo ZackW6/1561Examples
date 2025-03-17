@@ -23,8 +23,8 @@ public class TalonIntake implements FlywheelIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    // private final MotionMagicVelocityTorqueCurrentFOC torqueCurrentFOC = new MotionMagicVelocityTorqueCurrentFOC(0);
-    private final VelocityVoltage torqueCurrentFOC = new VelocityVoltage(0);
+    private final MotionMagicVelocityTorqueCurrentFOC torqueCurrentFOC = new MotionMagicVelocityTorqueCurrentFOC(0);
+    // private final VelocityVoltage torqueCurrentFOC = new VelocityVoltage(0);
 
     private final TalonFX intakeMotor;
 

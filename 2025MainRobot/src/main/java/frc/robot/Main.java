@@ -23,15 +23,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.CustomController;
 
 public final class Main {
-  static Thread thread;
   private Main() {}
 
   public static void main(String... args) {
-    createCustomController();
     RobotBase.startRobot(Robot::new);
-  }
-
-  public static void createCustomController(){
-    CustomController customController = new CustomController(1);
   }
 }

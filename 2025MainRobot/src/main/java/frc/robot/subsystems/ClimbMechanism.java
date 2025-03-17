@@ -29,34 +29,35 @@ public class ClimbMechanism {
 
     public static enum ClimbPositions{
         OFF(0,0),
-        PREPARED(90,90),
-        CLIMBED(0,90);
+        PREPARED(.25,.25),
+        CLIMBED(0,.25);
 
-        private double climberDegrees;
-        private double rampDegrees;
-        ClimbPositions(double climberDegrees, double rampDegrees){
-            this.climberDegrees = climberDegrees;
-            this.rampDegrees = rampDegrees;
+        private double climberRotations;
+        private double rampRotations;
+        ClimbPositions(double climberRotations, double rampRotations){
+            this.climberRotations = climberRotations;
+            this.rampRotations = rampRotations;
         }
 
-        public double climberDegrees(){
-            return climberDegrees;
+        public double climberRotations(){
+            return climberRotations;
         }
 
-        public double rampDegrees(){
-            return rampDegrees;
+        public double rampRotations(){
+            return rampRotations;
         }
     }
 
     public ClimbMechanism(Climber climber, Ramp ramp){
         this.climber = climber;
         this.ramp = ramp;
-        climber.setDefaultCommand(climber.reachGoalDegrees(ClimbPositions.OFF.climberDegrees()));
+        climber.setDefaultCommand(climber.reachGoal(ClimbPositions.OFF.climberRotations()));
+        ramp.setDefaultCommand(ramp.reachGoal(ClimbPositions.OFF.rampRotations()));
     }
 
     public Command runState(ClimbPositions position){
-        return climber.reachGoalDegrees(position.climberDegrees())
-            .alongWith(ramp.reachGoalDegrees(position.rampDegrees()));
+        return climber.reachGoal(position.climberRotations())
+            .alongWith(ramp.reachGoal(position.rampRotations()));
     }
 
     public Command idle(){
