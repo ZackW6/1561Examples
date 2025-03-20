@@ -12,12 +12,12 @@ public class ElevatorConstants {
     public static final double STAGE_ONE_POSITION = .4;
     public static final double STAGE_TWO_POSITION = .8;
 
-    public static final double P1 = 10;
-    public static final double I1 = 0;
-    public static final double D1 = 0;
+    public static final double P1 = 1000;
+    public static final double I1 = 10;
+    public static final double D1 = 60;
 
     public static final double S1 = 0.0;
-    public static final double G1 = 0;
+    public static final double G1 = 29;
     public static final double V1 = 0;
     public static final double A1 = 0.0;
 
@@ -26,7 +26,7 @@ public class ElevatorConstants {
     public static final double D2 = 0;
 
     public static final double S2 = 0.0;
-    public static final double G2 = 0;
+    public static final double G2 = 29;
     public static final double V2 = 0;
     public static final double A2 = 0.0;
 
@@ -46,16 +46,14 @@ public class ElevatorConstants {
     public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO / DRUM_CIRCUMFRANCE_METERS ;
     public static final double ELEVATOR_ROTOR_TO_SENSOR_RATIO = 1;
 
-    
-
     public static final double ELEVATOR_MASS_KG = 20;
 
     public static final double ELEVATOR_MIN_HEIGHT = 0;
-    public static final double ELEVATOR_MAX_HEIGHT = 2;
+    public static final double ELEVATOR_MAX_HEIGHT = 4;
 
-    public static final double CRUISE_VELOCITY = 400;
-    public static final double MAX_ACCELERATION = 1000;
-	public static final double JERK = 5000;
+    public static final double CRUISE_VELOCITY = 100;
+    public static final double MAX_ACCELERATION = 100;
+	public static final double JERK = 128;
 
     /* Elevator Current Limiting */ //TODO: Change/Fix these values
     public static final int ELEVATOR_CURRENT_LIMIT = 40;

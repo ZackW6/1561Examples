@@ -36,8 +36,10 @@ import frc.robot.util.PoseEX;
 
 public class FactoryCommands {
 
-    public static final double positionalToleranceMeters = .05;
-    public static final double rotationalToleranceRotations = .05;
+    public static final double positionalToleranceMeters = .1;
+    public static final double rotationalToleranceRotations = .1;
+
+    public static final double maxSpeed = 1.5;
 
     private final PIDController speedsPID = new PIDController(2, 0, 0);
     private final PIDController rotationPID = new PIDController(2, 0, 0);
@@ -157,23 +159,34 @@ public class FactoryCommands {
             .andThen(towardPose(pose, 5, 3*Math.PI, 5));
     }
 
+    /**
+     * does not end automatically, must be ended
+     * @return
+     */
+    public Command toPose(Pose2d pose, double straightDist, double maxSpeed){
+        return PathOnTheFly.AutoToPoint.getToPoint(pose, new PathConfig(4,5,
+            Rotation2d.fromRadians(3*Math.PI),Rotation2d.fromDegrees(720),0,0))
+            .until(()->drivetrain.getPose().minus(pose).getTranslation().getNorm() < straightDist)
+            .andThen(towardPose(pose, maxSpeed, 3*Math.PI, 5));
+    }
+
     public Command autoToCoral(int place){
         int clampedNum = Math.max(Math.min(place,12),1);
         return Commands.defer(()->toPose(GameData.coralPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2),Set.of());
+        ,1.2,maxSpeed),Set.of());
     }
 
     public Command autoToAlgae(int place){
         int clampedNum = Math.max(Math.min(place,6),1);
         return Commands.defer(()->toPose(GameData.algaePose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2),Set.of());
+        ,1.2,maxSpeed),Set.of());
     }
 
     public Command autoToFeeder(int place, double rightOffset){
         int clampedNum = Math.max(Math.min(place,2),1);
         return Commands.defer(()->toPose(GameData.feederPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
         .plus(new Transform2d(0,rightOffset, new Rotation2d()))
-        ,3),Set.of());
+        ,3,maxSpeed),Set.of());
     }
 
     public Command autoToFeeder(int place){
@@ -182,7 +195,7 @@ public class FactoryCommands {
 
     public Command autoToProcessor(){
         return Commands.defer(()->toPose(GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,3),Set.of());
+        ,3,maxSpeed),Set.of());
     }
 
     public Command autoToNet(){
@@ -190,7 +203,7 @@ public class FactoryCommands {
             PoseEX.closestTo(drivetrain.getPose(),
             GameData.netPose(1,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red),
             GameData.netPose(2,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
-        ,2),Set.of());
+        ,2,maxSpeed),Set.of());
     }
 
     public Command autoScoreCoral(int place, int level){
@@ -209,7 +222,7 @@ public class FactoryCommands {
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
-            return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
+            return 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2);
         })).andThen(scoringMechanism.scoreCoral(level)));
     }
 
@@ -260,11 +273,11 @@ public class FactoryCommands {
     }
 
     public Command autoIntakeCoral(int place){
-        return Commands.race(autoToFeeder(place), scoringMechanism.intake());
+        return autoIntakeCoral(place, 0);
     }
 
     public Command autoIntakeCoral(int place, double rightOffset){
-        return Commands.race(autoToFeeder(place, rightOffset), scoringMechanism.intake());
+        return Commands.race(autoToFeeder(place, rightOffset), Commands.waitSeconds(1).andThen(scoringMechanism.intake()));
     }
 
     public Command autoIntakeAlgae(int place){

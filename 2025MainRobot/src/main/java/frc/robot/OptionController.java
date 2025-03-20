@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
@@ -225,7 +227,16 @@ public class OptionController {
     }
 
     public Command getAlgaeLevel(){
+        return Commands.defer(()->factoryCommands.scoringMechanism.presetAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
+    }
+
+    public Command resetOrIntake(){
         return Commands.defer(()->factoryCommands.scoringMechanism.scoreAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
+    }
+
+    public Command getAutoCoralPosition(){
+        return Commands.defer(()->factoryCommands.toPose(GameData.coralPose(reefPosition, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+        ,1.2,3),Set.of());
     }
 
     public void setReefLevel(int value){

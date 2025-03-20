@@ -15,7 +15,7 @@ public class CANRange implements DigitalInputIO{
 
     public CANRange(int id, double dist){
         minDist = dist;
-        digitalInput = new CANrange(id);
+        digitalInput = new CANrange(id,"Canivore");
         configureCANRange();
     }
 

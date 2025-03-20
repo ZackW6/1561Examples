@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -23,13 +24,13 @@ public class TalonIntake implements FlywheelIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    private final MotionMagicVelocityTorqueCurrentFOC torqueCurrentFOC = new MotionMagicVelocityTorqueCurrentFOC(0);
+    private final MotionMagicVelocityVoltage torqueCurrentFOC = new MotionMagicVelocityVoltage(0);
     // private final VelocityVoltage torqueCurrentFOC = new VelocityVoltage(0);
 
     private final TalonFX intakeMotor;
 
     public TalonIntake(){
-        intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID);
+        intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, "Canivore");
         configMotor();
     }
 
@@ -50,7 +51,7 @@ public class TalonIntake implements FlywheelIO{
 
     @Override
     public double getTarget() {
-        return (intakeMotor.getDifferentialClosedLoopReference().getValueAsDouble());
+        return (intakeMotor.getClosedLoopReference().getValueAsDouble());
     }
 
     @Override
@@ -79,7 +80,7 @@ public class TalonIntake implements FlywheelIO{
 
         // set Motion Magic Velocity settings
         MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
-        motionMagicConfigs.MotionMagicAcceleration = 10000; // Target acceleration of 400 rps/s (0.25 seconds to max)
+        motionMagicConfigs.MotionMagicAcceleration = 9999; // Target acceleration of 400 rps/s (0.25 seconds to max)
         motionMagicConfigs.MotionMagicJerk = 0; // Target jerk of 4000 rps/s/s (0.1 seconds)
     
         currentLimits = new CurrentLimitsConfigs();

@@ -38,25 +38,33 @@ public class TalonElevator implements ElevatorIO{
     private final TalonFX motorLeader;
     private final TalonFX motorFollower;
 
-    private final Notifier PIDAdjuster;
+    // private final Notifier PIDAdjuster;
     // private final CANcoder encoder;
+
+    private double targetPosition = 0;
 
     public TalonElevator(){
         //Create and set motors and encoders up
-        motorLeader = new TalonFX(ElevatorConstants.ELEVATOR_LEADER_ID);
-        motorFollower = new TalonFX(ElevatorConstants.ELEVATOR_FOLLOWER_ID);
+        motorLeader = new TalonFX(ElevatorConstants.ELEVATOR_LEADER_ID,"Canivore");
+        motorFollower = new TalonFX(ElevatorConstants.ELEVATOR_FOLLOWER_ID,"Canivore");
         // encoder = new CANcoder(ElevatorConstants.ELEVATOR_ENCODER_ID);
         motorFollower.setControl(new Follower(motorLeader.getDeviceID(), true));
         configMotor();
         
-        PIDAdjuster = new Notifier(this::periodic);
-        PIDAdjuster.startPeriodic(.01);
-        Runtime.getRuntime().addShutdownHook(new Thread(PIDAdjuster::close));
+        // PIDAdjuster = new Notifier(this::periodic);
+        // PIDAdjuster.startPeriodic(.01);
+        // Runtime.getRuntime().addShutdownHook(new Thread(PIDAdjuster::close));
     }
 
     @Override
     public void setPosition(double position) {
-        motorLeader.setControl(m_request.withPosition(position).withSlot(0));
+        setPosition(position,0);
+    }
+
+    @Override
+    public void setPosition(double position, int slot) {
+        targetPosition = position;
+        motorLeader.setControl(m_request.withPosition(position).withSlot(slot));
     }
 
     @Override
@@ -71,7 +79,8 @@ public class TalonElevator implements ElevatorIO{
 
     @Override
     public double getTarget() {
-        return (motorLeader.getDifferentialClosedLoopReference().getValueAsDouble());
+        return targetPosition;
+        // return (motorLeader.getClosedLoopReference().getValueAsDouble());
     }
 
     private void configMotor(){
@@ -99,25 +108,25 @@ public class TalonElevator implements ElevatorIO{
         slot0Configs.kG = ElevatorConstants.G1;
         slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
 
-        Slot1Configs slot1Configs = talonFXConfigs.Slot1;
-        slot1Configs.kS = ElevatorConstants.S2;
-        slot1Configs.kV = ElevatorConstants.V2;
-        slot1Configs.kA = ElevatorConstants.A2;
-        slot1Configs.kP = ElevatorConstants.P2;
-        slot1Configs.kI = ElevatorConstants.I2;
-        slot1Configs.kD = ElevatorConstants.D2;
-        slot1Configs.kG = ElevatorConstants.G2;
-        slot1Configs.GravityType = GravityTypeValue.Elevator_Static;
+        // Slot1Configs slot1Configs = talonFXConfigs.Slot1;
+        // slot1Configs.kS = ElevatorConstants.S2;
+        // slot1Configs.kV = ElevatorConstants.V2;
+        // slot1Configs.kA = ElevatorConstants.A2;
+        // slot1Configs.kP = ElevatorConstants.P2;
+        // slot1Configs.kI = ElevatorConstants.I2;
+        // slot1Configs.kD = ElevatorConstants.D2;
+        // slot1Configs.kG = ElevatorConstants.G2;
+        // slot1Configs.GravityType = GravityTypeValue.Elevator_Static;
 
-        Slot2Configs slot2Configs = talonFXConfigs.Slot2;
-        slot2Configs.kS = ElevatorConstants.S3;
-        slot2Configs.kV = ElevatorConstants.V3;
-        slot2Configs.kA = ElevatorConstants.A3;
-        slot2Configs.kP = ElevatorConstants.P3;
-        slot2Configs.kI = ElevatorConstants.I3;
-        slot2Configs.kD = ElevatorConstants.D3;
-        slot2Configs.kG = ElevatorConstants.G3;
-        slot2Configs.GravityType = GravityTypeValue.Elevator_Static;
+        // Slot2Configs slot2Configs = talonFXConfigs.Slot2;
+        // slot2Configs.kS = ElevatorConstants.S3;
+        // slot2Configs.kV = ElevatorConstants.V3;
+        // slot2Configs.kA = ElevatorConstants.A3;
+        // slot2Configs.kP = ElevatorConstants.P3;
+        // slot2Configs.kI = ElevatorConstants.I3;
+        // slot2Configs.kD = ElevatorConstants.D3;
+        // slot2Configs.kG = ElevatorConstants.G3;
+        // slot2Configs.GravityType = GravityTypeValue.Elevator_Static;
 
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -143,24 +152,24 @@ public class TalonElevator implements ElevatorIO{
         motorFollower.getConfigurator().apply(talonFXConfigs);
     }
 
-    private void periodic(){
-        // motorLeader.setControl(m_request.withSlot(0));
-        if (getPosition() < getTarget()){
-            if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
-                motorLeader.setControl(m_request.withSlot(0));
-            }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
-                motorLeader.setControl(m_request.withSlot(1));
-            }else{
-                motorLeader.setControl(m_request.withSlot(2));
-            }
-        }else{
-            if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
-                motorLeader.setControl(m_request.withSlot(2));
-            }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
-                motorLeader.setControl(m_request.withSlot(1));
-            }else{
-                motorLeader.setControl(m_request.withSlot(0));
-            }
-        }
-    }
+    // private void periodic(){
+    //     motorLeader.setControl(m_request.withSlot(0));
+    //     // if (getPosition() < getTarget()){
+    //     //     if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
+    //     //         motorLeader.setControl(m_request.withSlot(0));
+    //     //     }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
+    //     //         motorLeader.setControl(m_request.withSlot(1));
+    //     //     }else{
+    //     //         motorLeader.setControl(m_request.withSlot(2));
+    //     //     }
+    //     // }else{
+    //     //     if (getPosition() < ElevatorConstants.CARRIAGE_POSITION){
+    //     //         motorLeader.setControl(m_request.withSlot(2));
+    //     //     }else if (getPosition() < ElevatorConstants.STAGE_ONE_POSITION){
+    //     //         motorLeader.setControl(m_request.withSlot(1));
+    //     //     }else{
+    //     //         motorLeader.setControl(m_request.withSlot(0));
+    //     //     }
+    //     // }
+    // }
 }

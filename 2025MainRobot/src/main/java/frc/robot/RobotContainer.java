@@ -36,11 +36,12 @@ import frc.robot.commands.WaitAutos.BranchInstruction;
 import frc.robot.commands.WaitAutos.BranchInstruction.BeginPose;
 import frc.robot.commands.WaitAutos.BranchInstruction.IntakePose;
 import frc.robot.commands.WaitAutos.BranchInstruction.ShootPose;
+import frc.robot.constants.GameData;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimbMechanism;
 import frc.robot.subsystems.MainMechanism;
 import frc.robot.subsystems.arm.Arm;
-import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climb.Climber;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.ramp.Ramp;
@@ -77,7 +78,7 @@ public class RobotContainer {
 
   private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator, ramp);
 
-  private final ClimbMechanism climbMechanism = new ClimbMechanism(climber, ramp);
+  private final ClimbMechanism climbMechanism = new ClimbMechanism(arm, climber, ramp);
   // private final ObjectDetection objectDetection = new ObjectDetection("Test",
   //   new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0))), ()->drivetrain.getPose());
 
@@ -120,8 +121,7 @@ public class RobotContainer {
     // customController.rawButtonPressed(9).onTrue(Commands.print("9"));
     // customController.rawButtonPressed(10).onTrue(Commands.print("10"));
     
-
-    driverController.y().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
+    driverController.start().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
     // driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
     // driverController.leftTrigger(.5).whileTrue(factoryCommands.autoIntakeCoral(0));
@@ -173,18 +173,24 @@ public class RobotContainer {
   };
 
   public void createPresetControls(){
-    driverController.povUp().onTrue(Commands.runOnce(()->optionController.setReefLevel(1)));
+    driverController.povUp().onTrue(scoringMechanism.scoreCoral(3));//Commands.runOnce(()->optionController.setReefLevel(1)));
     driverController.povRight().onTrue(Commands.runOnce(()->optionController.setReefLevel(2)));
     driverController.povDown().onTrue(Commands.runOnce(()->optionController.setReefLevel(3)));
     driverController.povLeft().onTrue(Commands.runOnce(()->optionController.setReefLevel(4)));
     // driverController.povRight().whileTrue(scoringMechanism.preset(2));
     // driverController.povDown().whileTrue(scoringMechanism.preset(3));
     // driverController.povLeft().whileTrue(scoringMechanism.preset(4));
-    driverController.leftTrigger(.5).whileTrue(optionController.getScoreLevel());
-    driverController.a().whileTrue(optionController.getAlgaeLevel());
-    driverController.leftBumper().whileTrue(intake.setVelocity(30));
-    driverController.rightBumper().whileTrue(scoringMechanism.intake());
-    driverController.rightTrigger(.5).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-15)));
+    driverController.rightTrigger(.5).whileTrue(optionController.getScoreLevel());
+    driverController.y().whileTrue(optionController.getAlgaeLevel());
+    driverController.b().onTrue(climbMechanism.prepare());
+    driverController.x().onTrue(climbMechanism.climb());
+    driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
+    driverController.rightBumper().whileTrue(intake.setVelocity(60));
+    driverController.leftBumper().whileTrue(scoringMechanism.intake());
+    driverController.leftTrigger(.5).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-120)));
+    driverController.leftStick().whileTrue(optionController.getAutoAlgae());
+    driverController.rightStick().whileTrue(optionController.getAutoCoral());
+    driverController.back().whileTrue(optionController.getAutoCoralPosition());
   }
 
   public void createAutoPathControls(){
@@ -305,7 +311,7 @@ public class RobotContainer {
       try {
         auto = new PathPlannerAuto(autoName);
       } catch (Exception e) {
-        auto = new PathPlannerAuto("");
+        auto = new PathPlannerAuto(Commands.none());
       }
       
       if (!defaultAutoName.isEmpty() && defaultAutoName.equals(autoName)) {

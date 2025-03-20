@@ -246,7 +246,7 @@ public class WaitAutos {
                 .minus(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
                 .getTranslation().getNorm() < straightDist)
             .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-            , 5, 3*Math.PI, 5), Set.of()))
+            , FactoryCommands.maxSpeed, 3*Math.PI, 5), Set.of()))
         ,Commands.deadline(Commands.waitUntil(()->{
             Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
@@ -261,7 +261,7 @@ public class WaitAutos {
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
-            return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
+            return 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2);
         })).andThen(factoryCommands.scoringMechanism.scoreCoral(level)));
     }
 
@@ -272,13 +272,12 @@ public class WaitAutos {
         } catch (Exception e) {
             return Commands.none();
         }
-        return Commands.race(path
+        return Commands.race((path.alongWith(Commands.waitSeconds(1).andThen(factoryCommands.scoringMechanism.resetElevator())))
             .until(()->factoryCommands.drivetrain.getPose()
                 .minus(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
                 .getTranslation().getNorm() < straightDist)
-            .andThen(Commands.defer(()->factoryCommands.towardPose(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-            , 5, 3*Math.PI, 5),Set.of()))
-            ,factoryCommands.scoringMechanism.intake());
+            .andThen(Commands.race(Commands.defer(()->factoryCommands.towardPose(GameData.feederPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+            , FactoryCommands.maxSpeed, 3*Math.PI, 5),Set.of()),factoryCommands.scoringMechanism.intake())));
     }
 
     /**

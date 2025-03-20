@@ -62,9 +62,10 @@ public class Intake extends SubsystemBase{
         }else{
             coralLimitSwitch1 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID1);
             coralLimitSwitch2 = new DigitalInputLS(IntakeConstants.CORAL_LIMIT_SWITCH_ID2);
-            coralLaser = new CANRange(IntakeConstants.CORAL_LASER_ID, .05);
-            algaeSense = new MotorDI(-5);
+            coralLaser = new CANRange(IntakeConstants.CORAL_LASER_ID, .09);
+            
             intakeIO = new TalonIntake();
+            algaeSense = new MotorDI(()->intakeIO.getCurrent(), ()->intakeIO.getAcceleration(), 50);
         }
     }
 

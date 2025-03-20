@@ -36,15 +36,18 @@ public class TalonArm implements ArmIO{
 
     private final double armPretendOffset = 0;
 
+    private double armSetpointReal = 0;
+
     //Config Motor to correct IDs
     public TalonArm(){
-        armMotor = new TalonFX(ArmConstants.ARM_MOTOR_ID);
-        encoder = new CANcoder(ArmConstants.ARM_ENCODER_ID);
+        armMotor = new TalonFX(ArmConstants.ARM_MOTOR_ID,"Canivore");
+        encoder = new CANcoder(ArmConstants.ARM_ENCODER_ID,"Canivore");
         configMotor();
     }
     
     @Override
     public void setPosition(double position) {
+        armSetpointReal = position;
         armMotor.setControl(m_request.withPosition(position + armPretendOffset).withSlot(0));
     }
 
@@ -60,7 +63,7 @@ public class TalonArm implements ArmIO{
 
     @Override
     public double getTarget() {
-        return armMotor.getDifferentialClosedLoopReference().getValueAsDouble()+armPretendOffset;
+        return armSetpointReal;//armMotor.getClosedLoopReference().getValueAsDouble()+armPretendOffset;
     }
 
     private void configMotor(){

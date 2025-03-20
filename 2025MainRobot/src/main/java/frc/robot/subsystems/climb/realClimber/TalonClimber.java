@@ -1,4 +1,4 @@
-package frc.robot.subsystems.climber.realClimber;
+package frc.robot.subsystems.climb.realClimber;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -35,7 +35,7 @@ public class TalonClimber implements ArmIO{
 
     //Config Motor to correct IDs
     public TalonClimber(){
-        armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID);
+        armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID,"Canivore");
         configMotor();
     }
 
@@ -56,7 +56,7 @@ public class TalonClimber implements ArmIO{
 
     @Override
     public double getTarget() {
-        return (armMotor.getDifferentialClosedLoopReference().getValueAsDouble());
+        return (armMotor.getClosedLoopReference().getValueAsDouble());
     }
 
     private void configMotor(){

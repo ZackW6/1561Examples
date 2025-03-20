@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.constants.ArmConstants;
 import frc.robot.subsystems.arm.Arm;
-import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climb.Climber;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.ramp.Ramp;
@@ -27,15 +27,19 @@ public class ClimbMechanism {
 
     public final Ramp ramp;
 
-    public static enum ClimbPositions{
-        OFF(0,0),
-        PREPARED(.25,.25),
-        CLIMBED(0,.25);
+    public final Arm arm;
 
+    public static enum ClimbPositions{
+        OFF(0,0,.1),
+        PREPARED(0,.25,-.25),
+        CLIMBED(0,0,-.25);
+
+        private double armRotations;
         private double climberRotations;
         private double rampRotations;
-        ClimbPositions(double climberRotations, double rampRotations){
+        ClimbPositions(double armRotations, double climberRotations, double rampRotations){
             this.climberRotations = climberRotations;
+            this.armRotations = armRotations;
             this.rampRotations = rampRotations;
         }
 
@@ -46,18 +50,24 @@ public class ClimbMechanism {
         public double rampRotations(){
             return rampRotations;
         }
+
+        public double armRotations(){
+            return rampRotations;
+        }
     }
 
-    public ClimbMechanism(Climber climber, Ramp ramp){
+    public ClimbMechanism(Arm arm, Climber climber, Ramp ramp){
         this.climber = climber;
         this.ramp = ramp;
+        this.arm = arm;
         climber.setDefaultCommand(climber.reachGoal(ClimbPositions.OFF.climberRotations()));
-        ramp.setDefaultCommand(ramp.reachGoal(ClimbPositions.OFF.rampRotations()));
+        ramp.setDefaultCommand(ramp.reachGoal(ClimbPositions.PREPARED.rampRotations()));
     }
 
     public Command runState(ClimbPositions position){
         return climber.reachGoal(position.climberRotations())
-            .alongWith(ramp.reachGoal(position.rampRotations()));
+            .alongWith(ramp.reachGoal(position.rampRotations()))
+            .alongWith(arm.reachGoal(position.armRotations()));
     }
 
     public Command idle(){

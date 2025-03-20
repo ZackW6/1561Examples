@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.realIntake;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.subsystems.intake.DigitalInputIO;
@@ -11,8 +12,8 @@ public class MotorDI implements DigitalInputIO{
 
     private boolean inverted;
 
-    public MotorDI(double someValueToCome){
-        valueSupplier = ()->someValueToCome > 0;
+    public MotorDI(DoubleSupplier statorCurrent, DoubleSupplier motorAcceleration, double min){
+        valueSupplier = ()->statorCurrent.getAsDouble() > min && motorAcceleration.getAsDouble() > -10;
     }
 
     @Override

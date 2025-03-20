@@ -10,10 +10,10 @@ public class IntakeConstants {
     public static final int CORAL_LASER_ID = 0;
     // Add 0.25 V output to overcome static friction
 
-    public static final double kS = 0; // An error of 1 rps results in 0.11 V output
+    public static final double kS = .6; // An error of 1 rps results in 0.11 V output
     public static final double kV = 0; // A velocity target of 1 rps results in 0.12 V output
     public static final double kA = 0; // An acceleration of 1 rps/s requires 0.01 V output
-    public static final double kP = 10; // This will need to be tuned after feedforward
+    public static final double kP = .1; // This will need to be tuned after feedforward
     public static final double kI = 0; // For flywheels, this should be 0
     public static final double kD = 0; // For flywheels, this should be 0
 
@@ -27,5 +27,5 @@ public class IntakeConstants {
     public static final boolean INTAKE_ENABLE_CURRENT_LIMIT = true;
 
     public static final boolean INTAKE_STATOR_CURRENT_LIMIT_ENABLE = true;
-	public static final double INTAKE_STATOR_CURRENT_LIMIT = 20;
+	public static final double INTAKE_STATOR_CURRENT_LIMIT = 60;
 }

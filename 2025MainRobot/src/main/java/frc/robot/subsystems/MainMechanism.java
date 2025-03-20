@@ -434,11 +434,12 @@ import frc.robot.util.MapleSimWorld;
  */
 public class MainMechanism {
 
-    private final double MAX_ARM_ERROR = .05;
-    private final double MAX_ELEVATOR_ERROR = .05;
+    private final double MAX_ARM_ERROR = .1;
+    private final double MAX_ELEVATOR_ERROR = .1;
     private final double MAX_RAMP_ERROR = .05;
     private final double MAX_SIGNAL_TIME = .03;
     private final double SHOOT_TIME = .4;
+    private final double INTAKE_TIME = .05;
     public static final double ELEVATOR_END_DEFFECTOR_OFFSET = .6;
 
     private final Notifier notifier;
@@ -461,20 +462,18 @@ public class MainMechanism {
 
     public static enum Positions{
         
-        CoralReset(.1944,0, false),
-        Idle(0,0, false),
-        Intake(0,0, false),
-        L1(0,.1, false),
-        L2(.09722,.5, false),
-        L3(.09722,1, false),
-        L4(.1944,1.6, false),
-        AlgaeReset(.5,0),
-        AlgaeU(.5,.6),
-        AlgaeL(.5,.3),
-        AlgaeN(-.0555,2),
-        AlgaeP(.0555,0);
-
-        public static final double safeStartArmRotations = 0;
+        CoralReset(-0.224609,0.05, false),
+        Idle(-.422871,0.05, false),
+        Intake(-.405,0, false),
+        L1(-0.30625,.1, false),
+        L2(-0.36625,.5, false),
+        L3(-0.30625,1.44, false),
+        L4(-0.224609,3, false),
+        AlgaeReset(0,0, true),
+        AlgaeU(0,1.8,true),
+        AlgaeL(0,1, true),
+        AlgaeN(-.2,3.4, true),
+        AlgaeP(0,0, true);
 
         private final double armRotations;
         private final double elevatorMeters;
@@ -507,11 +506,11 @@ public class MainMechanism {
 
     public static enum IntakeSpeeds{
         Off(0),
-        IntakeCoral(7.5),
-        ShootCoral(30),
-        IntakeAlgae(-15),
-        HoldAlgae(-10),
-        ShootAlgae(40);
+        IntakeCoral(30),
+        ShootCoral(60),
+        IntakeAlgae(-60),
+        HoldAlgae(-60),
+        ShootAlgae(60);
 
         private final double velocity;
         IntakeSpeeds(double velocity){
@@ -524,9 +523,9 @@ public class MainMechanism {
     }
 
     public static enum RampPositions{
-        Up(0),
-        Down(.25),
-        Jiggle(.01);
+        Up(-.186),
+        Down(-.6),
+        Jiggle(-.2);
 
         private final double rotation;
         RampPositions(double rotation){
@@ -544,7 +543,7 @@ public class MainMechanism {
         this.intake = intake;
         this.ramp = ramp;
 
-        elevator.setDefaultCommand(elevator.reachGoal(()->Math.abs(arm.getPosition() - arm.getTarget()) < MAX_ARM_ERROR ? Positions.Intake.elevatorMeters() : elevator.getPosition()));
+        elevator.setDefaultCommand(elevator.reachGoal(Positions.Intake.elevatorMeters(),1));
         arm.setDefaultCommand(arm.reachGoal(()->
             elevator.getPosition() > .2 ? intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.CoralReset.armRotations() : intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.Intake.armRotations()
         ));
@@ -570,11 +569,11 @@ public class MainMechanism {
                 , ()->2
                 , "Coral"
                 , "CoralIntake");
-            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 5);
+            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 10);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(arm.getPosition() - Positions.Intake.armRotations()) < .1);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPosition() - Positions.Intake.elevatorMeters) < .1);
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
-            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 10);
+            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 20);
 
             MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
             MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
@@ -624,6 +623,10 @@ public class MainMechanism {
                 , elevator.reachGoal(()->positions.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(),0,1))
                     .alongWith(arm.reachGoal(()->Math.abs(positions.elevatorMeters() - elevator.getPosition()) < MAX_ELEVATOR_ERROR ? positions.armRotations() : safe.armRotations()))
                 , ()->ending));
+    }
+
+    public Command resetElevator(){
+        return elevator.reachGoalOnce(Positions.Intake.elevatorMeters());
     }
 
     public Command preset(Positions positions, DoubleSupplier amount){
@@ -690,20 +693,22 @@ public class MainMechanism {
         return Commands.either(Commands.none()
             ,Commands.parallel(toState(Positions.Intake)
             ,intake.setVelocity(IntakeSpeeds.IntakeCoral.getVelocity())
-            ,jiggleRamp()).until(()->intake.hasCoral())
+            ,jiggleRamp())
+            .until(()->intake.hasCoral())
+            .andThen(Commands.waitSeconds(INTAKE_TIME))
             .andThen(intake.stop())
             , ()->intake.hasAlgae());
     }
 
     public Command jiggleRamp(){
         return (ramp.reachGoal(RampPositions.Up.getPosition())
-            .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < MAX_RAMP_ERROR)
+            .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < .01)
             .andThen(ramp.reachGoal(RampPositions.Up.getPosition())
-                .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < MAX_RAMP_ERROR))).repeatedly();
+                .until(()->Math.abs(ramp.getTarget() - ramp.getPosition()) < .01))).repeatedly();
     }
 
     public Command score(Positions positions, IntakeSpeeds speed){
-        return toState(positions).andThen(intake.setVelocity(speed.getVelocity())).withTimeout(SHOOT_TIME);
+        return toState(positions).andThen(intake.setVelocity(speed.getVelocity()).withTimeout(SHOOT_TIME));
     }
 
     public Command scoreCoral(int level){

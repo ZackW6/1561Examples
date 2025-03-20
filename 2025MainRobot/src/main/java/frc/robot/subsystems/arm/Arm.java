@@ -166,7 +166,7 @@ public class Arm extends SubsystemBase {
   //Send Current position and orientation data of Arm to Network table and get Elevator data, is Main loop of arm
   public void periodic(){
     double height = elevatorSubscriber.get().getZ();
-    armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
+    armPublisher.accept(new Pose3d(.262,0,.487 + height,new Rotation3d(0,Units.rotationsToRadians(getPosition()+.441),0)));
     trueArmAngle.accept(getPosition());
     armTarget.accept(getTarget());
   }

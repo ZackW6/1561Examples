@@ -6,6 +6,11 @@ public interface ElevatorIO {
      */
     public void setPosition(double position);
 
+    /**
+     * this is a constant call, so once you call it, it will keep going toward that position
+     */
+    public void setPosition(double position, int slot);
+
     public void stop();
 
     public double getPosition();

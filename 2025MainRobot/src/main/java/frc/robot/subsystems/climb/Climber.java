@@ -1,4 +1,4 @@
-package frc.robot.subsystems.climber;
+package frc.robot.subsystems.climb;
 
 import java.util.function.DoubleSupplier;
 
@@ -36,8 +36,8 @@ import frc.robot.constants.ArmConstants;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.realArm.TalonArm;
 import frc.robot.subsystems.arm.simArm.SimArm;
-import frc.robot.subsystems.climber.realClimber.TalonClimber;
-import frc.robot.subsystems.climber.simClimber.SimClimber;
+import frc.robot.subsystems.climb.realClimber.TalonClimber;
+import frc.robot.subsystems.climb.simClimber.SimClimber;
 
 public class Climber extends SubsystemBase {
   

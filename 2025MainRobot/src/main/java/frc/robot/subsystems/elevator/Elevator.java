@@ -93,7 +93,11 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setPosition(double position){
-    elevatorIO.setPosition(position);
+    setPosition(position,0);
+  }
+
+  public void setPosition(double position, int slot){
+    elevatorIO.setPosition(position, slot);
   }
 
   /**
@@ -115,6 +119,38 @@ public class Elevator extends SubsystemBase {
   //Update goal value
   public Command reachGoal(DoubleSupplier goal) {
     return this.run(()->elevatorIO.setPosition(goal.getAsDouble()));
+  }
+
+  /**
+   * Run control loop to reach and maintain goal.
+   *
+   * @param goal the position to maintain
+   */
+
+   //Reach goal position in rotations
+   public Command reachGoal(double goal, int slot) {
+    return this.run(()->elevatorIO.setPosition(goal, slot));
+  }
+  /**
+   * Run control loop to reach and maintain changing goal.
+   *
+   * @param goal the position to maintain
+   */
+
+  //Update goal value
+  public Command reachGoal(DoubleSupplier goal, int slot) {
+    return this.run(()->elevatorIO.setPosition(goal.getAsDouble(), slot));
+  }
+
+  /**
+   * Run control loop to reach and maintain goal.
+   *
+   * @param goal the position to maintain
+   */
+
+   //Reach goal position in rotations
+   public Command reachGoalOnce(double goal) {
+    return this.runOnce(()->elevatorIO.setPosition(goal));
   }
 
   public double getPosition(){

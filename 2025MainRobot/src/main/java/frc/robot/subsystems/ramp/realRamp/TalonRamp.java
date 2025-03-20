@@ -32,12 +32,14 @@ public class TalonRamp implements ArmIO{
     private final TalonFX armMotor;
 
     public TalonRamp(){
-        armMotor = new TalonFX(RampConstants.RAMP_MOTOR_ID);
+        armMotor = new TalonFX(RampConstants.RAMP_MOTOR_ID,"Canivore");
         configMotor();
     }
 
+    private double target = 0;
     @Override
     public void setPosition(double position) {
+        target = position;
         armMotor.setControl(m_request.withPosition(position).withSlot(0));
     }
 
@@ -53,7 +55,7 @@ public class TalonRamp implements ArmIO{
 
     @Override
     public double getTarget() {
-        return (armMotor.getDifferentialClosedLoopReference().getValueAsDouble());
+        return target;//(armMotor.getClosedLoopReference().getValueAsDouble());
     }
 
     private void configMotor(){
@@ -82,7 +84,7 @@ public class TalonRamp implements ArmIO{
         slot1Configs.kD = RampConstants.kD; // A velocity error of 1 rps results in 0.1 V output
         slot1Configs.kG = RampConstants.kG;
         slot1Configs.GravityType = GravityTypeValue.Arm_Cosine;
-        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
         // talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;

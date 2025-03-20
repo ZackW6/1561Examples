@@ -1,4 +1,4 @@
-package frc.robot.subsystems.climber.simClimber;
+package frc.robot.subsystems.climb.simClimber;
 
 
 import edu.wpi.first.math.controller.PIDController;

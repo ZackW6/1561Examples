@@ -62,6 +62,11 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     }
     @Override
     public void setPosition(double position) {
+        setPosition(position, 0);
+    }
+
+    @Override
+    public void setPosition(double position, int slot) {
         targetPosition = position;
         stopped = false;
     }

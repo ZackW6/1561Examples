@@ -37,8 +37,8 @@ import frc.robot.constants.ArmConstants;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.realArm.TalonArm;
 import frc.robot.subsystems.arm.simArm.SimArm;
-import frc.robot.subsystems.climber.realClimber.TalonClimber;
-import frc.robot.subsystems.climber.simClimber.SimClimber;
+import frc.robot.subsystems.climb.realClimber.TalonClimber;
+import frc.robot.subsystems.climb.simClimber.SimClimber;
 import frc.robot.subsystems.ramp.realRamp.TalonRamp;
 import frc.robot.subsystems.ramp.simRamp.SimRamp;
 
@@ -98,6 +98,10 @@ public class Ramp extends SubsystemBase {
     //Update goal value
     public Command reachGoal(DoubleSupplier goal) {
       return this.run(()->climberIO.setPosition(goal.getAsDouble()));
+    }
+
+    public Command stop(){
+      return this.run(()->climberIO.stop());
     }
   
     public double getPosition(){

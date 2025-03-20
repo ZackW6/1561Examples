@@ -18,9 +18,9 @@ public class RampConstants{
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 10;
+    public static final double kP = 300;
     public static final double kI = 0;
-    public static final double kD = 0;
+    public static final double kD = 20;
     public static final double kG = 0;//8.4749;
 
     public static final double RAMP_SENSOR_TO_MECHANISM_RATIO = 10.625;
@@ -28,9 +28,9 @@ public class RampConstants{
 
 
     // TODO: Make the RAMP positive when it goes up.
-    public static final double CRUISE_VELOCITY = 400;
-    public static final double MAX_ACCELERATION = 1000;
-    public static final double JERK = 5000;
+    public static final double CRUISE_VELOCITY = 10;
+    public static final double MAX_ACCELERATION = 20;
+    public static final double JERK = 40;
 
     public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0);
     
