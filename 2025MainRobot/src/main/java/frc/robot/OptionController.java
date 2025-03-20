@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.FactoryCommands;
 import frc.robot.constants.GameData;
 import frc.robot.util.CustomController;
+import frc.robot.util.SendableConsumer;
 
 public class OptionController {
 
@@ -130,7 +131,13 @@ public class OptionController {
         })).and(()->controller.getFixedButton(21)).onTrue(Commands.runOnce(()->{
             feederPosition = 2;
         }));
+
+        // SendableConsumer.createSendableChooser("Place", this::setPlace, 1);
     }
+
+    // public void setPlace(double place){
+    //     reefPosition = (int)place;
+    // }
 
     /**
      * auto intakes a coral if it doesn't have one, if it has an algae it scores it

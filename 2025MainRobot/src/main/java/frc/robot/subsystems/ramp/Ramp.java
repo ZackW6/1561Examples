@@ -115,7 +115,7 @@ public class Ramp extends SubsystemBase {
     //Send current position and orientation data of Ramp to network table and updates position, is main loop of ramp
     @Override
     public void periodic(){
-      rampPublisher.accept(new Pose3d(-.25,0,0.8,new Rotation3d(0,Units.rotationsToRadians(getPosition()),0)));
+      rampPublisher.accept(new Pose3d(-.25,0,0.8,new Rotation3d(0,Units.rotationsToRadians(getPosition()+.189),0)));
       rampAngle.accept(getPosition());
       rampTarget.accept(getTarget());
     }

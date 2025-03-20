@@ -129,11 +129,11 @@ public class RobotContainer {
     //TODO was deffered, i switched to not, make sure it works in all scenarios
     new Trigger(()->DriverStation.isTeleop()).onTrue(Commands.runOnce(()->{
       // DynamicObstacle.setDynamicObstacles("avoidAlgae",drivetrain.getPose().getTranslation());
-      if (Robot.isSimulation()){
-        drivetrain.seedFieldRelative(Rotation2d.fromDegrees(90));
-        return;
-      }
-      if (DriverStation.getAlliance().get() == Alliance.Red){
+      // if (Robot.isSimulation()){
+      //   drivetrain.seedFieldRelative(Rotation2d.fromDegrees(90));
+      //   return;
+      // }
+      if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red){
         drivetrain.seedFieldRelative(Rotation2d.fromDegrees(180));
       }else{
         drivetrain.seedFieldRelative(Rotation2d.fromDegrees(0));
@@ -173,7 +173,7 @@ public class RobotContainer {
   };
 
   public void createPresetControls(){
-    driverController.povUp().onTrue(scoringMechanism.scoreCoral(3));//Commands.runOnce(()->optionController.setReefLevel(1)));
+    driverController.povUp().onTrue(Commands.runOnce(()->optionController.setReefLevel(1)));
     driverController.povRight().onTrue(Commands.runOnce(()->optionController.setReefLevel(2)));
     driverController.povDown().onTrue(Commands.runOnce(()->optionController.setReefLevel(3)));
     driverController.povLeft().onTrue(Commands.runOnce(()->optionController.setReefLevel(4)));

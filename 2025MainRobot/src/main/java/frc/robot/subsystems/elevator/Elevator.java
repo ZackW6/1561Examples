@@ -164,11 +164,11 @@ public class Elevator extends SubsystemBase {
   //Send current position and orientation data of elevator to network table and updates position, is main loop of elevator
   @Override
   public void periodic(){
-    double position = getPosition();
+    double position = getPosition()/2;
     elevatorStage1.accept(new Pose3d(0,0,Math.min(position,.7),new Rotation3d()));
     elevatorStage2.accept(new Pose3d(0,0,Math.min(position,1.4),new Rotation3d()));
     elevatorStage3.accept(new Pose3d(0,0,position,new Rotation3d()));
-    elevatorTotalHeight.accept(position);
+    elevatorTotalHeight.accept(getPosition());
     elevatorTarget.accept(getTarget());
   }
 }

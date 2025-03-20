@@ -462,7 +462,7 @@ public class MainMechanism {
 
     public static enum Positions{
         
-        CoralReset(-0.224609,0.05, false),
+        CoralReset(-0.26,0.05, false),
         Idle(-.422871,0.05, false),
         Intake(-.405,0, false),
         L1(-0.30625,.1, false),
@@ -559,12 +559,18 @@ public class MainMechanism {
             //     , "Coral"
             //     , "CoralIntake");
             MapleSimWorld.addShooterSimulation(()->{
-                Pose3d armPose = armSubscriber.get(new Pose3d());
-                double yOffset = ArmConstants.ARM_LENGTH_METERS * Math.cos(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
-                double xOffset = ArmConstants.ARM_LENGTH_METERS * Math.sin(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
-                return new Transform3d(armPose.getX() + xOffset,0, armPose.getZ() + yOffset
-                    ,new Rotation3d(0, -armPose.getRotation().getY() - Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_ANGLE),0));
+                    Pose3d armPose = armSubscriber.get(new Pose3d());
+                    double yOffset = ArmConstants.ARM_LENGTH_METERS * Math.cos(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                    double xOffset = ArmConstants.ARM_LENGTH_METERS * Math.sin(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                        return new Transform3d(armPose.getX() + xOffset-.05,0, armPose.getZ() + yOffset
+                        ,new Rotation3d(0, armPose.getRotation().getY() + Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_ANGLE)+Math.PI,armSubscriber.get().getZ() > 1.5 ? 0 : Math.PI));
                 }
+                // Pose3d armPose = armSubscriber.get(new Pose3d());
+                // double yOffset = ArmConstants.ARM_LENGTH_METERS * Math.cos(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                // double xOffset = ArmConstants.ARM_LENGTH_METERS * Math.sin(Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_OFFSET) + armPose.getRotation().getY());
+                // return new Transform3d(armPose.getX() + xOffset,0, armPose.getZ() + yOffset
+                //     ,new Rotation3d(0, armPose.getRotation().getY() + Units.rotationsToRadians(ArmConstants.ARM_END_DEFFECTOR_SCORE_ANGLE),0));
+                // }
                 
                 , ()->2
                 , "Coral"
@@ -573,7 +579,7 @@ public class MainMechanism {
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(arm.getPosition() - Positions.Intake.armRotations()) < .1);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPosition() - Positions.Intake.elevatorMeters) < .1);
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
-            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 20);
+            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 31);
 
             MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
             MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
@@ -615,8 +621,19 @@ public class MainMechanism {
         return toState(positions, ()->1, true);
     }
 
+    //TODO this is an old, but stable version, the other is new, but may work, and be much better for it
+    // private Command toSafeState(Positions positions, Positions safe, DoubleSupplier amount, boolean ending){
+    //     return arm.reachGoal(safe.armRotations()).until(()->Math.abs(arm.getTarget() - arm.getPosition()) < MAX_ARM_ERROR)
+    //         .andThen(elevator.reachGoal(()->positions.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(),0,1))).until(()->Math.abs(positions.elevatorMeters() - elevator.getPosition()) < MAX_ELEVATOR_ERROR)
+    //         .andThen(Commands.either(
+    //             arm.reachGoalOnce(positions.armRotations())
+    //             , elevator.reachGoal(()->positions.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(),0,1))
+    //                 .alongWith(arm.reachGoal(()->Math.abs(positions.elevatorMeters() - elevator.getPosition()) < MAX_ELEVATOR_ERROR ? positions.armRotations() : safe.armRotations()))
+    //             , ()->ending));
+    // }
+
     private Command toSafeState(Positions positions, Positions safe, DoubleSupplier amount, boolean ending){
-        return arm.reachGoal(safe.armRotations()).until(()->Math.abs(arm.getTarget() - arm.getPosition()) < MAX_ARM_ERROR)
+        return arm.reachGoal(safe.armRotations()).until(()->arm.getPosition() > safe.armRotations())
             .andThen(elevator.reachGoal(()->positions.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(),0,1))).until(()->Math.abs(positions.elevatorMeters() - elevator.getPosition()) < MAX_ELEVATOR_ERROR)
             .andThen(Commands.either(
                 arm.reachGoalOnce(positions.armRotations())

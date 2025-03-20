@@ -33,7 +33,7 @@ public class SimIntake implements FlywheelIO{
     private Thread updateThread;
 
     //Create new intake with set values
-    private final FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(gearbox,0.032,IntakeConstants.GEARING),
+    private final FlywheelSim intakeSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(gearbox,0.012,IntakeConstants.GEARING),
      gearbox,
       0);
 

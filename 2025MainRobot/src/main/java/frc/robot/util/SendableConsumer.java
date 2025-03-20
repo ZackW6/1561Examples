@@ -19,14 +19,12 @@ public class SendableConsumer {
     public static void createSendableChooser(String id, Consumer<Double> consumer, double initVal){
         Notifier notifier;
 
-        NetworkTableEntry entry;
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        
-        entry = table.getEntry(id);
-
+        // NetworkTableEntry entry;
+        // NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
+        SmartDashboard.putNumber(id, initVal);
 
         notifier = new Notifier(()->{
-            consumer.accept(entry.getDouble(initVal));
+            consumer.accept(SmartDashboard.getNumber(id, initVal));
         });
         notifier.startPeriodic(0.05);
 
