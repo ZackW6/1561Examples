@@ -153,6 +153,10 @@ public class Elevator extends SubsystemBase {
     return this.runOnce(()->elevatorIO.setPosition(goal));
   }
 
+  public Command applyVoltage(double volts){
+    return this.run(()->elevatorIO.applyVoltage(volts));
+  }
+
   public double getPosition(){
     return elevatorIO.getPosition();
   }

@@ -462,7 +462,8 @@ public class MainMechanism {
 
     public static enum Positions{
         
-        CoralReset(-0.26,0.05, false),
+        CoralSafe(-0.27,0.05, false),
+        CoralReset(-0.224609,0.05, false),
         Idle(-.422871,0.05, false),
         Intake(-.405,0, false),
         L1(-0.30625,.1, false),
@@ -543,9 +544,9 @@ public class MainMechanism {
         this.intake = intake;
         this.ramp = ramp;
 
-        elevator.setDefaultCommand(elevator.reachGoal(Positions.Intake.elevatorMeters(),1));
+        elevator.setDefaultCommand(elevator.applyVoltage(-1));
         arm.setDefaultCommand(arm.reachGoal(()->
-            elevator.getPosition() > .2 ? intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.CoralReset.armRotations() : intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.Intake.armRotations()
+            elevator.getPosition() > .2 ? intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.L4.armRotations() : intake.hasAlgae() ? Positions.AlgaeReset.armRotations() : Positions.Intake.armRotations()
         ));
         intake.setDefaultCommand(intake.setVelocity(()->intake.hasAlgae() ? IntakeSpeeds.HoldAlgae.getVelocity() : IntakeSpeeds.Off.getVelocity()));
 
@@ -633,7 +634,7 @@ public class MainMechanism {
     // }
 
     private Command toSafeState(Positions positions, Positions safe, DoubleSupplier amount, boolean ending){
-        return arm.reachGoal(safe.armRotations()).until(()->arm.getPosition() > safe.armRotations())
+        return arm.reachGoal(safe.armRotations()).until(()->arm.getPosition() > Positions.CoralSafe.armRotations())
             .andThen(elevator.reachGoal(()->positions.elevatorMeters()*MathUtil.clamp(amount.getAsDouble(),0,1))).until(()->Math.abs(positions.elevatorMeters() - elevator.getPosition()) < MAX_ELEVATOR_ERROR)
             .andThen(Commands.either(
                 arm.reachGoalOnce(positions.armRotations())

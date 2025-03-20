@@ -27,7 +27,7 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     private final ElevatorSim elevatorSim =
       new ElevatorSim(
           gearbox,
-          ElevatorConstants.TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO * ElevatorConstants.ELEVATOR_ROTOR_TO_SENSOR_RATIO * 2, //The *2 is a lie, sorry
+          ElevatorConstants.TRUE_ELEVATOR_SENSOR_TO_MECHANISM_RATIO * ElevatorConstants.ELEVATOR_ROTOR_TO_SENSOR_RATIO, //The *2 is a lie, sorry
           ElevatorConstants.ELEVATOR_MASS_KG,
           ElevatorConstants.ELEVATOR_DRUM_RADIUS,
           ElevatorConstants.ELEVATOR_MIN_HEIGHT,
@@ -84,5 +84,10 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     @Override
     public double getTarget() {
         return targetPosition;
+    }
+
+    @Override
+    public void applyVoltage(double volts) {
+        elevatorSim.setInputVoltage(volts);
     }
 }

@@ -217,7 +217,7 @@ public class WaitAutos {
                 return autoScoreCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), place, layer, .2);
             }
             try {
-                return autoIntakeCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), Integer.parseInt(to.substring(1,2),10), .2);
+                return autoIntakeCoral(AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory(from+to)), Integer.parseInt(to.substring(1,2),10), 1.4);
             } catch (Exception e2) {
                 return Commands.none();
             }

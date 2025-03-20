@@ -1,5 +1,7 @@
 package frc.robot.subsystems.elevator.realElevator;
 
+import static edu.wpi.first.units.Units.Volt;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -9,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -59,6 +62,11 @@ public class TalonElevator implements ElevatorIO{
     @Override
     public void setPosition(double position) {
         setPosition(position,0);
+    }
+
+    @Override
+    public void applyVoltage(double volts) {
+        motorLeader.setControl(new VoltageOut(volts));
     }
 
     @Override

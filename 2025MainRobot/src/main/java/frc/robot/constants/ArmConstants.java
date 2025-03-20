@@ -19,9 +19,9 @@ public class ArmConstants{
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 1000;
-    public static final double kI = 10;
-    public static final double kD = 60;//50;
+    public static final double kP = 30;
+    public static final double kI = 0;
+    public static final double kD = 2;//50;
     public static final double kG = 0;//-26;//8.4749;
 
     public static final double ARM_SENSOR_TO_MECHANISM_RATIO = 1;
