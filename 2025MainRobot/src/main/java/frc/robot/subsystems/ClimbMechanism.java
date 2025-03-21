@@ -31,20 +31,20 @@ public class ClimbMechanism {
 
     public static enum ClimbPositions{
         OFF(0,0,.1),
-        PREPARED(0,.25,-.25),
-        CLIMBED(0,0,-.25);
+        PREPARED(0,-4,-.25),
+        CLIMBED(0,4,-.25);
 
         private double armRotations;
-        private double climberRotations;
+        private double climberVoltage;
         private double rampRotations;
-        ClimbPositions(double armRotations, double climberRotations, double rampRotations){
-            this.climberRotations = climberRotations;
+        ClimbPositions(double armRotations, double climberVoltage, double rampRotations){
+            this.climberVoltage = climberVoltage;
             this.armRotations = armRotations;
             this.rampRotations = rampRotations;
         }
 
-        public double climberRotations(){
-            return climberRotations;
+        public double climberVoltage(){
+            return climberVoltage;
         }
 
         public double rampRotations(){
@@ -52,7 +52,7 @@ public class ClimbMechanism {
         }
 
         public double armRotations(){
-            return rampRotations;
+            return armRotations;
         }
     }
 
@@ -60,12 +60,12 @@ public class ClimbMechanism {
         this.climber = climber;
         this.ramp = ramp;
         this.arm = arm;
-        climber.setDefaultCommand(climber.reachGoal(ClimbPositions.OFF.climberRotations()));
+        climber.setDefaultCommand(climber.setVoltage(0));
         ramp.setDefaultCommand(ramp.reachGoal(ClimbPositions.PREPARED.rampRotations()));
     }
 
     public Command runState(ClimbPositions position){
-        return climber.reachGoal(position.climberRotations())
+        return climber.setVoltage(position.climberVoltage()).repeatedly()
             .alongWith(ramp.reachGoal(position.rampRotations()))
             .alongWith(arm.reachGoal(position.armRotations()));
     }

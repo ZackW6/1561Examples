@@ -47,6 +47,5 @@ public class ArmConstants{
     public static final double ARM_CURRENT_THRESHOLD_TIME = 0.1;
     public static final boolean ARM_ENABLE_CURRENT_LIMIT = true;
     public static final boolean ARM_STATOR_CURRENT_LIMIT_ENABLE = true;
-    public static final double ARM_STATOR_CURRENT_LIMIT = 40;
-    
+    public static final double ARM_STATOR_CURRENT_LIMIT = 120;
 }

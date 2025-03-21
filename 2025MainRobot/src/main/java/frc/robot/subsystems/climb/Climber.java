@@ -99,6 +99,10 @@ public class Climber extends SubsystemBase {
     public Command reachGoal(DoubleSupplier goal) {
       return this.run(()->climberIO.setPosition(goal.getAsDouble()));
     }
+    
+    public Command setVoltage(double volts){
+      return this.run(()->climberIO.setVoltage(volts));
+    }
   
     public double getPosition(){
       return climberIO.getPosition();

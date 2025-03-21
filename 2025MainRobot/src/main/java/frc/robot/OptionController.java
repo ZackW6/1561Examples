@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -102,14 +104,14 @@ public class OptionController {
             //Intended to be L4 scoring
             reefLevel = 4;
         }));
-        controller.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{
-            //Intended to be processor scoring
-            algaeScoreLevel = 1;
-        }));
-        controller.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{
-            //Intended to be processor scoring
-            algaeScoreLevel = 2;
-        }));
+        // controller.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{
+        //     //Intended to be processor scoring
+        //     algaeScoreLevel = 1;
+        // }));
+        // controller.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{
+        //     //Intended to be processor scoring
+        //     algaeScoreLevel = 2;
+        // }));
         controller.fixedButtonPressed(19).onTrue(Commands.runOnce(()->{
             //Intended to be feeder 1 intake
             defaultFeeder = 1;
@@ -234,16 +236,23 @@ public class OptionController {
     }
 
     public Command getAlgaeLevel(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.presetAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
+        return Commands.defer(()->factoryCommands.scoringMechanism.presetAlgae(1), factoryCommands.presetSubsytems);
     }
 
     public Command resetOrIntake(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.scoreAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
+        return Commands.either(factoryCommands.scoringMechanism.elevator.reachGoal(0),Commands.either(factoryCommands.scoringMechanism.intake(),
+        factoryCommands.scoringMechanism.elevator.reachGoal(0), ()->!factoryCommands.scoringMechanism.intake.hasAlgae()),()->factoryCommands.scoringMechanism.intake.hasCoral());
     }
 
     public Command getAutoCoralPosition(){
         return Commands.defer(()->factoryCommands.toPose(GameData.coralPose(reefPosition, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2,3),Set.of());
+        ,1.2,3).alongWith(factoryCommands.scoringMechanism.presetCoral(reefLevel,()->{
+            Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
+            Pose2d coralPose = GameData.coralPose(reefPosition, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
+            Transform2d comparingTransform = coralPose.minus(drivetrainPose);
+
+            return 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2);
+        })),Set.of());
     }
 
     public void setReefLevel(int value){

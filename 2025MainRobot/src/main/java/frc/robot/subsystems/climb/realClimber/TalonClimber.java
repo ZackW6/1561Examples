@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -35,13 +36,18 @@ public class TalonClimber implements ArmIO{
 
     //Config Motor to correct IDs
     public TalonClimber(){
-        armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID,"Canivore");
+        armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID);
         configMotor();
     }
 
     @Override
     public void setPosition(double position) {
         armMotor.setControl(m_request.withPosition(position).withSlot(0));
+    }
+
+    @Override
+    public void setVoltage(double volts) {
+        armMotor.setControl(new VoltageOut(volts));
     }
 
     @Override

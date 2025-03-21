@@ -116,4 +116,10 @@ public class TalonArm implements ArmIO{
 
         armMotor.getConfigurator().apply(talonFXConfigs);
     }
+
+    @Override
+    public void setVoltage(double volts) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
+    }
 }

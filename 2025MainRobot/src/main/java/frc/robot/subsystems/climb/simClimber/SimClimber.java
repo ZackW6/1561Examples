@@ -83,4 +83,9 @@ public class SimClimber implements ArmIO{
         return targetPosition;
     }
 
+    @Override
+    public void setVoltage(double volts) {
+        
+    }
+
 }

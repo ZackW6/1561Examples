@@ -41,8 +41,8 @@ public class FactoryCommands {
 
     public static final double maxSpeed = 1.5;
 
-    private final PIDController speedsPID = new PIDController(2, 0, 0);
-    private final PIDController rotationPID = new PIDController(2, 0, 0);
+    private final PIDController speedsPID = new PIDController(4, 0, 0);
+    private final PIDController rotationPID = new PIDController(4, 0, 0);
 
     public final SwerveDrive drivetrain;
 
@@ -282,5 +282,9 @@ public class FactoryCommands {
 
     public Command autoIntakeAlgae(int place){
         return Commands.race(autoToAlgae(place), scoringMechanism.intakeAlgae((place%2)+1));
+    }
+
+    public Command teenyPush(){
+        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.3);
     }
 }

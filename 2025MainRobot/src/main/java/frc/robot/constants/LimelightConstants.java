@@ -17,14 +17,14 @@ public class LimelightConstants {
     public static final String BACKWARD_LIMELIGHT_NAME = "limelight-backcam";
     public static final double MAX_XY_ERROR = 1.0;
     public static final Transform3d BACKWARD_LIMELIGHT_CAMERA_TRANSFORM =
-        new Transform3d(new Translation3d(0,-0.297, 0.25146), new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(180)));
+        new Transform3d(new Translation3d(-.297,-0.297, 0.25146+.0158), new Rotation3d(0, Units.degreesToRadians(20), Units.degreesToRadians(-150)));
     public static final String FR_LIMELIGHT_NAME = "limelight-rfront";
     public static final Transform3d FR_LIMELIGHT_CAMERA_TRANSFORM =
-        new Transform3d(new Translation3d(0.297,0.297, 0.25146), new Rotation3d(180, Units.degreesToRadians(10), Units.degreesToRadians(30)));
+        new Transform3d(new Translation3d(0.297,0.297, 0.25146+.0158), new Rotation3d(0, Units.degreesToRadians(10), Units.degreesToRadians(30)));
 
     public static final String FL_LIMELIGHT_NAME = "limelight-lfront";
     public static final Transform3d FL_LIMELIGHT_CAMERA_TRANSFORM =
-        new Transform3d(new Translation3d(-0.297,0.297, 0.25146), new Rotation3d(180, Units.degreesToRadians(10), Units.degreesToRadians(-30)));
+        new Transform3d(new Translation3d(-0.297,0.297, 0.25146+.0158), new Rotation3d(180, Units.degreesToRadians(10), Units.degreesToRadians(-30)));
     // public static final String AMP_CAM = "limelight-object";
     // public static final double MAX_XY_ERROR_AMP_CAM = 1.0;
     // public static final Transform3d AMP_CAM_TRANSFORM =

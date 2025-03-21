@@ -98,9 +98,9 @@ public class RobotContainer {
     drivetrain.resetPose(new Pose2d(7,5,new Rotation2d()));
   
     drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * 1.00 * MaxSpeed)
-            .withVelocityY(-driverController.getLeftX() * 1.00 * MaxSpeed)
-            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * 2/3 * MaxAngularRate)
+        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * .85 * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+            .withVelocityY(-driverController.getLeftX() * .85 * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * .7 * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
     ));
 
     drivetrain.getDriveIO().registerTelemetry((log)->logger.telemeterize(log));
@@ -121,7 +121,7 @@ public class RobotContainer {
     // customController.rawButtonPressed(9).onTrue(Commands.print("9"));
     // customController.rawButtonPressed(10).onTrue(Commands.print("10"));
     
-    driverController.start().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
+    driverController.leftStick().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
     // driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
     // driverController.leftTrigger(.5).whileTrue(factoryCommands.autoIntakeCoral(0));
@@ -180,17 +180,19 @@ public class RobotContainer {
     // driverController.povRight().whileTrue(scoringMechanism.preset(2));
     // driverController.povDown().whileTrue(scoringMechanism.preset(3));
     // driverController.povLeft().whileTrue(scoringMechanism.preset(4));
-    driverController.rightTrigger(.5).whileTrue(optionController.getScoreLevel());
+    driverController.rightTrigger(.2).whileTrue(optionController.getScoreLevel());
     driverController.y().whileTrue(optionController.getAlgaeLevel());
-    driverController.b().onTrue(climbMechanism.prepare());
-    driverController.x().onTrue(climbMechanism.climb());
+    driverController.b().whileTrue(climbMechanism.prepare());
+    driverController.x().whileTrue(climbMechanism.climb());
     driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
-    driverController.leftBumper().whileTrue(scoringMechanism.intake());
-    driverController.leftTrigger(.5).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-120)));
-    driverController.leftStick().whileTrue(optionController.getAutoAlgae());
+    driverController.leftBumper().whileTrue(optionController.resetOrIntake());
+    driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
+    driverController.start().whileTrue(optionController.getAutoAlgae());
     driverController.rightStick().whileTrue(optionController.getAutoCoral());
     driverController.back().whileTrue(optionController.getAutoCoralPosition());
+
+    customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
   }
 
   public void createAutoPathControls(){

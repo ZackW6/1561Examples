@@ -15,4 +15,6 @@ public interface ArmIO {
     public double getPosition();
 
     public double getTarget();
+
+    public void setVoltage(double volts);
 }

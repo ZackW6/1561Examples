@@ -470,10 +470,10 @@ public class MainMechanism {
         L2(-0.36625,.5, false),
         L3(-0.30625,1.44, false),
         L4(-0.224609,3, false),
-        AlgaeReset(0,0, true),
+        AlgaeReset(-.2,0, true),
         AlgaeU(0,1.8,true),
         AlgaeL(0,1, true),
-        AlgaeN(-.2,3.4, true),
+        AlgaeN(0-.1,3.5, true),
         AlgaeP(0,0, true);
 
         private final double armRotations;

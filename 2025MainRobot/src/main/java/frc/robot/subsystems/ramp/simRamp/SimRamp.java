@@ -77,4 +77,10 @@ public class SimRamp implements ArmIO{
         return targetPosition;
     }
 
+    @Override
+    public void setVoltage(double volts) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
+    }
+
 }
