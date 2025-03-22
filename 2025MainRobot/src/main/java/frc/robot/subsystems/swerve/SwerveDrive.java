@@ -14,6 +14,9 @@ import com.pathplanner.lib.pathfinding.Pathfinder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -112,7 +115,7 @@ public class SwerveDrive extends SubsystemBase{
             this::getPose, // getState of the robot pose
             this::resetPose,  // Consumer for seeding pose against auto
             swerveIO::getSpeeds,
-            (speeds, feedForward)->swerveIO.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds.times(.5))), // Consumer of ChassisSpeeds to drive the robot
+            (speeds, feedForward)->swerveIO.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds.times(.7))), // Consumer of ChassisSpeeds to drive the robot
             new PPHolonomicDriveController(new PIDConstants(5, 0, 0),
                                             new PIDConstants(5, 0, 0)),
             PathplannerConstants.pathingConfig,

@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.constants.ArmConstants;
+import frc.robot.subsystems.MainMechanism.Positions;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.climb.Climber;
 import frc.robot.subsystems.elevator.Elevator;
@@ -75,10 +76,10 @@ public class ClimbMechanism {
     }
 
     public Command prepare(){
-        return runState(ClimbPositions.PREPARED);
+        return runState(ClimbPositions.PREPARED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(Positions.Intake.armRotations()))));
     }
 
     public Command climb(){
-        return runState(ClimbPositions.CLIMBED);
+        return runState(ClimbPositions.CLIMBED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(0))));
     }
 }

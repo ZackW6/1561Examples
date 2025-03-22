@@ -59,6 +59,8 @@ public class RobotContainer {
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
   private double MaxAngularRate = TunerConstants.MAX_ANGULAR_RATE;
 
+  private double speedPercent = .6;
+
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
 
@@ -95,16 +97,16 @@ public class RobotContainer {
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
   private void configureBindings() {
-    drivetrain.resetPose(new Pose2d(7,5,new Rotation2d()));
+    drivetrain.resetPose(new Pose2d(7,5,Rotation2d.fromDegrees(180)));
   
     drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * .85 * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
-            .withVelocityY(-driverController.getLeftX() * .85 * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
-            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * .7 * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+            .withVelocityY(-driverController.getLeftX() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * .65 * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
     ));
 
     drivetrain.getDriveIO().registerTelemetry((log)->logger.telemeterize(log));
-
+    
     /* Controller Bindings */
     // createManualControls();
     createPresetControls();
@@ -181,16 +183,19 @@ public class RobotContainer {
     // driverController.povDown().whileTrue(scoringMechanism.preset(3));
     // driverController.povLeft().whileTrue(scoringMechanism.preset(4));
     driverController.rightTrigger(.2).whileTrue(optionController.getScoreLevel());
-    driverController.y().whileTrue(optionController.getAlgaeLevel());
+    driverController.y().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
     driverController.b().whileTrue(climbMechanism.prepare());
     driverController.x().whileTrue(climbMechanism.climb());
-    driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
+    // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
     driverController.leftBumper().whileTrue(optionController.resetOrIntake());
     driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
     driverController.start().whileTrue(optionController.getAutoAlgae());
     driverController.rightStick().whileTrue(optionController.getAutoCoral());
     driverController.back().whileTrue(optionController.getAutoCoralPosition());
+
+    customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .6;}));
+    customController.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{speedPercent = .8;}));
 
     customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
   }
@@ -243,22 +248,25 @@ public class RobotContainer {
     //How you might make a choreo only path
     // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     autoChooser.addOption("RightAuto",
-      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,1.662,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceE,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4)
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,4)
     ));
     autoChooser.addOption("MiddleAuto",
-      WaitAutos.createBranchCommand("MiddleAuto", new Pose2d(7.578,4.025,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("MiddleAuto", new Pose2d(7.2,4.025,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginMiddle, ShootPose.PlaceH,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
-        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4)
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4)
     ));
     autoChooser.addOption("LeftAuto",
-      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.578,6.338,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.2,6.338,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginLeft, ShootPose.PlaceJ,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
-        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4)
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4)
     ));
     // autoChooser.addOption("WaitAuto",
     //   WaitAutos.createBranchCommand("WaitAuto", new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)), "",

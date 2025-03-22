@@ -21,7 +21,7 @@ import frc.robot.util.PoseEX;
 
 public class GameData {
 
-    private static final double coralPoseForwardOffset = -.40;
+    private static final double coralPoseForwardOffset = -.42;
     private static final double coralPoseRightOffset = .16;
 
     private static final double feederPoseForwardOffset = -.35;

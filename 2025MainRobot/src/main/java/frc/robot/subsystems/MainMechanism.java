@@ -467,7 +467,7 @@ public class MainMechanism {
         Idle(-.422871,0.05, false),
         Intake(-.405,0, false),
         L1(-0.30625,.1, false),
-        L2(-0.36625,.5, false),
+        L2(-0.30625,.55, false),
         L3(-0.30625,1.44, false),
         L4(-0.224609,3, false),
         AlgaeReset(-.2,0, true),

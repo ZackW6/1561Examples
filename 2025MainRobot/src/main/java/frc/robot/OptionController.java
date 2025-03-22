@@ -246,13 +246,7 @@ public class OptionController {
 
     public Command getAutoCoralPosition(){
         return Commands.defer(()->factoryCommands.toPose(GameData.coralPose(reefPosition, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2,3).alongWith(factoryCommands.scoringMechanism.presetCoral(reefLevel,()->{
-            Pose2d drivetrainPose = factoryCommands.drivetrain.getPose();
-            Pose2d coralPose = GameData.coralPose(reefPosition, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
-            Transform2d comparingTransform = coralPose.minus(drivetrainPose);
-
-            return 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2);
-        })),Set.of());
+        ,1.2,3),Set.of());
     }
 
     public void setReefLevel(int value){

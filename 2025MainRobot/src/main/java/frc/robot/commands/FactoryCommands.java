@@ -39,7 +39,8 @@ public class FactoryCommands {
     public static final double positionalToleranceMeters = .1;
     public static final double rotationalToleranceRotations = .1;
 
-    public static final double maxSpeed = 1.5;
+    //TODO if auto breaks, could be here
+    public static final double maxSpeed = 1.6;
 
     private final PIDController speedsPID = new PIDController(4, 0, 0);
     private final PIDController rotationPID = new PIDController(4, 0, 0);
