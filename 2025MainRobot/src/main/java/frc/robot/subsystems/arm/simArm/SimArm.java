@@ -14,10 +14,13 @@ public class SimArm implements ArmIO{
     //Set what motor to use and how many motors to use
     private final DCMotor gearbox = DCMotor.getFalcon500(1);
 
-    //Set PID valsz
+    //Set PID vals
     private PIDController pidController = new PIDController(110, 0, 7);
 
     private double targetPosition = 0;
+
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
 
     private boolean stopped = false;
 
@@ -46,7 +49,11 @@ public class SimArm implements ArmIO{
                         singleJointedArmSim.setInputVoltage(0);
                     }else{
                         //Move arm based on target Values
-                        singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        if (voltageOut){
+                            singleJointedArmSim.setInputVoltage(outputVolts);
+                        }else{
+                            singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        }
                     }
                     //Update positions every 20 ms
                     singleJointedArmSim.update(.02);
@@ -65,6 +72,7 @@ public class SimArm implements ArmIO{
   
     @Override
     public void setPosition(double position) {
+        voltageOut = false;
         targetPosition = position;
         stopped = false;
     }
@@ -86,7 +94,8 @@ public class SimArm implements ArmIO{
 
     @Override
     public void setVoltage(double volts) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
+        voltageOut = true;
+        outputVolts = volts;
+        stopped = false;
     }
 }

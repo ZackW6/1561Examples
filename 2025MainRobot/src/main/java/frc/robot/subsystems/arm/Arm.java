@@ -92,11 +92,6 @@ public class Arm extends SubsystemBase {
     }
   }
 
-  //Set position of arm
-  public void setPosition(double position){
-    armIO.setPosition(position);
-  }
-  
   /**
    * Run control loop to reach and maintain goal.
    *
@@ -150,6 +145,10 @@ public class Arm extends SubsystemBase {
   //Update goal values
   public Command reachGoal(DoubleSupplier goal) {
     return this.run(()->armIO.setPosition(goal.getAsDouble()));
+  }
+
+  public Command setVoltage(double volts) {
+    return this.run(()->armIO.setVoltage(volts));
   }
 
   //Get position of Arm

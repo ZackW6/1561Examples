@@ -213,25 +213,25 @@ public class MapleSimWorld{
         drive = mainDrive;
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,false)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(.8),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(
                 new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,false)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(.8),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(
                 new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(1,true)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(.8),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(
                 new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());
 
         new Trigger(()->drive.getSimulatedDriveTrainPose().minus(GameData.feederPose(2,true)).getTranslation().getNorm() < 2)
-        .whileTrue(Commands.sequence(Commands.waitSeconds(1),Commands.runOnce(()->{
+        .whileTrue(Commands.sequence(Commands.waitSeconds(.8),Commands.runOnce(()->{
             MapleSimWorld.createShootingCoral(
                 new Transform3d(0,0,1,new Rotation3d(0,0,0)), 0);
         }),Commands.waitSeconds(3)).repeatedly());

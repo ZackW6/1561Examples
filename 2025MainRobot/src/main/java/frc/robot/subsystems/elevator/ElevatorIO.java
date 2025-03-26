@@ -11,7 +11,7 @@ public interface ElevatorIO {
      */
     public void setPosition(double position, int slot);
 
-    public void applyVoltage(double volts);
+    public void setVoltage(double volts);
 
     public void stop();
 

@@ -35,7 +35,7 @@ public class TalonElevator implements ElevatorIO{
 
     //Magic
     private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    // private final PositionVoltage m_request = new PositionVoltage(0);
+    private final VoltageOut voltageRequest = new VoltageOut(0);
 
     //Initialize motors and encoder
     private final TalonFX motorLeader;
@@ -65,8 +65,8 @@ public class TalonElevator implements ElevatorIO{
     }
 
     @Override
-    public void applyVoltage(double volts) {
-        motorLeader.setControl(new VoltageOut(volts));
+    public void setVoltage(double volts) {
+        motorLeader.setControl(voltageRequest.withOutput(volts));
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.ironmaple.simulation.motorsims.SimMotorState;
 import org.ironmaple.utils.mathutils.MapleCommonMath;
 
 import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -27,7 +28,7 @@ public class GameData {
     private static final double feederPoseForwardOffset = -.35;
     private static final double feederPoseRightOffset = 0;
 
-    public static final double optionalFeederRightOffset = -.4;
+    public static final double optionalFeederRightOffset = -.45;
 
     private static final double processorPoseForwardOffset = -.4;
     private static final double processorPoseRightOffset = 0;
@@ -49,12 +50,14 @@ public class GameData {
 
     private static final Pose2d[] netPoses = new Pose2d[2];
 
+    private static final Pose2d reefCenter;
+
     private static final Pose2d processorPose;
     static{
-        aprilTagsPose2d = new Pose2d[AprilTagFields.k2025Reefscape.loadAprilTagLayoutField().getTags().size()];
-        aprilTagsPose3d = new Pose3d[AprilTagFields.k2025Reefscape.loadAprilTagLayoutField().getTags().size()];
+        aprilTagsPose2d = new Pose2d[AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape).getTags().size()];
+        aprilTagsPose3d = new Pose3d[AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape).getTags().size()];
         int i = 0;
-        for (AprilTag tag : AprilTagFields.k2025Reefscape.loadAprilTagLayoutField().getTags()){
+        for (AprilTag tag : AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape).getTags()){
             aprilTagsPose2d[i] = tag.pose.toPose2d();
             aprilTagsPose3d[i] = tag.pose;
             i++;
@@ -85,13 +88,12 @@ public class GameData {
         netPoses[0] = getAprilTagPose2d(14).plus(new Transform2d(-netForwardOffset,netRightOffset, Rotation2d.fromDegrees(180)));
         netPoses[1] = getAprilTagPose2d(4).plus(new Transform2d(-netForwardOffset,netRightOffset, Rotation2d.fromDegrees(180)));
 
+        reefCenter = PoseEX.getInbetweenPose2d(getAprilTagPose2d(21), getAprilTagPose2d(18));
+
         processorPose = getAprilTagPose2d(16).plus(new Transform2d(-processorPoseForwardOffset,processorPoseRightOffset, Rotation2d.fromDegrees(180)));
     }
     public static final double fieldSizeX = Units.feetToMeters(57.573);
     public static final double fieldSizeY = Units.feetToMeters(26.417);
-
-    public static final Translation2d centerOfBlueReef = new Translation2d(Units.feetToMeters(12), fieldSizeY/2);
-    public static final Translation2d centerOfRedReef = new Translation2d(fieldSizeX-Units.feetToMeters(12), fieldSizeY/2);
 
     public static Pose2d getAprilTagPose2d(int id){
         int fixedNum = Math.max(Math.min(id,22),1)-1;
@@ -139,8 +141,25 @@ public class GameData {
         return pose;
     }
 
+    public static Pose2d feederPose(int place, boolean red, double rightOffset){
+        int fixedNum = Math.max(Math.min(place,2),1)-1;
+        Pose2d pose = feederPoses[fixedNum].plus(new Transform2d(0, rightOffset, new Rotation2d()));
+        if (red){
+            pose = PoseEX.pose180(pose);
+        }
+        return pose;
+    }
+
     public static Pose2d processorPose(boolean red){
         Pose2d pose = processorPose;
+        if (red){
+            pose = PoseEX.pose180(pose);
+        }
+        return pose;
+    }
+
+    public static Pose2d reefCenterPose(boolean red){
+        Pose2d pose = reefCenter;
         if (red){
             pose = PoseEX.pose180(pose);
         }

@@ -40,7 +40,9 @@ public class FactoryCommands {
     public static final double rotationalToleranceRotations = .1;
 
     //TODO if auto breaks, could be here
-    public static final double maxSpeed = 1.6;
+    public static final double maxSpeed = 4;//1.6
+    public static final double lowerElevatorDist = 1.5;
+    public static final double raiseElevatorDist = 2.5;
 
     private final PIDController speedsPID = new PIDController(4, 0, 0);
     private final PIDController rotationPID = new PIDController(4, 0, 0);
@@ -223,7 +225,7 @@ public class FactoryCommands {
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
-            return 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2);
+            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2): 0;
         })).andThen(scoringMechanism.scoreCoral(level)));
     }
 
@@ -246,7 +248,7 @@ public class FactoryCommands {
                 GameData.netPose(2,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red));
             Transform2d comparingTransform = algaePose.minus(drivetrainPose);
 
-            return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
+            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2): 0;
         })).andThen(scoringMechanism.score(Positions.AlgaeN, IntakeSpeeds.ShootAlgae)));
     }
 
@@ -260,13 +262,7 @@ public class FactoryCommands {
             return (comparingTransform.getTranslation().getNorm() < positionalToleranceMeters) 
                 && (processorPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < rotationalToleranceRotations);
         })
-        ,scoringMechanism.preset(Positions.AlgaeP,()->{
-            Pose2d drivetrainPose = drivetrain.getPose();
-            Pose2d processorPose = GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
-            Transform2d comparingTransform = processorPose.minus(drivetrainPose);
-
-            return 1/Math.min(comparingTransform.getTranslation().getNorm(),5);
-        })).andThen(scoringMechanism.score(Positions.AlgaeP, IntakeSpeeds.ShootAlgae)));
+        ,scoringMechanism.preset(Positions.AlgaeP)).andThen(scoringMechanism.score(Positions.AlgaeP, IntakeSpeeds.ShootAlgae)));
     }
 
     public Command autoScoreAlgae(int level){
@@ -278,7 +274,10 @@ public class FactoryCommands {
     }
 
     public Command autoIntakeCoral(int place, double rightOffset){
-        return Commands.race(autoToFeeder(place, rightOffset), Commands.waitSeconds(1).andThen(scoringMechanism.intake()));
+        return Commands.race(autoToFeeder(place, rightOffset)
+            , Commands.waitUntil(()->PoseEX.getDistanceFromPoseMeters(drivetrain.getPose()
+                , GameData.reefCenterPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)) > lowerElevatorDist)
+        .andThen(scoringMechanism.intake()));
     }
 
     public Command autoIntakeAlgae(int place){
@@ -286,6 +285,6 @@ public class FactoryCommands {
     }
 
     public Command teenyPush(){
-        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.3);
+        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.2);
     }
 }

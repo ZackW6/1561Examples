@@ -44,7 +44,7 @@ public class Intake extends SubsystemBase{
     private final BooleanPublisher hasCoralPublisher = intakeTable
         .getBooleanTopic("HasCoral").publish();
     private final BooleanPublisher hasAlgaePublisher = intakeTable
-        .getBooleanTopic("HasCoral").publish();
+        .getBooleanTopic("HasAlgae").publish();
 
     //Create limit switches and lazer
     private final DigitalInputIO coralLimitSwitch1;

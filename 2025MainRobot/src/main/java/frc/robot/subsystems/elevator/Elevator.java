@@ -100,6 +100,10 @@ public class Elevator extends SubsystemBase {
     elevatorIO.setPosition(position, slot);
   }
 
+  public void setVolts(double volts){
+    elevatorIO.setVoltage(volts);
+  }
+
   /**
    * Run control loop to reach and maintain goal.
    *
@@ -153,8 +157,12 @@ public class Elevator extends SubsystemBase {
     return this.runOnce(()->elevatorIO.setPosition(goal));
   }
 
-  public Command applyVoltage(double volts){
-    return this.run(()->elevatorIO.applyVoltage(volts));
+  public Command setVoltage(DoubleSupplier volts){
+    return this.run(()->elevatorIO.setVoltage(volts.getAsDouble()));
+  }
+
+  public Command setVoltage(double volts){
+    return this.run(()->elevatorIO.setVoltage(volts));
   }
 
   public double getPosition(){

@@ -30,6 +30,9 @@ public class SimIntake implements FlywheelIO{
 
     private boolean stopped = false;
 
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
+
     private Thread updateThread;
 
     //Create new intake with set values
@@ -46,7 +49,11 @@ public class SimIntake implements FlywheelIO{
                         intakeSim.setInputVoltage(0);
                     }else{
                         //Run intake with set values
-                        intakeSim.setInputVoltage(pidController.calculate(getVelocity(), targetVelocity));
+                        if (voltageOut){
+                            intakeSim.setInputVoltage(outputVolts);
+                        }else{
+                            intakeSim.setInputVoltage(pidController.calculate(getVelocity(), targetVelocity));
+                        }
                     }
                     //Update every 20 ms
                     intakeSim.update(.02);
@@ -66,6 +73,7 @@ public class SimIntake implements FlywheelIO{
     public void setVelocity(double rps) {
         targetVelocity = rps;
         stopped = false;
+        voltageOut = false;
     }
 
     @Override
@@ -94,5 +102,12 @@ public class SimIntake implements FlywheelIO{
     @Override
     public double getAcceleration() {
         return (Units.radiansToRotations(intakeSim.getAngularAccelerationRadPerSecSq()));
+    }
+
+    @Override
+    public void setVoltage(double volts) {
+        voltageOut = true;
+        outputVolts = volts;
+        stopped = false;
     }
 }

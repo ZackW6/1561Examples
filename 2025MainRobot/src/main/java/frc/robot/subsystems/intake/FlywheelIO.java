@@ -7,6 +7,8 @@ public interface FlywheelIO {
      */
     public void setVelocity(double rps);
 
+    public void setVoltage(double volts);
+
     public void stop();
 
     /**

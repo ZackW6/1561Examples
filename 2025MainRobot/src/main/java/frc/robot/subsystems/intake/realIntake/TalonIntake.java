@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -25,9 +26,11 @@ public class TalonIntake implements FlywheelIO{
 
     //Magic
     private final MotionMagicVelocityVoltage torqueCurrentFOC = new MotionMagicVelocityVoltage(0);
-    // private final VelocityVoltage torqueCurrentFOC = new VelocityVoltage(0);
+    private final VoltageOut voltageRequest = new VoltageOut(0);
 
     private final TalonFX intakeMotor;
+
+    private double target = 0;
 
     public TalonIntake(){
         intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, "Canivore");
@@ -36,7 +39,13 @@ public class TalonIntake implements FlywheelIO{
 
     @Override
     public void setVelocity(double rps) {
+        target = rps;
         intakeMotor.setControl(torqueCurrentFOC.withVelocity(rps).withSlot(0));
+    }
+
+    @Override
+    public void setVoltage(double volts) {
+        intakeMotor.setControl(voltageRequest.withOutput(volts));
     }
 
     @Override
@@ -51,7 +60,7 @@ public class TalonIntake implements FlywheelIO{
 
     @Override
     public double getTarget() {
-        return (intakeMotor.getClosedLoopReference().getValueAsDouble());
+        return target;
     }
 
     @Override

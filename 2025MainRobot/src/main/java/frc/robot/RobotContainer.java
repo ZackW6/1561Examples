@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -55,6 +56,7 @@ import frc.robot.util.SendableConsumer;
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
+  private SendableChooser<Command> teenyPush;
   
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
   private double MaxAngularRate = TunerConstants.MAX_ANGULAR_RATE;
@@ -78,7 +80,7 @@ public class RobotContainer {
 
   private final Ramp ramp = new Ramp();
 
-  private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator, ramp);
+  private final MainMechanism scoringMechanism = new MainMechanism(arm, intake, elevator, ramp, ()->drivetrain.getPose());
 
   private final ClimbMechanism climbMechanism = new ClimbMechanism(arm, climber, ramp);
   // private final ObjectDetection objectDetection = new ObjectDetection("Test",
@@ -183,7 +185,7 @@ public class RobotContainer {
     // driverController.povDown().whileTrue(scoringMechanism.preset(3));
     // driverController.povLeft().whileTrue(scoringMechanism.preset(4));
     driverController.rightTrigger(.2).whileTrue(optionController.getScoreLevel());
-    driverController.y().whileTrue(elevator.reachGoal(0).alongWith(arm.reachGoal(0)));
+    driverController.y().whileTrue(scoringMechanism.presetAlgae(1));
     driverController.b().whileTrue(climbMechanism.prepare());
     driverController.x().whileTrue(climbMechanism.climb());
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
@@ -225,21 +227,28 @@ public class RobotContainer {
     configureAutonomousCommands();
     
     autoChooser = buildAutoChooser("", (data) -> data);
+    teenyPush = new SendableChooser<Command>();
+    teenyPush.setDefaultOption("False", Commands.none());
+    teenyPush.addOption("True", factoryCommands.teenyPush());
 
-    // autoChooser.onChange((data)->{
-    //   try{
-    //     PathPlannerAuto auto = new PathPlannerAuto(data.getName());
-    //     drivetrain.resetPose((!DriverStation.getAlliance().isEmpty() && DriverStation.getAlliance().get() == Alliance.Red)
-    //       ? PoseEX.pose180(auto.getStartingPose())
-    //       : auto.getStartingPose());
-    //   } catch(Exception e){
-    //     drivetrain.resetPose((!DriverStation.getAlliance().isEmpty() && DriverStation.getAlliance().get() == Alliance.Red)
-    //       ? PoseEX.pose180(WaitAutos.getStartingPose(data.getName()))
-    //       : WaitAutos.getStartingPose(data.getName()));
-    //   }
-    // });
+    //TODO this could cause auto errors, if so just comment
+    autoChooser.onChange((data)->{
+      try{
+        if (AutoBuilder.getAllAutoNames().contains(data.getName())){
+          PathPlannerAuto auto = new PathPlannerAuto(data.getName());
+          drivetrain.resetPose(auto.getStartingPose());
+        }else{
+          drivetrain.resetPose(WaitAutos.getStartingPose(data.getName()));
+        }
+      } catch(Exception e){
+        
+      }
+    });
+
     
     SmartDashboard.putData("Auto Chooser", autoChooser);
+
+    SmartDashboard.putData("Push?", teenyPush);
 
     SmartDashboard.putData(CommandScheduler.getInstance());
 
@@ -248,26 +257,31 @@ public class RobotContainer {
     //How you might make a choreo only path
     // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     autoChooser.addOption("RightAuto",
-      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,1.662,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,2.5,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceE,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
-        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceE,4)
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceB,4),
+        BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceA,4)
     ));
     autoChooser.addOption("MiddleAuto",
       WaitAutos.createBranchCommand("MiddleAuto", new Pose2d(7.2,4.025,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginMiddle, ShootPose.PlaceH,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
-        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4)
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceB,4)
     ));
     autoChooser.addOption("LeftAuto",
-      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.2,6.338,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.2,5.55,Rotation2d.fromDegrees(180)), "",
         BranchInstruction.of(BeginPose.BeginLeft, ShootPose.PlaceJ,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
-        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4)
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceA,4),
+        BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceB,4)
     ));
+
+
     // autoChooser.addOption("WaitAuto",
     //   WaitAutos.createBranchCommand("WaitAuto", new Pose2d(7.578,1.662,Rotation2d.fromDegrees(180)), "",
     //     BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceF,4),
@@ -316,7 +330,9 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
+    CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
+    return autoChooser.getSelected().beforeStarting(teenyPush.getSelected());
   }
 
   public static SendableChooser<Command> buildAutoChooser(

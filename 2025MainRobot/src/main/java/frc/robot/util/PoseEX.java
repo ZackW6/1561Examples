@@ -86,6 +86,10 @@ public class PoseEX {
         return returnPose;
     }
 
+    public static Pose2d getInbetweenPose2d(Pose2d mainPose, Pose2d comparingPose){
+        return new Pose2d((mainPose.getX() + comparingPose.getX())/2, (mainPose.getY() + comparingPose.getY())/2, new Rotation2d());
+    }
+
     public static Pose2d closestTo(Pose2d to, Pose2d option1, Pose2d option2){
         if (to.minus(option1).getTranslation().getNorm() < to.minus(option2).getTranslation().getNorm()){
             return option1;

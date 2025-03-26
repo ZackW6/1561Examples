@@ -21,6 +21,9 @@ public class SimClimber implements ArmIO{
 
     private boolean stopped = false;
 
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
+
     private Thread updateThread;
 
     //Created SingleJointedArmSim with set values
@@ -46,7 +49,11 @@ public class SimClimber implements ArmIO{
                         singleJointedArmSim.setInputVoltage(0);
                     }else{
                         //Move arm based on Positions
-                        singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        if (voltageOut){
+                            singleJointedArmSim.setInputVoltage(outputVolts);
+                        }else{
+                            singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        }
                     }
                     //Update Vals every 20 ms
                     singleJointedArmSim.update(.02);
@@ -64,6 +71,7 @@ public class SimClimber implements ArmIO{
   
     @Override
     public void setPosition(double position) {
+        voltageOut = false;
         targetPosition = position;
         stopped = false;
     }
@@ -85,7 +93,9 @@ public class SimClimber implements ArmIO{
 
     @Override
     public void setVoltage(double volts) {
-        
+        stopped = false;
+        voltageOut = true;
+        outputVolts = volts;
     }
 
 }

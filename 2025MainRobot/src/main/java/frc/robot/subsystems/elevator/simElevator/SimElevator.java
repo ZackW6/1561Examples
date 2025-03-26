@@ -15,11 +15,14 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     private final DCMotor gearbox = DCMotor.getFalcon500(2);
 
     //Set what PID vals to use
-    private PIDController pidController = new PIDController(30, 0, 0);
+    private PIDController pidController = new PIDController(50, 0, 0);
 
     private double targetPosition = 0;
 
     private boolean stopped = false;
+
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
 
     private Thread updateThread;
 
@@ -45,7 +48,11 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
                         elevatorSim.setInputVoltage(0);
                     }else{
                         //Move elevator based on positions
-                        elevatorSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        if (voltageOut){
+                            elevatorSim.setInputVoltage(outputVolts);
+                        }else{
+                            elevatorSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        }
                     }
                     //Update vals every 20 ms
                     elevatorSim.update(.02);
@@ -69,6 +76,7 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     public void setPosition(double position, int slot) {
         targetPosition = position;
         stopped = false;
+        voltageOut = false;
     }
 
     @Override
@@ -87,7 +95,9 @@ public class SimElevator extends SubsystemBase implements ElevatorIO{
     }
 
     @Override
-    public void applyVoltage(double volts) {
-        elevatorSim.setInputVoltage(volts);
+    public void setVoltage(double volts) {
+        voltageOut = true;
+        outputVolts = volts;
+        stopped = false;
     }
 }

@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -27,7 +28,7 @@ public class TalonRamp implements ArmIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    // private final PositionVoltage m_request = new PositionVoltage(0);
+    private final VoltageOut voltageRequest = new VoltageOut(0);
 
     private final TalonFX armMotor;
 
@@ -113,7 +114,6 @@ public class TalonRamp implements ArmIO{
 
     @Override
     public void setVoltage(double volts) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
+        voltageRequest.withOutput(volts);
     }
 }

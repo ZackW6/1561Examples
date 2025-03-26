@@ -34,6 +34,8 @@ public class TalonClimber implements ArmIO{
 
     private final TalonFX armMotor;
 
+    private double target = 0;
+
     //Config Motor to correct IDs
     public TalonClimber(){
         armMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID);
@@ -42,6 +44,7 @@ public class TalonClimber implements ArmIO{
 
     @Override
     public void setPosition(double position) {
+        target = position;
         armMotor.setControl(m_request.withPosition(position).withSlot(0));
     }
 
@@ -62,7 +65,7 @@ public class TalonClimber implements ArmIO{
 
     @Override
     public double getTarget() {
-        return (armMotor.getClosedLoopReference().getValueAsDouble());
+        return target;//(armMotor.getClosedLoopReference().getValueAsDouble());
     }
 
     private void configMotor(){

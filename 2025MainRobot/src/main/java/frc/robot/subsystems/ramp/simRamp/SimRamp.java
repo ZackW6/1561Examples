@@ -21,6 +21,9 @@ public class SimRamp implements ArmIO{
 
     private boolean stopped = false;
 
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
+
     private Thread updateThread;
 
     //Create new single jointed arm with set vlas
@@ -43,7 +46,11 @@ public class SimRamp implements ArmIO{
                     if (stopped){
                         singleJointedArmSim.setInputVoltage(0);
                     }else{
-                        singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        if (voltageOut){
+                            singleJointedArmSim.setInputVoltage(outputVolts);
+                        }else{
+                            singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        }
                     }
                     singleJointedArmSim.update(.02);
                     Thread.sleep(20);
@@ -60,6 +67,7 @@ public class SimRamp implements ArmIO{
     public void setPosition(double position) {
         targetPosition = position;
         stopped = false;
+        voltageOut = false;
     }
 
     @Override
@@ -79,8 +87,9 @@ public class SimRamp implements ArmIO{
 
     @Override
     public void setVoltage(double volts) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
+        voltageOut = true;
+        stopped = false;
+        outputVolts = volts;
     }
 
 }
