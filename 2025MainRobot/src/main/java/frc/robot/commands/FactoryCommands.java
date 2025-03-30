@@ -287,4 +287,10 @@ public class FactoryCommands {
     public Command teenyPush(){
         return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.2);
     }
+
+    public Command backupIntakebackupAlgae(int place){
+        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.4)
+        .andThen(autoIntakeAlgae(place))
+        .andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-2)).withTimeout(.4));
+    }
 }

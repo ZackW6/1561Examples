@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.json.simple.parser.ParseException;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
@@ -157,7 +158,7 @@ public class WaitAutos {
      * @param reason - acquired piece or not yet
      * @param branchInstructions - this is the list of pieces you want to get and where you want to score them.
      */
-    public static Command createBranchCommand(String nameOfAuto, Pose2d beginPose, String dynamicObstacles, BranchInstruction... branchInstructions){
+    public static Command createBranchCommand(String nameOfAuto, Pose2d beginPose, String dynamicObstacles, boolean doAlgae, BranchInstruction... branchInstructions){
 
         boolean avoidObstacles = false;
         if (dynamicObstacles.length() == 0){
@@ -191,7 +192,12 @@ public class WaitAutos {
             }
             commandGroup.addCommands(tryPath(fromID, shootID, place, branchInstructions[i].layer, avoidObstacles).andThen(tryPath(shootID, branchInstructions[i+1].from.value(), place, 0, avoidObstacles)));
         }
-
+        FactoryCommands factoryCommands;
+        try {
+            factoryCommands = FactoryCommands.getInstance().get();
+        } catch (Exception e) {
+            return Commands.none();
+        }
         return AutoBuilder.resetOdom(startPose)
             .andThen(commandGroup).withName(nameOfAuto);
     }

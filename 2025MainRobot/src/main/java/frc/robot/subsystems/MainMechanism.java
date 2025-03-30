@@ -536,15 +536,15 @@ public class MainMechanism {
                 boolean a = PoseEX.getDistanceFromPoseMeters(robotPose.get(),
                 GameData.reefCenterPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)) > 1.5;
                 if (a){
-                    elevator.setPosition(0); 
-                }else{ 
+                    elevator.setPosition(0);
+                }else{
                     elevator.setVolts(0);
                 }
         }));
 
-        arm.setDefaultCommand(arm.reachGoal(()->
-            intake.hasAlgae() ? Positions.AlgaeP.armRotations() : elevator.getPosition() > .2 ? Positions.L4.armRotations() : Positions.Intake.armRotations()
-        ));
+        // arm.setDefaultCommand(arm.reachGoal(()->
+        //     intake.hasAlgae() ? Positions.AlgaeP.armRotations() : elevator.getPosition() > .2 ? Positions.L4.armRotations() : Positions.Intake.armRotations()
+        // ));
         intake.setDefaultCommand(intake.setVelocity(()->intake.hasAlgae() ? IntakeSpeeds.HoldAlgae.getVelocity() : IntakeSpeeds.Off.getVelocity()));
 
         if (Robot.isSimulation()){

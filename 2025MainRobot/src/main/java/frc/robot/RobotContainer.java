@@ -56,6 +56,7 @@ import frc.robot.util.SendableConsumer;
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
+  private SendableChooser<Command> algaeEnd;
   private SendableChooser<Command> teenyPush;
   
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
@@ -231,6 +232,15 @@ public class RobotContainer {
     teenyPush.setDefaultOption("False", Commands.none());
     teenyPush.addOption("True", factoryCommands.teenyPush());
 
+    algaeEnd = new SendableChooser<Command>();
+    algaeEnd.setDefaultOption("None", Commands.none());
+    algaeEnd.addOption("One", factoryCommands.backupIntakebackupAlgae(1));
+    algaeEnd.addOption("Two", factoryCommands.backupIntakebackupAlgae(2));
+    algaeEnd.addOption("Three", factoryCommands.backupIntakebackupAlgae(3));
+    algaeEnd.addOption("Four", factoryCommands.backupIntakebackupAlgae(4));
+    algaeEnd.addOption("Five", factoryCommands.backupIntakebackupAlgae(5));
+    algaeEnd.addOption("Six", factoryCommands.backupIntakebackupAlgae(6));
+
     //TODO this could cause auto errors, if so just comment
     autoChooser.onChange((data)->{
       try{
@@ -250,6 +260,8 @@ public class RobotContainer {
 
     SmartDashboard.putData("Push?", teenyPush);
 
+    SmartDashboard.putData("GrabAlgae?", algaeEnd);
+
     SmartDashboard.putData(CommandScheduler.getInstance());
 
     configureBindings();
@@ -257,7 +269,7 @@ public class RobotContainer {
     //How you might make a choreo only path
     // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     autoChooser.addOption("RightAuto",
-      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,2.5,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,2.5,Rotation2d.fromDegrees(180)), "", true,
         BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceE,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceC,4),
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceD,4),
@@ -265,7 +277,7 @@ public class RobotContainer {
         BranchInstruction.of(IntakePose.FeederTwo, ShootPose.PlaceA,4)
     ));
     autoChooser.addOption("MiddleAuto",
-      WaitAutos.createBranchCommand("MiddleAuto", new Pose2d(7.2,4.025,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("MiddleAuto", new Pose2d(7.2,4.025,Rotation2d.fromDegrees(180)), "", true,
         BranchInstruction.of(BeginPose.BeginMiddle, ShootPose.PlaceH,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
@@ -273,7 +285,7 @@ public class RobotContainer {
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceB,4)
     ));
     autoChooser.addOption("LeftAuto",
-      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.2,5.55,Rotation2d.fromDegrees(180)), "",
+      WaitAutos.createBranchCommand("LeftAuto", new Pose2d(7.2,5.55,Rotation2d.fromDegrees(180)), "", true,
         BranchInstruction.of(BeginPose.BeginLeft, ShootPose.PlaceJ,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceK,4),
         BranchInstruction.of(IntakePose.FeederOne, ShootPose.PlaceL,4),
@@ -332,7 +344,8 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
     CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
-    return autoChooser.getSelected().beforeStarting(teenyPush.getSelected());
+    CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
+    return autoChooser.getSelected().beforeStarting(teenyPush.getSelected()).andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
   }
 
   public static SendableChooser<Command> buildAutoChooser(
