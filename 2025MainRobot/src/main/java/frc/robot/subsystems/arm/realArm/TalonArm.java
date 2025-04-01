@@ -78,7 +78,7 @@ public class TalonArm implements ArmIO{
         
         canCoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint = .5;
         // canCoderConfigs.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
-        canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         canCoderConfigs.MagnetSensor.MagnetOffset = ArmConstants.ANGLE_OFFSET.getRotations();
         
         encoder.getConfigurator().apply(canCoderConfigs);
@@ -93,7 +93,7 @@ public class TalonArm implements ArmIO{
         slot0Configs.kG = ArmConstants.kG;
         slot0Configs.GravityType = GravityTypeValue.Arm_Cosine;
 
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;//InvertedValue.Clockwise_Positive
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;//InvertedValue.Clockwise_Positive
         talonFXConfigs.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
         talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         talonFXConfigs.Feedback.SensorToMechanismRatio = ArmConstants.ARM_SENSOR_TO_MECHANISM_RATIO;

@@ -33,7 +33,7 @@ public class TalonRamp implements ArmIO{
     private final TalonFX armMotor;
 
     public TalonRamp(){
-        armMotor = new TalonFX(RampConstants.RAMP_MOTOR_ID,"Canivore");
+        armMotor = new TalonFX(RampConstants.RAMP_MOTOR_ID);
         configMotor();
     }
 

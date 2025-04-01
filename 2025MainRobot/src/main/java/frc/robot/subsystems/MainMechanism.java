@@ -448,19 +448,19 @@ public class MainMechanism {
 
     public static enum Positions{
         
-        CoralSafe(-0.27,0.05, false),
-        CoralReset(-0.224609,0.05, false),
-        Idle(-.422871,0.05, false),
-        Intake(-.405,0, false),
-        L1(-0.30625,.1, false),
-        L2(-0.30625,.55, false),
-        L3(-0.30625,1.44, false),
-        L4(-0.224609,2.95, false),
-        AlgaeReset(0,0, true),
-        AlgaeU(0,1.8,true),
-        AlgaeL(0,1, true),
-        AlgaeN(0-.1,3.5, true),
-        AlgaeP(0,0, true);
+        CoralSafe(-0.32,0.05, false),
+        CoralReset(-0.274609,0.05, false),
+        Idle(-.432871,0.05, false),
+        Intake(-.45,0, false),
+        L1(-0.40625,.1, false),
+        L2(-0.35625,.55, false),
+        L3(-0.35625,1.44, false),
+        L4(-0.274609,2.95, false),
+        AlgaeReset(-0.05,0, true),
+        AlgaeU(-.05,1.8,true),
+        AlgaeL(-0.05,1, true),
+        AlgaeN(0-.15,3.5, true),
+        AlgaeP(-0.05,0, true);
 
         private final double armRotations;
         private final double elevatorMeters;
@@ -493,7 +493,7 @@ public class MainMechanism {
 
     public static enum IntakeSpeeds{
         Off(0),
-        IntakeCoral(30),
+        IntakeCoral(60),
         ShootCoral(60),
         IntakeAlgae(-60),
         HoldAlgae(-60),
@@ -510,9 +510,9 @@ public class MainMechanism {
     }
 
     public static enum RampPositions{
-        Up(-.186),
+        Up(-.16),
         Down(-.6),
-        Jiggle(-.2);
+        Jiggle(-.17);
 
         private final double rotation;
         RampPositions(double rotation){
@@ -542,9 +542,9 @@ public class MainMechanism {
                 }
         }));
 
-        // arm.setDefaultCommand(arm.reachGoal(()->
-        //     intake.hasAlgae() ? Positions.AlgaeP.armRotations() : elevator.getPosition() > .2 ? Positions.L4.armRotations() : Positions.Intake.armRotations()
-        // ));
+        arm.setDefaultCommand(arm.reachGoal(()->
+            intake.hasAlgae() ? Positions.AlgaeP.armRotations() : elevator.getPosition() > .2 ? Positions.L4.armRotations() : Positions.Intake.armRotations()
+        ));
         intake.setDefaultCommand(intake.setVelocity(()->intake.hasAlgae() ? IntakeSpeeds.HoldAlgae.getVelocity() : IntakeSpeeds.Off.getVelocity()));
 
         if (Robot.isSimulation()){

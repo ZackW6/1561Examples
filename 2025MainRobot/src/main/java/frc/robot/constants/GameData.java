@@ -25,7 +25,7 @@ public class GameData {
     private static final double coralPoseForwardOffset = -.42;
     private static final double coralPoseRightOffset = .16;
 
-    private static final double feederPoseForwardOffset = -.35;
+    private static final double feederPoseForwardOffset = -.25;
     private static final double feederPoseRightOffset = 0;
 
     public static final double optionalFeederRightOffset = -.45;

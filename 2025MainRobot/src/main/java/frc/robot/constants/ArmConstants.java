@@ -19,10 +19,10 @@ public class ArmConstants{
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 30;
+    public static final double kP = 20;
     public static final double kI = 0;
-    public static final double kD = 2.5;//50;
-    public static final double kG = -.57;//-26;//8.4749;
+    public static final double kD = .5;//50;
+    public static final double kG = 0;//-26;//8.4749;
 
     public static final double ARM_SENSOR_TO_MECHANISM_RATIO = 1;
     public static final double ARM_ROTOR_TO_SENSOR_RATIO = 30;
@@ -34,7 +34,7 @@ public class ArmConstants{
     public static final double JERK = 128;
 
     
-    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(.95);
+    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(.999);
     
     public static final double JOINT_START_HEIGHT_METERS = .2;
     public static final double ARM_END_DEFFECTOR_SCORE_ANGLE = 0.05;//Rotations

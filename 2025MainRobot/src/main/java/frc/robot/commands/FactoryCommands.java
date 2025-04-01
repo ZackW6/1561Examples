@@ -36,11 +36,11 @@ import frc.robot.util.PoseEX;
 
 public class FactoryCommands {
 
-    public static final double positionalToleranceMeters = .1;
-    public static final double rotationalToleranceRotations = .1;
+    public static final double positionalToleranceMeters = .05;
+    public static final double rotationalToleranceRotations = .05;
 
     //TODO if auto breaks, could be here
-    public static final double maxSpeed = 4;//1.6
+    public static final double maxSpeed = .4;//1.6
     public static final double lowerElevatorDist = 1.5;
     public static final double raiseElevatorDist = 2.5;
 

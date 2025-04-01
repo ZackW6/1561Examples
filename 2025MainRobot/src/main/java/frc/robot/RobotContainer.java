@@ -47,6 +47,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.ramp.Ramp;
 import frc.robot.subsystems.swerve.SwerveDrive;
+import frc.robot.util.ChoreoEX;
 import frc.robot.util.CustomController;
 // import frc.robot.commands.WheelRadiusCommand;
 import frc.robot.util.PoseEX;
@@ -56,8 +57,8 @@ import frc.robot.util.SendableConsumer;
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
-  private SendableChooser<Command> algaeEnd;
-  private SendableChooser<Command> teenyPush;
+  // private SendableChooser<Command> algaeEnd;
+  // private SendableChooser<Command> teenyPush;
   
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
   private double MaxAngularRate = TunerConstants.MAX_ANGULAR_RATE;
@@ -228,46 +229,46 @@ public class RobotContainer {
     configureAutonomousCommands();
     
     autoChooser = buildAutoChooser("", (data) -> data);
-    teenyPush = new SendableChooser<Command>();
-    teenyPush.setDefaultOption("False", Commands.none());
-    teenyPush.addOption("True", factoryCommands.teenyPush());
+    // teenyPush = new SendableChooser<Command>();
+    // teenyPush.setDefaultOption("False", Commands.none());
+    // teenyPush.addOption("True", factoryCommands.teenyPush());
 
-    algaeEnd = new SendableChooser<Command>();
-    algaeEnd.setDefaultOption("None", Commands.none());
-    algaeEnd.addOption("One", factoryCommands.backupIntakebackupAlgae(1));
-    algaeEnd.addOption("Two", factoryCommands.backupIntakebackupAlgae(2));
-    algaeEnd.addOption("Three", factoryCommands.backupIntakebackupAlgae(3));
-    algaeEnd.addOption("Four", factoryCommands.backupIntakebackupAlgae(4));
-    algaeEnd.addOption("Five", factoryCommands.backupIntakebackupAlgae(5));
-    algaeEnd.addOption("Six", factoryCommands.backupIntakebackupAlgae(6));
+    // algaeEnd = new SendableChooser<Command>();
+    // algaeEnd.setDefaultOption("None", Commands.none());
+    // algaeEnd.addOption("One", factoryCommands.backupIntakebackupAlgae(1));
+    // algaeEnd.addOption("Two", factoryCommands.backupIntakebackupAlgae(2));
+    // algaeEnd.addOption("Three", factoryCommands.backupIntakebackupAlgae(3));
+    // algaeEnd.addOption("Four", factoryCommands.backupIntakebackupAlgae(4));
+    // algaeEnd.addOption("Five", factoryCommands.backupIntakebackupAlgae(5));
+    // algaeEnd.addOption("Six", factoryCommands.backupIntakebackupAlgae(6));
 
     //TODO this could cause auto errors, if so just comment
-    autoChooser.onChange((data)->{
-      try{
-        if (AutoBuilder.getAllAutoNames().contains(data.getName())){
-          PathPlannerAuto auto = new PathPlannerAuto(data.getName());
-          drivetrain.resetPose(auto.getStartingPose());
-        }else{
-          drivetrain.resetPose(WaitAutos.getStartingPose(data.getName()));
-        }
-      } catch(Exception e){
+    // autoChooser.onChange((data)->{
+    //   try{
+    //     if (AutoBuilder.getAllAutoNames().contains(data.getName())){
+    //       PathPlannerAuto auto = new PathPlannerAuto(data.getName());
+    //       drivetrain.resetPose(auto.getStartingPose());
+    //     }else{
+    //       drivetrain.resetPose(WaitAutos.getStartingPose(data.getName()));
+    //     }
+    //   } catch(Exception e){
         
-      }
-    });
+    //   }
+    // });
 
     
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    SmartDashboard.putData("Push?", teenyPush);
+    // SmartDashboard.putData("Push?", teenyPush);
 
-    SmartDashboard.putData("GrabAlgae?", algaeEnd);
+    // SmartDashboard.putData("GrabAlgae?", algaeEnd);
 
     SmartDashboard.putData(CommandScheduler.getInstance());
 
     configureBindings();
 
     //How you might make a choreo only path
-    // autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
+    autoChooser.addOption("ChoreoPath", ChoreoEX.getChoreoGroupPath(true,new String[]{"shootPreAmp","intake4","shoot4M","intake5","shoot5M","intake6","shoot6M","intake7","shoot7M"}));
     autoChooser.addOption("RightAuto",
       WaitAutos.createBranchCommand("RightAuto", new Pose2d(7.2,2.5,Rotation2d.fromDegrees(180)), "", true,
         BranchInstruction.of(BeginPose.BeginRight, ShootPose.PlaceE,4),
@@ -342,10 +343,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
-    CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
-    CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
-    return autoChooser.getSelected().beforeStarting(teenyPush.getSelected()).andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
+    // CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
+    // CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
+    // CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
+    // return autoChooser.getSelected().beforeStarting(teenyPush.getSelected()).andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
+    return autoChooser.getSelected();
   }
 
   public static SendableChooser<Command> buildAutoChooser(
