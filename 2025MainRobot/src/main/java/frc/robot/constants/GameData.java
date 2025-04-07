@@ -22,18 +22,18 @@ import frc.robot.util.PoseEX;
 
 public class GameData {
 
-    private static final double coralPoseForwardOffset = -.42;
+    private static final double coralPoseForwardOffset = -.45;
     private static final double coralPoseRightOffset = .16;
 
     private static final double feederPoseForwardOffset = -.25;
     private static final double feederPoseRightOffset = 0;
 
-    public static final double optionalFeederRightOffset = -.45;
+    public static final double optionalFeederRightOffset = -.4;
 
     private static final double processorPoseForwardOffset = -.4;
     private static final double processorPoseRightOffset = 0;
 
-    private static final double reefAlgaeForwardOffset = -.45;
+    private static final double reefAlgaeForwardOffset = -.6;
     private static final double reefAlgaeRightOffset = 0;
 
     private static final double netForwardOffset = -.45;

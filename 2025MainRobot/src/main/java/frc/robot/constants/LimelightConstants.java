@@ -34,11 +34,11 @@ public class LimelightConstants {
 
     public static final double[][] ONE_APRIL_TAG_LOOKUP_TABLE = {
       // {distance in meters, x std deviation, y std deviation, r (in degrees//actually maybe radians) std deviation}
-      {0, 0.0, 0.0, .2},
-      {1.5, 0.0, 0.0, .3},
-      {3, .25, .25, .4},
-      {4.5, 1, 1, .6},
-      {6, 2, 2, 2},
+      {0, 0.0, 0.0, 999},
+      {1.5, 0.0, 0.0, 999},
+      {3, 2, 2, 999},
+      {4.5, 4, 4, 999},
+      {6, 8, 8, 999},
       {7, 999, 999, 999}
     };
     

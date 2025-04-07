@@ -21,6 +21,9 @@ public class CANRange implements DigitalInputIO{
 
     @Override
     public boolean getValue() {
+        if (digitalInput.getDistance().getValueAsDouble() == 0){
+            return false;
+        }
         return (digitalInput.getDistance().getValueAsDouble() <= minDist) ^ inverted;
     }
 

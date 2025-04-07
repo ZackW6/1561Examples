@@ -116,6 +116,8 @@ public class TalonArm implements ArmIO{
 
         talonFXConfigs.CurrentLimits = currentLimits;
 
+        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
         armMotor.getConfigurator().apply(talonFXConfigs);
     }
 

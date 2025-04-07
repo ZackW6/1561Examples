@@ -32,8 +32,8 @@ public class ClimbMechanism {
 
     public static enum ClimbPositions{
         OFF(0,0,.1),
-        PREPARED(0,-4,-.25),
-        CLIMBED(0,4,-.25);
+        PREPARED(.1,-4,-.5),
+        CLIMBED(.1,8,-.5);
 
         private double armRotations;
         private double climberVoltage;
@@ -62,7 +62,7 @@ public class ClimbMechanism {
         this.ramp = ramp;
         this.arm = arm;
         climber.setDefaultCommand(climber.setVoltage(0));
-        ramp.setDefaultCommand(ramp.reachGoal(ClimbPositions.PREPARED.rampRotations()));
+        ramp.setDefaultCommand(ramp.reachGoal(-.35));
     }
 
     public Command runState(ClimbPositions position){
@@ -76,10 +76,12 @@ public class ClimbMechanism {
     }
 
     public Command prepare(){
-        return runState(ClimbPositions.PREPARED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(Positions.Intake.armRotations()))));
+        return runState(ClimbPositions.PREPARED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(Positions.Intake.armRotations()))))
+            .alongWith(Commands.runOnce(()->ramp.setDefaultCommand(ramp.reachGoal(-.23))));
     }
 
     public Command climb(){
-        return runState(ClimbPositions.CLIMBED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(0))));
+        return runState(ClimbPositions.CLIMBED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(.1))))
+            .alongWith(Commands.runOnce(()->ramp.setDefaultCommand(ramp.reachGoal(-.5))));
     }
 }

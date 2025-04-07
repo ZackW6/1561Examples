@@ -17,6 +17,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -59,6 +60,9 @@ public class RobotContainer {
   private SendableChooser<Command> autoChooser;
   // private SendableChooser<Command> algaeEnd;
   // private SendableChooser<Command> teenyPush;
+
+  //Good to know, but not used here
+  private SlewRateLimiter limiter = new SlewRateLimiter(.5);
   
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
   private double MaxAngularRate = TunerConstants.MAX_ANGULAR_RATE;
@@ -90,7 +94,7 @@ public class RobotContainer {
 
   private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain, scoringMechanism);
   
-  private final OptionController optionController = new OptionController(customController, factoryCommands, ()-> intake.hasCoral(), ()-> intake.hasAlgae());
+  private final OptionController optionController = new OptionController(customController, factoryCommands, ()-> intake.hasCoral(), ()-> intake.hasAlgae(), ()->drivetrain.getPose());
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDeadband(0).withRotationalDeadband(0)
@@ -127,7 +131,7 @@ public class RobotContainer {
     // customController.rawButtonPressed(9).onTrue(Commands.print("9"));
     // customController.rawButtonPressed(10).onTrue(Commands.print("10"));
     
-    driverController.leftStick().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
+    driverController.start().onTrue(Commands.runOnce(() -> drivetrain.seedFieldRelative(drivetrain.getPose().getRotation())));
     
     // driverController.rightTrigger(.5).whileTrue(drivetrain.applyRequest(() -> brake));
     // driverController.leftTrigger(.5).whileTrue(factoryCommands.autoIntakeCoral(0));
@@ -194,11 +198,12 @@ public class RobotContainer {
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
     driverController.leftBumper().whileTrue(optionController.resetOrIntake());
     driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
-    driverController.start().whileTrue(optionController.getAutoAlgae());
-    driverController.rightStick().whileTrue(optionController.getAutoCoral());
+    // driverController.start().whileTrue(optionController.getAutoAlgae());
+    driverController.leftStick().whileTrue(optionController.getAutoCoral(1));
+    driverController.rightStick().whileTrue(optionController.getAutoCoral(2));
     driverController.back().whileTrue(optionController.getAutoCoralPosition());
 
-    customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .6;}));
+    customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .2;}));
     customController.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{speedPercent = .8;}));
 
     customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));

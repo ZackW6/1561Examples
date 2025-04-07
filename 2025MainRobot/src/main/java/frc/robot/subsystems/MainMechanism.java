@@ -452,15 +452,15 @@ public class MainMechanism {
         CoralReset(-0.274609,0.05, false),
         Idle(-.432871,0.05, false),
         Intake(-.45,0, false),
-        L1(-0.40625,.1, false),
-        L2(-0.35625,.55, false),
-        L3(-0.35625,1.44, false),
-        L4(-0.274609,2.95, false),
+        L1(-0.32,.4, false),
+        L2(-0.35625,.6, false),
+        L3(-0.35625,1.5, false),
+        L4(-0.31,2.71, false),
         AlgaeReset(-0.05,0, true),
         AlgaeU(-.05,1.8,true),
         AlgaeL(-0.05,1, true),
-        AlgaeN(0-.15,3.5, true),
-        AlgaeP(-0.05,0, true);
+        AlgaeN(-.05,3.5, true),
+        AlgaeP(0.05,0, true);
 
         private final double armRotations;
         private final double elevatorMeters;
@@ -494,7 +494,7 @@ public class MainMechanism {
     public static enum IntakeSpeeds{
         Off(0),
         IntakeCoral(60),
-        ShootCoral(60),
+        ShootCoral(90),
         IntakeAlgae(-60),
         HoldAlgae(-60),
         ShootAlgae(60);
@@ -510,9 +510,9 @@ public class MainMechanism {
     }
 
     public static enum RampPositions{
-        Up(-.16),
+        Up(-.19),
         Down(-.6),
-        Jiggle(-.17);
+        Jiggle(-.2);
 
         private final double rotation;
         RampPositions(double rotation){
@@ -573,11 +573,11 @@ public class MainMechanism {
                 , ()->2
                 , "Coral"
                 , "CoralIntake");
-            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 10);
+            MapleSimWorld.addIntakeRequirements("CoralIntake", ()->intake.getVelocity() > 50);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(arm.getPosition() - Positions.Intake.armRotations()) < .1);
             MapleSimWorld.addIntakeRequirements("CoralIntake", ()->Math.abs(elevator.getPosition() - Positions.Intake.elevatorMeters) < .1);
             MapleSimWorld.hasPiece("CoralIntake",(has)->intake.getCoralDigitalInputIO().setValue(has));
-            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 31);
+            MapleSimWorld.addShootRequirements("CoralIntake", ()->intake.getVelocity() > 70);
 
             MapleSimWorld.addIntakeSimulation("AlgaeIntake","Algae", .5,.4,new Translation2d(.3,0));
             MapleSimWorld.addIntakeRequirements("AlgaeIntake", ()->intake.getVelocity() < -20);
@@ -766,7 +766,7 @@ public class MainMechanism {
             ,Commands.parallel(toState(positions)
             ,intake.setVelocity(IntakeSpeeds.IntakeAlgae.getVelocity()))
             .until(()->intake.hasAlgae())
-            .andThen(intake.setVelocity(IntakeSpeeds.HoldAlgae.getVelocity()))
+            .andThen(intake.setVelocityOnce(IntakeSpeeds.HoldAlgae.getVelocity()))
             , ()->intake.hasCoral());
     }
 
@@ -784,6 +784,10 @@ public class MainMechanism {
 
     public Command testPosition(DoubleSupplier elevatorMeters, DoubleSupplier armRotations, DoubleSupplier intakeSpeed){
         return elevator.reachGoal(elevatorMeters).alongWith(arm.reachGoal(armRotations)).alongWith(intake.setVelocity(intakeSpeed));
+    }
+
+    public Command voltZero(){
+        return elevator.setVoltage(0).alongWith(arm.setVoltage(0)).alongWith(intake.setVelocity(0));
     }
 
     public void periodic(){

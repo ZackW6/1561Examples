@@ -12,8 +12,8 @@ public class MotorDI implements DigitalInputIO{
 
     private boolean inverted;
 
-    public MotorDI(DoubleSupplier statorCurrent, DoubleSupplier motorAcceleration, double min){
-        valueSupplier = ()->statorCurrent.getAsDouble() > min && motorAcceleration.getAsDouble() > -10;
+    public MotorDI(DoubleSupplier statorCurrent, DoubleSupplier velocityTarget, double min){
+        valueSupplier = ()->statorCurrent.getAsDouble() > min && velocityTarget.getAsDouble() < -10;
     }
 
     @Override

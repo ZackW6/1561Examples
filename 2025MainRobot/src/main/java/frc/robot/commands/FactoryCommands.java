@@ -37,15 +37,17 @@ import frc.robot.util.PoseEX;
 public class FactoryCommands {
 
     public static final double positionalToleranceMeters = .05;
-    public static final double rotationalToleranceRotations = .05;
+    public static final double rotationalToleranceRotations = .1;
 
     //TODO if auto breaks, could be here
-    public static final double maxSpeed = .4;//1.6
-    public static final double lowerElevatorDist = 1.5;
-    public static final double raiseElevatorDist = 2.5;
+    public static final double maxSpeedAutoAlign = 1.2;//1.6
+    public static final double maxSpeedAutoCoral = 1;
+    public static final double maxSpeedAutoIntake = 3;
+    public static final double lowerElevatorDist = 1.4;
+    public static final double raiseElevatorDist = 2;
 
-    private final PIDController speedsPID = new PIDController(4, 0, 0);
-    private final PIDController rotationPID = new PIDController(4, 0, 0);
+    private final PIDController speedsPID = new PIDController(6, 0, 0);
+    private final PIDController rotationPID = new PIDController(6, 0, 0);
 
     public final SwerveDrive drivetrain;
 
@@ -176,20 +178,22 @@ public class FactoryCommands {
     public Command autoToCoral(int place){
         int clampedNum = Math.max(Math.min(place,12),1);
         return Commands.defer(()->toPose(GameData.coralPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2,maxSpeed),Set.of());
+        ,1.2,maxSpeedAutoAlign),Set.of());
     }
 
     public Command autoToAlgae(int place){
         int clampedNum = Math.max(Math.min(place,6),1);
         return Commands.defer(()->toPose(GameData.algaePose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,1.2,maxSpeed),Set.of());
+        ,1.2,maxSpeedAutoAlign)
+            .until(()->drivetrain.getPose().minus(GameData.feederPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)).getTranslation().getNorm() < .05),Set.of())
+            .andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(.25)));
     }
 
     public Command autoToFeeder(int place, double rightOffset){
         int clampedNum = Math.max(Math.min(place,2),1);
         return Commands.defer(()->toPose(GameData.feederPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
         .plus(new Transform2d(0,rightOffset, new Rotation2d()))
-        ,3,maxSpeed),Set.of());
+        ,3,4),Set.of());
     }
 
     public Command autoToFeeder(int place){
@@ -197,16 +201,16 @@ public class FactoryCommands {
     }
 
     public Command autoToProcessor(){
-        return Commands.defer(()->toPose(GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,3,maxSpeed),Set.of());
+        return Commands.defer(()->(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1.25)).alongWith(scoringMechanism.voltZero())).withTimeout(.6).andThen(toPose(GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+        ,3,maxSpeedAutoAlign)),Set.of());
     }
 
     public Command autoToNet(){
-        return Commands.defer(()->toPose(
+        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1.25)).andThen(Commands.defer(()->toPose(
             PoseEX.closestTo(drivetrain.getPose(),
             GameData.netPose(1,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red),
             GameData.netPose(2,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
-        ,2,maxSpeed),Set.of());
+        ,2,maxSpeedAutoAlign),Set.of()));
     }
 
     public Command autoScoreCoral(int place, int level){
@@ -225,7 +229,7 @@ public class FactoryCommands {
             Pose2d coralPose = GameData.coralPose(place, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red);
             Transform2d comparingTransform = coralPose.minus(drivetrainPose);
 
-            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2): 0;
+            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/5): 0;
         })).andThen(scoringMechanism.scoreCoral(level)));
     }
 
@@ -248,7 +252,7 @@ public class FactoryCommands {
                 GameData.netPose(2,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red));
             Transform2d comparingTransform = algaePose.minus(drivetrainPose);
 
-            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/2): 0;
+            return comparingTransform.getTranslation().getNorm() < raiseElevatorDist ? 1/(Math.min(comparingTransform.getTranslation().getNorm(),5)/5): 0;
         })).andThen(scoringMechanism.score(Positions.AlgaeN, IntakeSpeeds.ShootAlgae)));
     }
 
@@ -262,7 +266,8 @@ public class FactoryCommands {
             return (comparingTransform.getTranslation().getNorm() < positionalToleranceMeters) 
                 && (processorPose.getRotation().getRotations() - drivetrainPose.getRotation().getRotations() < rotationalToleranceRotations);
         })
-        ,scoringMechanism.preset(Positions.AlgaeP)).andThen(scoringMechanism.score(Positions.AlgaeP, IntakeSpeeds.ShootAlgae)));
+        ,scoringMechanism.preset(Positions.AlgaeP)
+        ,scoringMechanism.intake.setVelocity(IntakeSpeeds.HoldAlgae.getVelocity())).andThen(scoringMechanism.score(Positions.AlgaeP, IntakeSpeeds.ShootAlgae)));
     }
 
     public Command autoScoreAlgae(int level){

@@ -65,7 +65,7 @@ public class Intake extends SubsystemBase{
             coralLaser = new CANRange(IntakeConstants.CORAL_LASER_ID, .09);
             
             intakeIO = new TalonIntake();
-            algaeSense = new MotorDI(()->intakeIO.getCurrent(), ()->intakeIO.getAcceleration(), 50);
+            algaeSense = new MotorDI(()->intakeIO.getCurrent(), ()->getTargetVelocity(), 50);
         }
     }
 
@@ -77,6 +77,10 @@ public class Intake extends SubsystemBase{
     //Update velocity in rotations
     public Command setVelocity(double rps){
         return this.run(() -> intakeIO.setVelocity(rps));
+    }
+
+    public Command setVelocityOnce(double rps){
+        return this.runOnce(() -> intakeIO.setVelocity(rps));
     }
 
     public Command stop(){
