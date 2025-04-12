@@ -60,14 +60,14 @@ public class OptionController {
 
         this.robotPose = robotPose;
 
-        controller.fixedButtonPressed(1).onTrue(Commands.runOnce(()->{
-            //Intended to be A scoring
-            position = 1;
-        }));
-        controller.fixedButtonPressed(2).onTrue(Commands.runOnce(()->{
-            //Intended to be B scoring
-            position = 2;
-        }));
+        // controller.fixedButtonPressed(1).onTrue(Commands.runOnce(()->{
+        //     //Intended to be A scoring
+        //     position = 1;
+        // }));
+        // controller.fixedButtonPressed(2).onTrue(Commands.runOnce(()->{
+        //     //Intended to be B scoring
+        //     position = 2;
+        // }));
         // controller.fixedButtonPressed(3).onTrue(Commands.runOnce(()->{
         //     //Intended to be C scoring
         //     position = 3;
@@ -124,14 +124,14 @@ public class OptionController {
             //Intended to be L4 scoring
             reefLevel = 4;
         }));
-        // controller.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{
-        //     //Intended to be processor scoring
-        //     algaeScoreLevel = 1;
-        // }));
-        // controller.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{
-        //     //Intended to be processor scoring
-        //     algaeScoreLevel = 2;
-        // }));
+        controller.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{
+            //Intended to be processor scoring
+            algaeScoreLevel = 1;
+        }));
+        controller.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{
+            //Intended to be processor scoring
+            algaeScoreLevel = 2;
+        }));
         // controller.fixedButtonPressed(19).onTrue(Commands.runOnce(()->{
         //     //Intended to be feeder 1 intake
         //     defaultFeeder = 1;
@@ -194,7 +194,7 @@ public class OptionController {
     }
 
     /**
-     * 
+     * position as in left or right position of the reef
      * @return
      */
     public Command getAutoCoral(int position){
@@ -268,7 +268,7 @@ public class OptionController {
     }
 
     public Command getAlgaeLevel(){
-        return Commands.defer(()->factoryCommands.scoringMechanism.presetAlgae(1), factoryCommands.presetSubsytems);
+        return Commands.defer(()->factoryCommands.scoringMechanism.presetAlgae(algaeScoreLevel), factoryCommands.presetSubsytems);
     }
 
     public Command resetOrIntake(){

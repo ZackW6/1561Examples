@@ -58,8 +58,8 @@ import frc.robot.util.SendableConsumer;
 public class RobotContainer {
 
   private SendableChooser<Command> autoChooser;
-  // private SendableChooser<Command> algaeEnd;
-  // private SendableChooser<Command> teenyPush;
+  private SendableChooser<Command> algaeEnd;
+  private SendableChooser<Command> teenyPush;
 
   //Good to know, but not used here
   private SlewRateLimiter limiter = new SlewRateLimiter(.5);
@@ -187,11 +187,9 @@ public class RobotContainer {
     driverController.povRight().onTrue(Commands.runOnce(()->optionController.setReefLevel(2)));
     driverController.povDown().onTrue(Commands.runOnce(()->optionController.setReefLevel(3)));
     driverController.povLeft().onTrue(Commands.runOnce(()->optionController.setReefLevel(4)));
-    // driverController.povRight().whileTrue(scoringMechanism.preset(2));
-    // driverController.povDown().whileTrue(scoringMechanism.preset(3));
-    // driverController.povLeft().whileTrue(scoringMechanism.preset(4));
+
     driverController.rightTrigger(.2).whileTrue(optionController.getScoreLevel());
-    driverController.y().whileTrue(scoringMechanism.presetAlgae(1));
+    driverController.y().whileTrue(optionController.getAlgaeLevel());
     driverController.b().whileTrue(climbMechanism.prepare());
     driverController.x().whileTrue(climbMechanism.climb());
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
@@ -203,10 +201,13 @@ public class RobotContainer {
     driverController.rightStick().whileTrue(optionController.getAutoCoral(2));
     driverController.back().whileTrue(optionController.getAutoCoralPosition());
 
-    customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .2;}));
-    customController.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{speedPercent = .8;}));
+    customController.fixedButtonPressed(1).onTrue(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(0))));
+    customController.fixedButtonPressed(2).onTrue(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(MainMechanism.Positions.Intake.armRotations()))));
 
-    customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
+    // customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .2;}));
+    // customController.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{speedPercent = .8;}));
+
+    // customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
   }
 
   public void createAutoPathControls(){
@@ -234,18 +235,18 @@ public class RobotContainer {
     configureAutonomousCommands();
     
     autoChooser = buildAutoChooser("", (data) -> data);
-    // teenyPush = new SendableChooser<Command>();
-    // teenyPush.setDefaultOption("False", Commands.none());
-    // teenyPush.addOption("True", factoryCommands.teenyPush());
+    teenyPush = new SendableChooser<Command>();
+    teenyPush.setDefaultOption("False", Commands.none());
+    teenyPush.addOption("True", factoryCommands.teenyPush());
 
-    // algaeEnd = new SendableChooser<Command>();
-    // algaeEnd.setDefaultOption("None", Commands.none());
-    // algaeEnd.addOption("One", factoryCommands.backupIntakebackupAlgae(1));
-    // algaeEnd.addOption("Two", factoryCommands.backupIntakebackupAlgae(2));
-    // algaeEnd.addOption("Three", factoryCommands.backupIntakebackupAlgae(3));
-    // algaeEnd.addOption("Four", factoryCommands.backupIntakebackupAlgae(4));
-    // algaeEnd.addOption("Five", factoryCommands.backupIntakebackupAlgae(5));
-    // algaeEnd.addOption("Six", factoryCommands.backupIntakebackupAlgae(6));
+    algaeEnd = new SendableChooser<Command>();
+    algaeEnd.setDefaultOption("None", Commands.none());
+    algaeEnd.addOption("One", factoryCommands.backupIntakebackupAlgae(1));
+    algaeEnd.addOption("Two", factoryCommands.backupIntakebackupAlgae(2));
+    algaeEnd.addOption("Three", factoryCommands.backupIntakebackupAlgae(3));
+    algaeEnd.addOption("Four", factoryCommands.backupIntakebackupAlgae(4));
+    algaeEnd.addOption("Five", factoryCommands.backupIntakebackupAlgae(5));
+    algaeEnd.addOption("Six", factoryCommands.backupIntakebackupAlgae(6));
 
     //TODO this could cause auto errors, if so just comment
     // autoChooser.onChange((data)->{
@@ -264,9 +265,9 @@ public class RobotContainer {
     
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    // SmartDashboard.putData("Push?", teenyPush);
+    SmartDashboard.putData("Push?", teenyPush);
 
-    // SmartDashboard.putData("GrabAlgae?", algaeEnd);
+    SmartDashboard.putData("GrabAlgae?", algaeEnd);
 
     SmartDashboard.putData(CommandScheduler.getInstance());
 
@@ -348,11 +349,12 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    // CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
+    CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
     // CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
-    // CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
+    CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
     // return autoChooser.getSelected().beforeStarting(teenyPush.getSelected()).andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
-    return autoChooser.getSelected();
+    return autoChooser.getSelected().andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
+    // return autoChooser.getSelected();
   }
 
   public static SendableChooser<Command> buildAutoChooser(
