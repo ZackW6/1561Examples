@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -39,9 +40,12 @@ import frc.robot.constants.PathplannerConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.simSwerve.SimSwerve;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.objectDetection.ObjectDetection;
+import frc.robot.util.LimelightHelpers;
 
 public class SwerveDrive extends SubsystemBase{
     private final Vision cameras;
+    private final ObjectDetection objectDetection;
 
     private final SwerveDriveIO swerveIO;
 
@@ -63,6 +67,17 @@ public class SwerveDrive extends SubsystemBase{
         }else{
             this.swerveIO = TunerConstants.createDrivetrain();
         }
+        objectDetection = new ObjectDetection(LimelightConstants.BACKWARD_LIMELIGHT_NAME
+            , LimelightConstants.BACKWARD_LIMELIGHT_CAMERA_TRANSFORM
+            , ()->getPose());
+        
+        LimelightHelpers.setPipelineIndex(LimelightConstants.BACKWARD_LIMELIGHT_NAME, 0);
+        new Trigger(()->DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red).onTrue(Commands.runOnce(()->{
+            LimelightHelpers.setPipelineIndex(LimelightConstants.BACKWARD_LIMELIGHT_NAME, 0);
+        }));
+        new Trigger(()->DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue).onTrue(Commands.runOnce(()->{
+            LimelightHelpers.setPipelineIndex(LimelightConstants.BACKWARD_LIMELIGHT_NAME, 1);
+        }));
 
         cameras = new Vision(swerveIO, new Transform3d[]{LimelightConstants.FR_LIMELIGHT_CAMERA_TRANSFORM,
             LimelightConstants.FL_LIMELIGHT_CAMERA_TRANSFORM
@@ -115,7 +130,7 @@ public class SwerveDrive extends SubsystemBase{
             this::getPose, // getState of the robot pose
             this::resetPose,  // Consumer for seeding pose against auto
             swerveIO::getSpeeds,
-            (speeds, feedForward)->swerveIO.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds.times(1))), // Consumer of ChassisSpeeds to drive the robot
+            (speeds, feedForward)->swerveIO.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds.times(.45))), // Consumer of ChassisSpeeds to drive the robot
             new PPHolonomicDriveController(new PIDConstants(5, 0, 0),
                                             new PIDConstants(5, 0, 0)),
             PathplannerConstants.pathingConfig,
@@ -145,6 +160,10 @@ public class SwerveDrive extends SubsystemBase{
 
     public SwerveDriveIO getDriveIO(){
         return swerveIO;
+    }
+
+    public Optional<Pose2d> getObjectPose(){
+        return objectDetection.getPiecePose();
     }
 
     public void registerTelemetry(Consumer<SwerveDriveState> object) {

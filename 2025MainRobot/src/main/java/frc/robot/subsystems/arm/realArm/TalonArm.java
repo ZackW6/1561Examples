@@ -29,8 +29,8 @@ public class TalonArm implements ArmIO{
     private CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
 
     //Magic
-    // private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
-    private final PositionVoltage m_request = new PositionVoltage(0);
+    private final MotionMagicTorqueCurrentFOC m_request = new MotionMagicTorqueCurrentFOC(0);
+    // private final PositionVoltage m_request = new PositionVoltage(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
     private final TalonFX armMotor;
@@ -78,7 +78,7 @@ public class TalonArm implements ArmIO{
         
         canCoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint = .5;
         // canCoderConfigs.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
-        canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        canCoderConfigs.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         canCoderConfigs.MagnetSensor.MagnetOffset = ArmConstants.ANGLE_OFFSET.getRotations();
         
         encoder.getConfigurator().apply(canCoderConfigs);
@@ -95,7 +95,7 @@ public class TalonArm implements ArmIO{
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;//InvertedValue.Clockwise_Positive
         talonFXConfigs.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-        talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        talonFXConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         talonFXConfigs.Feedback.SensorToMechanismRatio = ArmConstants.ARM_SENSOR_TO_MECHANISM_RATIO;
         talonFXConfigs.Feedback.RotorToSensorRatio = ArmConstants.ARM_ROTOR_TO_SENSOR_RATIO;
         

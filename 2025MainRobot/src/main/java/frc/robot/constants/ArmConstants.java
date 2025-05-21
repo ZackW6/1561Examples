@@ -15,13 +15,13 @@ public class ArmConstants{
     public static final int ARM_MOTOR_ID = 10;
     public static final int ARM_ENCODER_ID = 10;
 
-    public static final double kS = 0;
+    public static final double kS = 6;
     public static final double kV = 0;
     public static final double kA = 0;
     
-    public static final double kP = 20;
+    public static final double kP = 180;
     public static final double kI = 0;
-    public static final double kD = .5;//50;
+    public static final double kD = 6;//50;
     public static final double kG = 0;//-26;//8.4749;
 
     public static final double ARM_SENSOR_TO_MECHANISM_RATIO = 1;
@@ -29,19 +29,19 @@ public class ArmConstants{
 
 
     // TODO: Make the arm positive when it goes up.
-    public static final double CRUISE_VELOCITY = 100;
-    public static final double MAX_ACCELERATION = 100;
-    public static final double JERK = 128;
+    public static final double CRUISE_VELOCITY = 9999;
+    public static final double MAX_ACCELERATION = 9999;
+    public static final double JERK = 0;
 
     
-    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(.999);
+    public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0.116);
     
     public static final double JOINT_START_HEIGHT_METERS = .2;
     public static final double ARM_END_DEFFECTOR_SCORE_ANGLE = 0.05;//Rotations
     public static final double ARM_END_DEFFECTOR_SCORE_OFFSET = -Units.degreesToRotations(32.8);//Rotations
 
     /* Arm Current Limiting */ //TODO: Change/Fix these values
-    public static final int ARM_CURRENT_LIMIT = 80;
+    public static final int ARM_CURRENT_LIMIT = 70;
     public static final int ARM_SUPPLY_CURRENT_THRESHOLD = 65;
     public static final int ARM_CURRENT_THRESHOLD = 70;
     public static final double ARM_CURRENT_THRESHOLD_TIME = 0.1;

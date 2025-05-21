@@ -32,8 +32,8 @@ public class ClimbMechanism {
 
     public static enum ClimbPositions{
         OFF(0,0,.1),
-        PREPARED(.1,-4,-.5),
-        CLIMBED(.1,8,-.5);
+        PREPARED(Positions.AlgaeP.armRotations(),-4,-.5),
+        CLIMBED(Positions.AlgaeP.armRotations(),8,-.5);
 
         private double armRotations;
         private double climberVoltage;
@@ -81,7 +81,7 @@ public class ClimbMechanism {
     }
 
     public Command climb(){
-        return runState(ClimbPositions.CLIMBED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(.1))))
+        return runState(ClimbPositions.CLIMBED).alongWith(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(Positions.AlgaeP.armRotations()))))
             .alongWith(Commands.runOnce(()->ramp.setDefaultCommand(ramp.reachGoal(-.5))));
     }
 }

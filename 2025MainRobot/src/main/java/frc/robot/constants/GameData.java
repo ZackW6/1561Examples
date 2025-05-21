@@ -28,7 +28,7 @@ public class GameData {
     private static final double feederPoseForwardOffset = -.25;
     private static final double feederPoseRightOffset = 0;
 
-    public static final double optionalFeederRightOffset = -.4;
+    public static final double optionalFeederRightOffset = -.38;
 
     private static final double processorPoseForwardOffset = -.4;
     private static final double processorPoseRightOffset = 0;
@@ -62,18 +62,18 @@ public class GameData {
             aprilTagsPose3d[i] = tag.pose;
             i++;
         }
-        coralPoses[0] = getAprilTagPose2d(18).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[1] = getAprilTagPose2d(18).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[2] = getAprilTagPose2d(17).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[3] = getAprilTagPose2d(17).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[4] = getAprilTagPose2d(22).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[5] = getAprilTagPose2d(22).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[6] = getAprilTagPose2d(21).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[7] = getAprilTagPose2d(21).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[8] = getAprilTagPose2d(20).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[9] = getAprilTagPose2d(20).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[10] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset, Rotation2d.fromDegrees(180)));
-        coralPoses[11] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset, Rotation2d.fromDegrees(180)));
+        coralPoses[0] = getAprilTagPose2d(18).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[1] = getAprilTagPose2d(18).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[2] = getAprilTagPose2d(17).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[3] = getAprilTagPose2d(17).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[4] = getAprilTagPose2d(22).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[5] = getAprilTagPose2d(22).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[6] = getAprilTagPose2d(21).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[7] = getAprilTagPose2d(21).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[8] = getAprilTagPose2d(20).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[9] = getAprilTagPose2d(20).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[10] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,-coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
+        coralPoses[11] = getAprilTagPose2d(19).plus(new Transform2d(-coralPoseForwardOffset,coralPoseRightOffset-.03, Rotation2d.fromDegrees(180)));
 
         initAlgaePoses[0] = getAprilTagPose2d(18).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));
         initAlgaePoses[1] = getAprilTagPose2d(17).plus(new Transform2d(-reefAlgaeForwardOffset,reefAlgaeRightOffset, Rotation2d.fromDegrees(180)));

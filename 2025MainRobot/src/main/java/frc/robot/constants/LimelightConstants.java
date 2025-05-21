@@ -14,10 +14,10 @@ import frc.robot.util.MultiLinearInterpolator;
 
 public class LimelightConstants {
     /* 5027 https://github.com/FRC5727/SwervyBoi/blob/76bf195e5332ee201a1d0d766fbc0b57b428d485/src/main/java/frc/robot/Constants.java */
-    public static final String BACKWARD_LIMELIGHT_NAME = "limelight-backcam";
+    public static final String BACKWARD_LIMELIGHT_NAME = "limelight-objdet";
     public static final double MAX_XY_ERROR = 1.0;
     public static final Transform3d BACKWARD_LIMELIGHT_CAMERA_TRANSFORM =
-        new Transform3d(new Translation3d(-.297,-0.297, 0.25146+.0158), new Rotation3d(0, Units.degreesToRadians(20), Units.degreesToRadians(-150)));
+        new Transform3d(new Translation3d(0,-0.297, 0.25146+.0158), new Rotation3d(0, 0, Units.degreesToRadians(-180)));
     public static final String FR_LIMELIGHT_NAME = "limelight-rfront";
     public static final Transform3d FR_LIMELIGHT_CAMERA_TRANSFORM =
         new Transform3d(new Translation3d(0.297,0.297, 0.25146+.0158), new Rotation3d(0, Units.degreesToRadians(10), Units.degreesToRadians(30)));
@@ -34,11 +34,11 @@ public class LimelightConstants {
 
     public static final double[][] ONE_APRIL_TAG_LOOKUP_TABLE = {
       // {distance in meters, x std deviation, y std deviation, r (in degrees//actually maybe radians) std deviation}
-      {0, 0.0, 0.0, 999},
-      {1.5, 0.0, 0.0, 999},
-      {3, 2, 2, 999},
-      {4.5, 4, 4, 999},
-      {6, 8, 8, 999},
+      {0, 0.0, 0.0, 0},
+      {1.5, 0.0, 0.0, 0},
+      {3, 2, 2, 2},
+      {4.5, 4, 4, 4},
+      {6, 8, 8, 8},
       {7, 999, 999, 999}
     };
     

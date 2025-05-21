@@ -41,10 +41,10 @@ public class FactoryCommands {
 
     //TODO if auto breaks, could be here
     public static final double maxSpeedAutoAlign = 1.2;//1.6
-    public static final double maxSpeedAutoCoral = 1;
-    public static final double maxSpeedAutoIntake = 3;
+    public static final double maxSpeedAutoCoral = .5;//1.6
+    public static final double maxSpeedAutoIntake = 1.3;
     public static final double lowerElevatorDist = 1.4;
-    public static final double raiseElevatorDist = 2;
+    public static final double raiseElevatorDist = 2.35;
 
     private final PIDController speedsPID = new PIDController(6, 0, 0);
     private final PIDController rotationPID = new PIDController(6, 0, 0);
@@ -185,7 +185,7 @@ public class FactoryCommands {
         int clampedNum = Math.max(Math.min(place,6),1);
         return Commands.defer(()->toPose(GameData.algaePose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
         ,1.2,maxSpeedAutoAlign)
-            .until(()->drivetrain.getPose().minus(GameData.feederPose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)).getTranslation().getNorm() < .05),Set.of())
+            .until(()->drivetrain.getPose().minus(GameData.algaePose(clampedNum, DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)).getTranslation().getNorm() < .05),Set.of())
             .andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(.25)));
     }
 
@@ -201,12 +201,12 @@ public class FactoryCommands {
     }
 
     public Command autoToProcessor(){
-        return Commands.defer(()->(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1.25)).alongWith(scoringMechanism.voltZero())).withTimeout(.6).andThen(toPose(GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
-        ,3,maxSpeedAutoAlign)),Set.of());
+        return Commands.defer(()->(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).alongWith(scoringMechanism.voltZero())).withTimeout(.6).andThen(toPose(GameData.processorPose(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red)
+        ,2,maxSpeedAutoAlign)),Set.of());
     }
 
     public Command autoToNet(){
-        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1.25)).andThen(Commands.defer(()->toPose(
+        return drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1.25)).withTimeout(.6).andThen(Commands.defer(()->toPose(
             PoseEX.closestTo(drivetrain.getPose(),
             GameData.netPose(1,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red),
             GameData.netPose(2,DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red))
@@ -286,7 +286,7 @@ public class FactoryCommands {
     }
 
     public Command autoIntakeAlgae(int place){
-        return Commands.race(autoToAlgae(place), scoringMechanism.intakeAlgae((place%2)+1));
+        return Commands.race(autoToAlgae(place), scoringMechanism.voltZero().withTimeout(.5).andThen(scoringMechanism.intakeAlgae((place%2)+1)));
     }
 
     public Command teenyPush(){

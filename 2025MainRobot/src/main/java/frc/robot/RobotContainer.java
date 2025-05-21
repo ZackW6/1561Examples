@@ -50,6 +50,7 @@ import frc.robot.subsystems.ramp.Ramp;
 import frc.robot.subsystems.swerve.SwerveDrive;
 import frc.robot.util.ChoreoEX;
 import frc.robot.util.CustomController;
+import frc.robot.util.MutSlewRateLimiter;
 // import frc.robot.commands.WheelRadiusCommand;
 import frc.robot.util.PoseEX;
 import frc.robot.util.SendableConsumer;
@@ -62,12 +63,13 @@ public class RobotContainer {
   private SendableChooser<Command> teenyPush;
 
   //Good to know, but not used here
-  private SlewRateLimiter limiter = new SlewRateLimiter(.5);
+  private MutSlewRateLimiter[] limiter = new MutSlewRateLimiter[]{new MutSlewRateLimiter(.5),new MutSlewRateLimiter(.5),new MutSlewRateLimiter(.5)};
   
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps;
   private double MaxAngularRate = TunerConstants.MAX_ANGULAR_RATE;
 
   private double speedPercent = .6;
+  private double rotationPercent = .6;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driverController = new CommandXboxController(0);
@@ -108,10 +110,24 @@ public class RobotContainer {
     drivetrain.resetPose(new Pose2d(7,5,Rotation2d.fromDegrees(180)));
   
     drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> drive.withVelocityX(-driverController.getLeftY() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
-            .withVelocityY(-driverController.getLeftX() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
-            .withRotationalRate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * .65 * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1))
+        drivetrain.applyRequest(() -> drive.withVelocityX(limiter[0].calculate(-driverController.getLeftY() * MaxSpeed * MathUtil.clamp(1/Math.abs(elevator.getPosition()),.1,1)))
+            .withVelocityY(limiter[1].calculate(-driverController.getLeftX() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1)))
+            .withRotationalRate(limiter[2].calculate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * rotationPercent * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1)))
     ));
+
+    SendableConsumer.createSendableChooser("AccelerationLimit", (data)->{
+      limiter[0].setRateLimit(data);
+      limiter[1].setRateLimit(data);}, 3);
+    SendableConsumer.createSendableChooser("RotAccelLimit", (data)->{
+      limiter[2].setRateLimit(data);}, 3);
+
+    SendableConsumer.createSendableChooser("DeccelerationLimit", (data)->{
+      limiter[0].setDecelLimit(data);
+      limiter[1].setDecelLimit(data);}, 10);
+    SendableConsumer.createSendableChooser("RotDeccelLimit", (data)->{
+      limiter[2].setDecelLimit(data);}, 10);
+    
+      
 
     drivetrain.getDriveIO().registerTelemetry((log)->logger.telemeterize(log));
     
@@ -192,20 +208,26 @@ public class RobotContainer {
     driverController.y().whileTrue(optionController.getAlgaeLevel());
     driverController.b().whileTrue(climbMechanism.prepare());
     driverController.x().whileTrue(climbMechanism.climb());
+    driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
+    driverController.back().whileTrue(factoryCommands.toPose(drivetrain.getObjectPose().get(), MaxAngularRate));
     driverController.leftBumper().whileTrue(optionController.resetOrIntake());
-    driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
+    driverController.a().whileTrue(drivetrain.applyRequest(()->brake)).onTrue(Commands.runOnce(()->{limiter[0].reset(0);
+      limiter[1].reset(0);
+      limiter[2].reset(0);}));
     // driverController.start().whileTrue(optionController.getAutoAlgae());
     driverController.leftStick().whileTrue(optionController.getAutoCoral(1));
     driverController.rightStick().whileTrue(optionController.getAutoCoral(2));
-    driverController.back().whileTrue(optionController.getAutoCoralPosition());
+    // driverController.back().whileTrue(optionController.getAutoCoralPosition());
 
     customController.fixedButtonPressed(1).onTrue(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(0))));
     customController.fixedButtonPressed(2).onTrue(Commands.runOnce(()->arm.setDefaultCommand(arm.reachGoal(MainMechanism.Positions.Intake.armRotations()))));
 
-    // customController.fixedButtonPressed(17).onTrue(Commands.runOnce(()->{speedPercent = .2;}));
-    // customController.fixedButtonPressed(18).onTrue(Commands.runOnce(()->{speedPercent = .8;}));
+    customController.fixedButtonPressed(19).onTrue(Commands.runOnce(()->{speedPercent = .2;
+    rotationPercent = .2;}));
+    customController.fixedButtonPressed(20).onTrue(Commands.runOnce(()->{speedPercent = .8;
+    rotationPercent = .65;}));
 
     // customController.fixedButtonPressed(17).and(()->customController.getFixedButton(18)).whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
   }
@@ -349,11 +371,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
+    // CommandScheduler.getInstance().removeComposedCommand(autoChooser.getSelected());
     // CommandScheduler.getInstance().removeComposedCommand(teenyPush.getSelected());
-    CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
+    // CommandScheduler.getInstance().removeComposedCommand(algaeEnd.getSelected());
     // return autoChooser.getSelected().beforeStarting(teenyPush.getSelected()).andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
-    return autoChooser.getSelected().andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
+    return teenyPush.getSelected().andThen(algaeEnd.getSelected());//.andThen(algaeEnd.getSelected()).andThen(drivetrain.applyRequest(()->new SwerveRequest.RobotCentric().withVelocityX(-1)).withTimeout(.4));
     // return autoChooser.getSelected();
   }
 

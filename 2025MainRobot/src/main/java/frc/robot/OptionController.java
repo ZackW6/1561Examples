@@ -202,7 +202,7 @@ public class OptionController {
         ,Commands.either(coralTillInterruptSwap(position)
             , coralIntakeTillInterruptSwap()
             , hasCoral)
-        ,hasAlgae),factoryCommands.mainSubsytems).andThen(Commands.defer(()->getAutoCoral(), factoryCommands.mainSubsytems));
+        ,hasAlgae),factoryCommands.mainSubsytems).andThen(Commands.defer(()->getAutoCoral(position), factoryCommands.mainSubsytems));
     }
 
     /**
@@ -221,13 +221,14 @@ public class OptionController {
         return coralTillInterruptSwap(position);
     }
 
-    private Command coralTillInterruptSwap(int position){
+    private Command coralTillInterruptSwap(int sidePosition){
         return Commands.defer(()->{
-            int initReefPosition = closestSide * 2 -2 + position;
+            int initPosition = sidePosition;
+            int initReefPosition = closestSide * 2 -2 + initPosition;
             int initReefLevel = reefLevel;
             return factoryCommands.autoScoreCoral(initReefPosition, initReefLevel)
-                .until(()->initReefPosition != closestSide * 2 -2 + position || (initReefLevel != reefLevel))
-                .andThen(coralTillInterruptSwap()).unless(()->!hasCoral.getAsBoolean());
+                .until(()->initReefPosition != closestSide * 2 -2 + initPosition || (initReefLevel != reefLevel))
+                .andThen(coralTillInterruptSwap(initPosition)).unless(()->!hasCoral.getAsBoolean());
         },Set.of());
     }
 
