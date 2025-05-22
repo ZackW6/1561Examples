@@ -90,6 +90,18 @@ public class PoseEX {
         return new Pose2d((mainPose.getX() + comparingPose.getX())/2, (mainPose.getY() + comparingPose.getY())/2, new Rotation2d());
     }
 
+    public static Pose2d rotatePose(Pose2d pose, Rotation2d rotation){
+        Pose2d newPose = new Pose2d(pose.getX(), pose.getY(), correctedRotation(Rotation2d.fromDegrees(pose.getRotation().getDegrees() + rotation.getDegrees())));
+        return newPose;
+    }
+
+    public static Rotation2d correctedRotation(Rotation2d rot){
+        double degrees = rot.getDegrees();
+        degrees = degrees%360;
+        degrees = degrees > 180 ? degrees-360 : degrees < -180 ? degrees+360 : degrees;
+        return Rotation2d.fromDegrees(degrees);
+    }
+
     public static Pose2d closestTo(Pose2d to, Pose2d... options){
         if (options.length == 0){
             return to;

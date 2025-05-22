@@ -159,7 +159,7 @@ public class ObjectDetection extends SubsystemBase {
     public void periodic() {
         Optional<Pose2d> piecePose = getPiecePose();
         if (piecePose.isPresent()){
-            objectPublisher.accept(getPiecePose().get());
+            objectPublisher.accept(piecePose.get());
         }else{
             objectPublisher.accept(robotPose.get());
         }

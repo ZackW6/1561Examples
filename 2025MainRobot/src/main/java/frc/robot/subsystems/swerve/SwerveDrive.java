@@ -105,7 +105,7 @@ public class SwerveDrive extends SubsystemBase{
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return this.run(() -> swerveIO.setControl(requestSupplier.get()));
+        return this.run(() -> setControl(requestSupplier.get()));
     }
 
     public void setControl(SwerveRequest request) {

@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -20,6 +21,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -94,7 +96,7 @@ public class RobotContainer {
   // private final ObjectDetection objectDetection = new ObjectDetection("Test",
   //   new Transform3d(new Translation3d(0,-.101, .522), new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(0))), ()->drivetrain.getPose());
 
-  private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain, scoringMechanism);
+  private final FactoryCommands factoryCommands = new FactoryCommands(drivetrain, driverController, scoringMechanism);
   
   private final OptionController optionController = new OptionController(customController, factoryCommands, ()-> intake.hasCoral(), ()-> intake.hasAlgae(), ()->drivetrain.getPose());
 
@@ -211,7 +213,8 @@ public class RobotContainer {
     driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
-    driverController.back().whileTrue(factoryCommands.toPose(drivetrain.getObjectPose().get(), MaxAngularRate));
+    driverController.back().whileTrue(Commands.defer(()->factoryCommands.toAndPointTranslation((drivetrain.getObjectPose().isPresent() ? drivetrain.getObjectPose().get().getTranslation() : new Translation2d(-500,-500))
+      , 5,2,5,true),Set.of()));
     driverController.leftBumper().whileTrue(optionController.resetOrIntake());
     driverController.a().whileTrue(drivetrain.applyRequest(()->brake)).onTrue(Commands.runOnce(()->{limiter[0].reset(0);
       limiter[1].reset(0);

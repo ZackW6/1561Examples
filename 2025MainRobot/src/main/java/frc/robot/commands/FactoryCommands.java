@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.PathOnTheFly.PathConfig;
 import frc.robot.constants.GameData;
 import frc.robot.generated.TunerConstants;
@@ -51,6 +52,8 @@ public class FactoryCommands {
 
     public final SwerveDrive drivetrain;
 
+    public final CommandXboxController xboxController;
+
     public final MainMechanism scoringMechanism;
 
     public final Set<Subsystem> mainSubsytems;
@@ -65,11 +68,12 @@ public class FactoryCommands {
 
     private final ShareDrive shareRequest;
 
-    public FactoryCommands(SwerveDrive drivetrain, MainMechanism scoringMechanism){
+    public FactoryCommands(SwerveDrive drivetrain, CommandXboxController controller, MainMechanism scoringMechanism){
         if (instance == null){
             instance = this;
         }
         this.drivetrain = drivetrain;
+        this.xboxController = controller;
         this.scoringMechanism = scoringMechanism;
         this.shareRequest = new ShareDrive(()->drivetrain.getPose().getRotation(),()->drivetrain.getDriveIO().getYawOffset())
             .withMaxLinearVelocity(TunerConstants.kSpeedAt12VoltsMps)
@@ -115,14 +119,7 @@ public class FactoryCommands {
         },drivetrain);
     }
 
-    /**
-     * @param translation
-     * @param strengthCompWithNormalDrive
-     * @param minDist
-     * @param maxAngle
-     * @return
-     */
-    public Command passiveTowardTranslation(Translation2d translation, double speedCap, double radianPSCap, double minDist){
+    public Command towardTranslation(Translation2d translation, double speedCap, double radianPSCap, double minDist){
         return Commands.run(()->{
 
             Vector2 vector = new Vector2(translation.getX()-drivetrain.getPose().getX(), translation.getY()-drivetrain.getPose().getY());
@@ -138,6 +135,41 @@ public class FactoryCommands {
 
 
             drivetrain.setControl(fieldSpeedRequest.withSpeeds(new ChassisSpeeds(finalSpeeds.x, finalSpeeds.y, 0)));
+
+        },drivetrain);
+    }
+
+    /**
+     * works with driver, so can still drive while this is happening, and should
+     * @param translation
+     * @param speedCap
+     * @param radianPSCap
+     * @param minDist
+     * @return
+     */
+    public Command toAndPointTranslation(Translation2d translation, double speedCap, double radianPSCap, double minDist, boolean flip){
+        return Commands.run(()->{
+
+            Vector2 vector = new Vector2(translation.getX()-drivetrain.getPose().getX(), translation.getY()-drivetrain.getPose().getY());
+            if (vector.getMagnitude() > minDist){
+                drivetrain.setControl(fieldSpeedRequest.withSpeeds(new ChassisSpeeds()));
+                return;
+            }
+
+            Vector2 finalSpeeds = new Vector2(-speedsPID.calculate(vector.x,0),-speedsPID.calculate(vector.y,0));
+            if (finalSpeeds.getMagnitude() > speedCap){
+                finalSpeeds = finalSpeeds.normalize().multiply(speedCap);
+            }
+
+            double finalRotation = 
+                Math.min(Math.max(rotationPID.calculate(distToCorrectedPoint(
+                    PoseEX.correctedRotation(Rotation2d.fromDegrees(PoseEX.getPoseAngle(drivetrain.getPose(), new Pose2d(translation, new Rotation2d())).getDegrees()
+                    - drivetrain.getPose().getRotation().getDegrees()+180)).getRadians()
+                ,0)),-radianPSCap),radianPSCap);
+
+            drivetrain.setControl(fieldSpeedRequest.withSpeeds(new ChassisSpeeds(finalSpeeds.x,
+                finalSpeeds.y,
+                finalRotation)));
 
         },drivetrain);
     }
