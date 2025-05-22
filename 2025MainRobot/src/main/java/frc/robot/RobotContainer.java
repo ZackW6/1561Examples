@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -213,8 +214,13 @@ public class RobotContainer {
     driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
-    driverController.back().whileTrue(Commands.defer(()->factoryCommands.toAndPointTranslation((drivetrain.getObjectPose().isPresent() ? drivetrain.getObjectPose().get().getTranslation() : new Translation2d(-500,-500))
-      , 5,2,5,true),Set.of()));
+    Supplier<Pose2d> prospectivePose = ()->{
+      Pose2d pose = drivetrain.getObjectPose().isPresent() ? drivetrain.getObjectPose().get() : new Pose2d(-500,-500, new Rotation2d());
+      pose = new Pose2d(pose.getX(), pose.getY(), PoseEX.correctedRotation(PoseEX.getPoseAngle(drivetrain.getPose(),pose).rotateBy(Rotation2d.k180deg)));
+      return pose;
+    };
+    driverController.back().whileTrue(Commands.defer(()->factoryCommands.towardPose((prospectivePose.get())
+      , .3,1,5),Set.of()));
     driverController.leftBumper().whileTrue(optionController.resetOrIntake());
     driverController.a().whileTrue(drivetrain.applyRequest(()->brake)).onTrue(Commands.runOnce(()->{limiter[0].reset(0);
       limiter[1].reset(0);

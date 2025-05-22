@@ -38,6 +38,8 @@ public class ObjectDetection extends SubsystemBase {
 
     private Optional<Pose2d> cachedObjectPose = null;
 
+    private double goalHeightMeters = Units.inchesToMeters(9);
+
     private final NetworkTable robot = NetworkTableInstance.getDefault().getTable("Robot");
     private final NetworkTable objectTable = robot.getSubTable("ObjectDetection");
 
@@ -79,7 +81,7 @@ public class ObjectDetection extends SubsystemBase {
             double limelightLensHeightMeters = limelightTransform.getZ();
 
             // distance from the target to the floor
-            double goalHeightMeters = 0;
+            double goalHeightMeters = this.goalHeightMeters;
 
             double angleToGoalRadians = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
             return  (limelightLensHeightMeters-goalHeightMeters) / -(Math.sin(angleToGoalRadians));
@@ -110,7 +112,7 @@ public class ObjectDetection extends SubsystemBase {
             Pose3d initialPose = new Pose3d(robotPose.get()).transformBy(limelightTransform);
             double initialPitch = initialPose.getRotation().getY(); // Initial pose's pitch in radians
             double pitch = Math.toRadians(getVerticalRotationFromPiece().getDegrees()); // Target pitch in radians
-            double yaw = Math.toRadians(getHorizontalRotationFromPiece().getDegrees()); // Target yaw in radians
+            double yaw = Math.toRadians(getHorizontalRotationFromPiece().getDegrees())*-1; // Target yaw in radians
         
             // Calculate total pitch and yaw
             double totalPitch = initialPitch + pitch;
@@ -132,7 +134,8 @@ public class ObjectDetection extends SubsystemBase {
             // Calculate new position
             double newX = x0 + t * dx;
             double newY = y0 + t * dy;
-            double newZ = 0; // Object is resting on the floor
+            System.out.println(t+"  "+x0+"  "+dx+"   "+newY);
+            double newZ = goalHeightMeters;
         
             // Create new orientation (pitch and yaw)
             Rotation3d newRotation = new Rotation3d(totalPitch, 0, totalYaw);
