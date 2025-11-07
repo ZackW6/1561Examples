@@ -35,11 +35,11 @@ import frc.robot.util.mapleSimWorlds.MapleSim2025;
  */
 public class BaseMechanism {
 
-    protected final double MAX_ARM_ERROR = .1;
-    protected final double MAX_ELEVATOR_ERROR = .1;
-    protected final double MAX_RAMP_ERROR = .05;
-    protected final double SHOOT_TIME = .3;
-    protected final double INTAKE_TIME = .05;
+    protected final double MAX_ARM_ERROR = .05;
+    protected final double MAX_ELEVATOR_ERROR = .05;
+    protected final double MAX_RAMP_ERROR = .005;
+    protected final double SHOOT_TIME = .4;
+    protected final double INTAKE_TIME = .07;
 
     //The starting height of the end effector from ground
     public static final double ELEVATOR_END_EFFECTOR_OFFSETZ = .487;
@@ -74,10 +74,10 @@ public class BaseMechanism {
     protected StructPublisher<Pose3d> targetPublisher = odom.getStructTopic("TargetPose",Pose3d.struct).publish();
 
 
-    protected final double rampIntakePosition = -.16;
+    protected final double rampIntakePosition = -.142;
     protected final double rampRest = -.3;
-    protected final double rampWiggleAmount = .02;
-    protected final double wigglePeriod = .1;
+    protected final double rampWiggleAmount = -.05;
+    protected final double wigglePeriod = .05;
 
     public final double coralShootSpeed = 80;
     public final double algaeShootSpeed = -60;
@@ -86,17 +86,17 @@ public class BaseMechanism {
     public final double holdAlgaeSpeed = 20;
 
     protected final double armPressVolts = -3.5;
-
+    
     public enum MainStates{
         Rest(0,0),
         Intake(0,0),
         L1(.2,0.2),
         L2(.4,0.15),
         L3(.8,0.15),
-        L4(1.45,0.2),
-        IntakeLowAlgae(0,0),
-        IntakeHighAlgae(0,0),
-        Processor(0,0),
+        L4(1.4,0.2),
+        IntakeLowAlgae(.5,.5),
+        IntakeHighAlgae(.8,.5),
+        Processor(0,.25),
         Barge(0,0);
 
         public final double elevatorHeight;

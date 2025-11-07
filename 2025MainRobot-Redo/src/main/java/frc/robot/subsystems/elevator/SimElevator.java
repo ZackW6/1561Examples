@@ -8,7 +8,6 @@ import frc.robot.constants.ElevatorConstants;
 
 public class SimElevator extends SubsystemBase implements ElevatorIO{
 
-    //Set what motor to use and how many motors to sue
     private final DCMotor gearbox = DCMotor.getFalcon500(2);
 
     //Set what PID vals to use

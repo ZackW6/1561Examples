@@ -42,7 +42,7 @@ public class GameData {
     private static final double L1Height = .409;
     private static final double L2Height = .793;
     private static final double L3Height = 1.18;
-    private static final double L4Height = 1.829;
+    private static final double L4Height = 1.77;
 
     private static final double[] branchHeights = new double[]{L1Height,L2Height,L3Height,L4Height};
     private static final Pose2d[] branchPoses = new Pose2d[12];

@@ -105,7 +105,7 @@ public class RobotContainer {
     drivetrain.resetPose(new Pose2d(7,5,Rotation2d.fromDegrees(180)));
   
     drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> drive.withVelocityX(limiter[0].calculate(-driverController.getLeftY() * MaxSpeed * MathUtil.clamp(1/Math.abs(elevator.getPosition()),.1,1)))
+        drivetrain.applyRequest(() -> drive.withVelocityX(limiter[0].calculate(-driverController.getLeftY() * speedPercent * MaxSpeed * MathUtil.clamp(1/Math.abs(elevator.getPosition()),.1,1)))
             .withVelocityY(limiter[1].calculate(-driverController.getLeftX() * speedPercent * MaxSpeed * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1)))
             .withRotationalRate(limiter[2].calculate(-driverController.getRightX()/*driverController.getRawAxis(2)*/ * rotationPercent * MaxAngularRate * MathUtil.clamp(1/(Math.abs(elevator.getPosition())),.1,1)))
     ));

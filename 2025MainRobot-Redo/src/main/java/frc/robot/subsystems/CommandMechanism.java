@@ -100,7 +100,7 @@ public class CommandMechanism extends BaseMechanism{
         Pose2d pose = GameData.coralPose(place);
         return inState(arm.getTarget(), MAX_ARM_ERROR, elevator.getTarget(), MAX_ELEVATOR_ERROR) 
             && swerveDrive.withinCoords(new Pose2d(pose.getX(), pose.getY()
-                , PoseEX.getPoseAngle(swerveDrive.getPose(), GameData.branchPose(place, 1).toPose2d())), .06, .05);
+                , PoseEX.getPoseAngle(swerveDrive.getPose(), GameData.branchPose(place, 1).toPose2d())), .02, .02);
     }
 
     /**
@@ -118,8 +118,7 @@ public class CommandMechanism extends BaseMechanism{
             .andThen(Commands.parallel(setCoralState(level), swerveDrive.stop())
                 .until(()->inState(arm.getTarget(), .1, elevator.getTarget(), .1)))
             .andThen(Commands.race(applyTargetAim(GameData.coralPose(place)
-                ,GameData.branchPose(place, level), 1, 2)
-                ,Commands.waitUntil(()->readyToScore(place))
+                ,GameData.branchPose(place, level), 1, 2).until(()->readyToScore(place))
                 .andThen(intake.reachGoal(coralShootSpeed).withTimeout(SHOOT_TIME))
             )
         ).andThen(backupLowerSafely());
@@ -127,7 +126,7 @@ public class CommandMechanism extends BaseMechanism{
 
     public Command autoScoreCoral(int place, int level){
         return autoScoreCoral(swerveDrive.toPose(GameData.coralPose(place)
-            , 1.5, 5,3*Math.PI, 5, Math.PI * 3),place, level, 1);
+            , 1.5, 5,3*Math.PI, 5, Math.PI * 3),place, level, 1.5);
     }
 
     /**

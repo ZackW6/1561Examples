@@ -30,7 +30,7 @@ public class RampConstants{
     // TODO: Make the RAMP positive when it goes up.
     public static final double CRUISE_VELOCITY = 10;
     public static final double MAX_ACCELERATION = 20;
-    public static final double JERK = 40;
+    public static final double JERK = 150;
 
     public static final Rotation2d ANGLE_OFFSET = Rotation2d.fromRotations(0);
 
