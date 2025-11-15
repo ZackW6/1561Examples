@@ -120,15 +120,15 @@ public class RobotContainer {
 
     SendableConsumer.createSendableChooser("AccelerationLimit", (data)->{
       limiter[0].setRateLimit(data);
-      limiter[1].setRateLimit(data);}, 3);
+      limiter[1].setRateLimit(data);}, 100);
     SendableConsumer.createSendableChooser("RotAccelLimit", (data)->{
-      limiter[2].setRateLimit(data);}, 3);
+      limiter[2].setRateLimit(data);}, 100);
 
     SendableConsumer.createSendableChooser("DeccelerationLimit", (data)->{
       limiter[0].setDecelLimit(data);
-      limiter[1].setDecelLimit(data);}, 10);
+      limiter[1].setDecelLimit(data);}, 100);
     SendableConsumer.createSendableChooser("RotDeccelLimit", (data)->{
-      limiter[2].setDecelLimit(data);}, 10);
+      limiter[2].setDecelLimit(data);}, 100);
     
       
 
@@ -210,7 +210,7 @@ public class RobotContainer {
     driverController.rightTrigger(.2).whileTrue(optionController.getScoreLevel());
     driverController.y().whileTrue(optionController.getAlgaeLevel());
     driverController.b().whileTrue(climbMechanism.prepare());
-    driverController.x().whileTrue(climbMechanism.climb());
+    // driverController.x().whileTrue(climbMechanism.climb());
     driverController.leftTrigger(.2).whileTrue(optionController.getAlgaeIntakeLevel().alongWith(intake.setVelocity(-60)));
     // driverController.a().whileTrue(intake.setVelocity(30).alongWith(elevator.reachGoal(0).alongWith(arm.reachGoal(-.22)).alongWith(ramp.reachGoal(0))));
     driverController.rightBumper().whileTrue(intake.setVelocity(60));
@@ -221,7 +221,8 @@ public class RobotContainer {
     };
     driverController.back().whileTrue(Commands.defer(()->factoryCommands.towardPose((prospectivePose.get())
       , .3,1,5),Set.of()));
-    driverController.leftBumper().whileTrue(optionController.resetOrIntake());
+    driverController.x().whileTrue(optionController.resetOrIntake());
+    
     driverController.a().whileTrue(drivetrain.applyRequest(()->brake)).onTrue(Commands.runOnce(()->{limiter[0].reset(0);
       limiter[1].reset(0);
       limiter[2].reset(0);}));
