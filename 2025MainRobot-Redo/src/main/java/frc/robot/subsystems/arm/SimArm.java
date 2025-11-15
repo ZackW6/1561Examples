@@ -1,0 +1,96 @@
+package frc.robot.subsystems.arm;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.constants.ArmConstants;
+
+public class SimArm implements ArmIO{
+
+    //Set what motor to use and how many motors to use
+    private final DCMotor gearbox = DCMotor.getFalcon500(1);
+
+    //Set PID vals
+    private PIDController pidController = new PIDController(110, 0, 7);
+
+    private double targetPosition = 0;
+
+    private boolean voltageOut = false;
+    private double outputVolts = 0;
+
+    private boolean stopped = false;
+
+    private Thread updateThread;
+
+    //Create SingleJointedArm with set values
+    private final SingleJointedArmSim singleJointedArmSim =
+      new SingleJointedArmSim(
+          gearbox,
+          ArmConstants.ARM_ROTOR_TO_SENSOR_RATIO * ArmConstants.ARM_SENSOR_TO_MECHANISM_RATIO,
+          SingleJointedArmSim.estimateMOI(ArmConstants.ARM_LENGTH_METERS, ArmConstants.ARM_WEIGHT_KG),
+          ArmConstants.ARM_LENGTH_METERS,
+          ArmConstants.MIN_ARM_ANGLE_RAD,
+          ArmConstants.MAX_ARM_ANGLE_RAD,
+          true,
+          Units.rotationsToRadians(0)
+        );
+
+    //Main Loop for SimArm
+    public SimArm(){
+        updateThread = new Thread(()->{
+            while(true){
+                try {
+                    if (stopped){
+                        singleJointedArmSim.setInputVoltage(0);
+                    }else{
+                        //Move arm based on target Values
+                        if (voltageOut){
+                            singleJointedArmSim.setInputVoltage(outputVolts);
+                        }else{
+                            singleJointedArmSim.setInputVoltage(pidController.calculate(getPosition(), targetPosition));
+                        }
+                    }
+                    //Update positions every 20 ms
+                    singleJointedArmSim.update(.02);
+                    //Sleep 20 ms
+                    Thread.sleep(20);
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        updateThread.setDaemon(true); 
+        updateThread.start();
+    }
+  
+    @Override
+    public void setPosition(double position) {
+        voltageOut = false;
+        targetPosition = position;
+        stopped = false;
+    }
+
+    @Override
+    public void stop() {
+        stopped = true;
+    }
+
+    @Override
+    public double getPosition() {
+        return (Units.radiansToRotations(singleJointedArmSim.getAngleRads()));
+    }
+
+    @Override
+    public double getTarget() {
+        return targetPosition;
+    }
+
+    @Override
+    public void setVoltage(double volts) {
+        voltageOut = true;
+        outputVolts = volts;
+        stopped = false;
+    }
+}
